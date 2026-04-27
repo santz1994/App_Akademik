@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Intervention\Image\Laravel\Facades\Image;
 
 class KaryawanController extends Controller
 {
@@ -90,7 +91,7 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:200|dimensions:ratio=3/4',
+            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:2048|dimensions:ratio=3/4',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id',
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
@@ -186,18 +187,29 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:200|dimensions:ratio=3/4',
+            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id,' . $karyawan->id,
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
 
-        $fotoPath = $karyawan->foto_path;
         if ($request->hasFile('foto')) {
-            if ($fotoPath) {
-                Storage::disk('public')->delete($fotoPath);
-            }
-            $fotoPath = $request->file('foto')->store('karyawan-foto', 'public');
+            $file = $request->file('foto');
+            $filename = time() . '.' . $file->getClientOriginalExtension();
+            
+            // Di v2, gunakan 'make' bukan 'read'
+            $img = Image::make($file);
+
+            // Di v2, gunakan 'fit' bukan 'cover' untuk auto-crop 3:4
+            $img->fit(300, 400); 
+
+            // Di v2, gunakan 'encode'
+            $encoded = $img->encode('png');
+
+            $path = 'setting-lembaga/' . $filename;
+            Storage::disk('public')->put($path, $encoded);
+
+            $karyawan->update(['foto' => $path]);
         }
 
         $linkedUser = $request->filled('user_id') ? User::find($request->user_id) : null;
