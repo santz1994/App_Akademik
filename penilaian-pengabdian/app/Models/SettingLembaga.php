@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SettingLembaga extends Model
+{
+    protected $table = 'setting_lembaga';
+
+    protected $fillable = [
+        'nama_lembaga',
+        'nama_yayasan',
+        'alamat_lembaga',
+        'telepon_lembaga',
+        'email_lembaga',
+        'website_lembaga',
+        'sidebar_title',
+        'sidebar_subtitle_1',
+        'sidebar_subtitle_2',
+        'sidebar_show_title',
+        'sidebar_show_subtitle_1',
+        'sidebar_show_subtitle_2',
+        'lokasi_surat',
+        'nama_ketua_yayasan',
+        'nama_ketua_babinlumni',
+        'logo_path',
+        'ttd_ketua_yayasan_path',
+        'ttd_ketua_babinlumni_path',
+        'show_logo',
+        'show_tahun_ajaran',
+        'show_nama_pimpinan',
+        'show_tanda_tangan',
+        'laporan_default_jenis',
+        'laporan_show_no',
+        'laporan_show_kode_karyawan',
+        'laporan_show_pangkalan',
+        'laporan_show_nilai_akhir',
+        'laporan_show_rating',
+        'laporan_show_detail_kompetensi',
+        'laporan_show_bobot_kategori',
+        'laporan_paper_size',
+        'laporan_orientation',
+        'laporan_margin_top',
+        'laporan_margin_right',
+        'laporan_margin_bottom',
+        'laporan_margin_left',
+        'laporan_text_align',
+        'laporan_header_align',
+        'laporan_cell_padding',
+        'laporan_border_width',
+        'laporan_font_size',
+        'laporan_title_font_size',
+        'laporan_col_width_no',
+        'laporan_col_width_kode',
+        'laporan_col_width_nama',
+        'laporan_col_width_pangkalan',
+        'laporan_col_width_nilai',
+        'laporan_col_width_rating',
+        'laporan_column_order',
+        'laporan_label_no',
+        'laporan_label_kode_karyawan',
+        'laporan_label_nama_karyawan',
+        'laporan_label_pangkalan',
+        'laporan_label_detail_kompetensi',
+        'laporan_label_nilai_akhir',
+        'laporan_label_rating',
+        'laporan_scoring_method',
+        'tahun_penilaian_id',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'show_logo' => 'boolean',
+        'show_tahun_ajaran' => 'boolean',
+        'show_nama_pimpinan' => 'boolean',
+        'show_tanda_tangan' => 'boolean',
+        'sidebar_show_title' => 'boolean',
+        'sidebar_show_subtitle_1' => 'boolean',
+        'sidebar_show_subtitle_2' => 'boolean',
+        'laporan_show_no' => 'boolean',
+        'laporan_show_kode_karyawan' => 'boolean',
+        'laporan_show_pangkalan' => 'boolean',
+        'laporan_show_nilai_akhir' => 'boolean',
+        'laporan_show_rating' => 'boolean',
+        'laporan_show_detail_kompetensi' => 'boolean',
+        'laporan_show_bobot_kategori' => 'boolean',
+        'laporan_margin_top' => 'float',
+        'laporan_margin_right' => 'float',
+        'laporan_margin_bottom' => 'float',
+        'laporan_margin_left' => 'float',
+        'laporan_cell_padding' => 'integer',
+        'laporan_border_width' => 'float',
+        'laporan_font_size' => 'integer',
+        'laporan_title_font_size' => 'integer',
+        'laporan_col_width_no' => 'integer',
+        'laporan_col_width_kode' => 'integer',
+        'laporan_col_width_nama' => 'integer',
+        'laporan_col_width_pangkalan' => 'integer',
+        'laporan_col_width_nilai' => 'integer',
+        'laporan_col_width_rating' => 'integer',
+        'is_active' => 'boolean',
+    ];
+
+    public function tahunPenilaian()
+    {
+        return $this->belongsTo(TahunPenilaian::class);
+    }
+}
