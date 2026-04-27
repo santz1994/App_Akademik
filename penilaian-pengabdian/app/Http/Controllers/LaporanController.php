@@ -176,7 +176,9 @@ class LaporanController extends Controller
                 'nilai_akhir' => $setting?->laporan_label_nilai_akhir ?: 'Nilai Akhir',
                 'rating' => $setting?->laporan_label_rating ?: 'Rating',
             ],
-            'scoring_method' => $setting?->laporan_scoring_method ?: 'weighted_kategori',
+            'scoring_method' => $setting?->laporan_scoring_method ?: 'weighted_kinerja_kegiatan',
+            'score_weight_kinerja' => (float) ($setting?->laporan_bobot_kinerja ?? 70),
+            'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
         ];
 
         if (!$reportFormat['show_nilai_akhir']) {
@@ -212,9 +214,15 @@ class LaporanController extends Controller
         }
         $reportFormat['column_order'] = $normalizedOrder;
 
-        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'average_kinerja_kegiatan'], true)) {
-            $reportFormat['scoring_method'] = 'weighted_kategori';
+        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+            $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
+        if ($reportFormat['scoring_method'] === 'average_kinerja_kegiatan') {
+            $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
+        }
+
+        $reportFormat['score_weight_kinerja'] = max(0.0, min(100.0, (float) $reportFormat['score_weight_kinerja']));
+        $reportFormat['score_weight_kegiatan'] = max(0.0, min(100.0, (float) $reportFormat['score_weight_kegiatan']));
 
         $defaultJenisLaporan = $setting?->laporan_default_jenis;
         if (!in_array($defaultJenisLaporan, ['ringkas', 'rinci'], true)) {

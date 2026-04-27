@@ -43,15 +43,20 @@ class LaporanScoreCalculator
             ->values();
     }
 
-    public static function calculate(Collection $kategoriList, Collection $trxByKompetensi, string $method = 'weighted_kategori'): ?float
+    public static function calculate(
+        Collection $kategoriList,
+        Collection $trxByKompetensi,
+        string $method = 'weighted_kategori',
+        array $options = []
+    ): ?float
     {
         $hasAnyValue = $trxByKompetensi->contains(fn($t) => self::isScored($t?->nilai));
         if (!$hasAnyValue) {
             return null;
         }
 
-        if ($method === 'average_kinerja_kegiatan') {
-            return self::calculateAverageByJenis($kategoriList, $trxByKompetensi);
+        if (in_array($method, ['average_kinerja_kegiatan', 'weighted_kinerja_kegiatan'], true)) {
+            return self::calculateWeightedByJenis($kategoriList, $trxByKompetensi, $options);
         }
 
         return self::calculateWeightedByKategori($kategoriList, $trxByKompetensi);
@@ -82,7 +87,11 @@ class LaporanScoreCalculator
         return ['label' => 'E - Sangat Kurang', 'color' => 'dark'];
     }
 
-    private static function calculateAverageByJenis(Collection $kategoriList, Collection $trxByKompetensi): ?float
+    private static function calculateWeightedByJenis(
+        Collection $kategoriList,
+        Collection $trxByKompetensi,
+        array $options = []
+    ): ?float
     {
         $kinerjaScore = self::calculateWeightedByKategori(
             $kategoriList->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')->values(),
@@ -98,15 +107,31 @@ class LaporanScoreCalculator
             return null;
         }
 
-        $parts = [];
-        if ($kinerjaScore !== null) {
-            $parts[] = $kinerjaScore;
-        }
-        if ($kegiatanScore !== null) {
-            $parts[] = $kegiatanScore;
+        $bobotKinerja = self::normalizedPercent((float) ($options['bobot_kinerja'] ?? 50));
+        $bobotKegiatan = self::normalizedPercent((float) ($options['bobot_kegiatan'] ?? 50));
+
+        if (($bobotKinerja + $bobotKegiatan) <= 0.0) {
+            $bobotKinerja = 50.0;
+            $bobotKegiatan = 50.0;
         }
 
-        return empty($parts) ? null : (array_sum($parts) / count($parts));
+        $weightedSum = 0.0;
+        $usedWeight = 0.0;
+
+        if ($kinerjaScore !== null) {
+            $weightedSum += ($bobotKinerja * $kinerjaScore);
+            $usedWeight += $bobotKinerja;
+        }
+        if ($kegiatanScore !== null) {
+            $weightedSum += ($bobotKegiatan * $kegiatanScore);
+            $usedWeight += $bobotKegiatan;
+        }
+
+        if ($usedWeight <= 0.0) {
+            return null;
+        }
+
+        return $weightedSum / $usedWeight;
     }
 
     private static function calculateWeightedByKategori(Collection $kategoriList, Collection $trxByKompetensi): ?float
@@ -138,6 +163,11 @@ class LaporanScoreCalculator
     private static function isScored(mixed $nilai): bool
     {
         return $nilai !== null && is_numeric($nilai);
+    }
+
+    private static function normalizedPercent(float $value): float
+    {
+        return max(0.0, min(100.0, $value));
     }
 
     private static function resolveMappedKategoriIdsByPangkalan(mixed $karyawan): Collection

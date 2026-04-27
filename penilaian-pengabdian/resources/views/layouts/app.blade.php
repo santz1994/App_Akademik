@@ -242,6 +242,9 @@
             <a href="{{ route('admin.laporan.index') }}" class="nav-link {{ request()->routeIs('admin.laporan.index') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line"></i> Laporan
             </a>
+            <a href="{{ route('admin.penilaian-metode.edit') }}" class="nav-link {{ request()->routeIs('admin.penilaian-metode.*') ? 'active' : '' }}">
+                <i class="bi bi-calculator"></i> Cara Penilaian
+            </a>
             <a href="{{ route('admin.laporan.format.edit') }}" class="nav-link {{ request()->routeIs('admin.laporan.format.*') ? 'active' : '' }}">
                 <i class="bi bi-sliders"></i> Format Cetak Laporan
             </a>

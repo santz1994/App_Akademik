@@ -123,6 +123,9 @@ class SettingLembagaController extends Controller
             'sidebar_show_title' => true,
             'sidebar_show_subtitle_1' => true,
             'sidebar_show_subtitle_2' => true,
+            'laporan_scoring_method' => 'weighted_kinerja_kegiatan',
+            'laporan_bobot_kinerja' => 70,
+            'laporan_bobot_kegiatan' => 30,
         ]);
     }
 }

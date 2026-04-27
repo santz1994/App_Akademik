@@ -61,7 +61,7 @@ class LaporanFormatController extends Controller
             'laporan_label_detail_kompetensi' => 'required|string|max:100',
             'laporan_label_nilai_akhir' => 'required|string|max:100',
             'laporan_label_rating' => 'required|string|max:100',
-            'laporan_scoring_method' => 'required|in:weighted_kategori,average_kinerja_kegiatan',
+            'laporan_scoring_method' => 'required|in:weighted_kategori,weighted_kinerja_kegiatan,average_kinerja_kegiatan',
         ]);
 
         $setting = $this->resolveSetting();
@@ -101,8 +101,12 @@ class LaporanFormatController extends Controller
             'laporan_label_detail_kompetensi' => trim((string) $request->input('laporan_label_detail_kompetensi', 'Detail Kompetensi')),
             'laporan_label_nilai_akhir' => trim((string) $request->input('laporan_label_nilai_akhir', 'Nilai Akhir')),
             'laporan_label_rating' => trim((string) $request->input('laporan_label_rating', 'Rating')),
-            'laporan_scoring_method' => $request->input('laporan_scoring_method', 'weighted_kategori'),
+            'laporan_scoring_method' => $request->input('laporan_scoring_method', 'weighted_kinerja_kegiatan'),
         ];
+
+        if ($data['laporan_scoring_method'] === 'average_kinerja_kegiatan') {
+            $data['laporan_scoring_method'] = 'weighted_kinerja_kegiatan';
+        }
 
         $requestedOrder = json_decode((string) $request->input('laporan_column_order', '[]'), true);
         if (!is_array($requestedOrder)) {
@@ -189,7 +193,9 @@ class LaporanFormatController extends Controller
             'laporan_label_detail_kompetensi' => 'Detail Kompetensi',
             'laporan_label_nilai_akhir' => 'Nilai Akhir',
             'laporan_label_rating' => 'Rating',
-            'laporan_scoring_method' => 'weighted_kategori',
+            'laporan_scoring_method' => 'weighted_kinerja_kegiatan',
+            'laporan_bobot_kinerja' => 70,
+            'laporan_bobot_kegiatan' => 30,
         ]);
     }
 }

@@ -12,13 +12,18 @@
     $reportFormat = array_merge([
         'show_bobot_kategori' => true,
         'show_detail_kompetensi' => true,
-        'scoring_method' => 'weighted_kategori',
+        'scoring_method' => 'weighted_kinerja_kegiatan',
+        'score_weight_kinerja' => 70,
+        'score_weight_kegiatan' => 30,
     ], $reportFormat ?? []);
     $isRingkas = ($jenisLaporan ?? 'ringkas') === 'ringkas';
 @endphp
 
 @if($routePrefix === 'admin')
-<div class="d-flex justify-content-end mb-2">
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <a href="{{ route('admin.penilaian-metode.edit') }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-calculator me-1"></i>Cara Penilaian
+    </a>
     <a href="{{ route('admin.laporan.format.edit') }}" class="btn btn-sm btn-outline-dark">
         <i class="bi bi-sliders me-1"></i>Atur Format Cetak
     </a>
@@ -213,7 +218,15 @@
                             ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
                             ->keyBy('kompetensi_id');
 
-                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate($kategoriUntukKaryawan, $trxByKompetensi, $reportFormat['scoring_method']);
+                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                            $kategoriUntukKaryawan,
+                            $trxByKompetensi,
+                            $reportFormat['scoring_method'],
+                            [
+                                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                            ]
+                        );
                         $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
                         $rating = $ratingMeta['label'];
                         $ratingColor = $ratingMeta['color'];

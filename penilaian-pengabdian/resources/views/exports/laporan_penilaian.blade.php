@@ -20,7 +20,9 @@
         'col_width_rating' => 108,
         'column_order' => ['no', 'kode_karyawan', 'nama_karyawan', 'pangkalan', 'detail_kompetensi', 'nilai_akhir', 'rating'],
         'labels' => [],
-        'scoring_method' => 'weighted_kategori',
+        'scoring_method' => 'weighted_kinerja_kegiatan',
+        'score_weight_kinerja' => 70,
+        'score_weight_kegiatan' => 30,
     ], $reportFormat ?? []);
 
     $defaultOrder = ['no', 'kode_karyawan', 'nama_karyawan', 'pangkalan', 'detail_kompetensi', 'nilai_akhir', 'rating'];
@@ -164,7 +166,15 @@
                     ->filter(fn($t) => $t->nilai !== null)
                     ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
                     ->keyBy('kompetensi_id');
-                $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate($kategoriUntukKaryawan, $trxByKompetensi, $reportFormat['scoring_method']);
+                $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                    $kategoriUntukKaryawan,
+                    $trxByKompetensi,
+                    $reportFormat['scoring_method'],
+                    [
+                        'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                        'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                    ]
+                );
                 $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
             @endphp
             <tr>

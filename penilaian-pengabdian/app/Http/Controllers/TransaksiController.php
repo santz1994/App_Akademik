@@ -72,9 +72,14 @@ class TransaksiController extends Controller
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
         $scoreMethod = $setting?->laporan_scoring_method;
-        if (!in_array($scoreMethod, ['weighted_kategori', 'average_kinerja_kegiatan'], true)) {
-            $scoreMethod = 'weighted_kategori';
+        if (!in_array($scoreMethod, ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+            $scoreMethod = 'weighted_kinerja_kegiatan';
         }
+        if ($scoreMethod === 'average_kinerja_kegiatan') {
+            $scoreMethod = 'weighted_kinerja_kegiatan';
+        }
+        $scoreWeightKinerja = max(0.0, min(100.0, (float) ($setting?->laporan_bobot_kinerja ?? 70)));
+        $scoreWeightKegiatan = max(0.0, min(100.0, (float) ($setting?->laporan_bobot_kegiatan ?? 30)));
         $pendingUnlockCount = PenilaianUnlockRequest::where('status', 'pending')->count();
 
         return view('admin.transaksi.index', compact(
@@ -84,6 +89,8 @@ class TransaksiController extends Controller
             'totalKompetensi',
             'kategoriListForScore',
             'scoreMethod',
+            'scoreWeightKinerja',
+            'scoreWeightKegiatan',
             'pendingUnlockCount',
             'search',
             'filterPangkalan',
@@ -134,9 +141,14 @@ class TransaksiController extends Controller
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
         $scoreMethod = $setting?->laporan_scoring_method;
-        if (!in_array($scoreMethod, ['weighted_kategori', 'average_kinerja_kegiatan'], true)) {
-            $scoreMethod = 'weighted_kategori';
+        if (!in_array($scoreMethod, ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+            $scoreMethod = 'weighted_kinerja_kegiatan';
         }
+        if ($scoreMethod === 'average_kinerja_kegiatan') {
+            $scoreMethod = 'weighted_kinerja_kegiatan';
+        }
+        $scoreWeightKinerja = max(0.0, min(100.0, (float) ($setting?->laporan_bobot_kinerja ?? 70)));
+        $scoreWeightKegiatan = max(0.0, min(100.0, (float) ($setting?->laporan_bobot_kegiatan ?? 30)));
         $pendingUnlockCount = 0;
 
         return view('admin.transaksi.index', compact(
@@ -146,6 +158,8 @@ class TransaksiController extends Controller
             'totalKompetensi',
             'kategoriListForScore',
             'scoreMethod',
+            'scoreWeightKinerja',
+            'scoreWeightKegiatan',
             'pendingUnlockCount',
             'routePrefix',
             'isKepalaView',

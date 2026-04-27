@@ -6,7 +6,9 @@
 @php
     $routePrefix = $routePrefix ?? 'admin';
     $isKepalaView = $isKepalaView ?? false;
-    $scoreMethod = $scoreMethod ?? 'weighted_kategori';
+    $scoreMethod = $scoreMethod ?? 'weighted_kinerja_kegiatan';
+    $scoreWeightKinerja = (float) ($scoreWeightKinerja ?? 70);
+    $scoreWeightKegiatan = (float) ($scoreWeightKegiatan ?? 30);
     $pendingUnlockCount = $pendingUnlockCount ?? 0;
     $canBatchUnlock = !$isKepalaView && (bool) $selectedTahun;
 @endphp
@@ -149,7 +151,15 @@
                         $isLocked  = $lockState ? (bool) $lockState->is_locked : false;
 
                         $trxByKompetensi = $scoredTrx->keyBy('kompetensi_id');
-                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate($kategoriForKaryawan, $trxByKompetensi, $scoreMethod);
+                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                            $kategoriForKaryawan,
+                            $trxByKompetensi,
+                            $scoreMethod,
+                            [
+                                'bobot_kinerja' => $scoreWeightKinerja,
+                                'bobot_kegiatan' => $scoreWeightKegiatan,
+                            ]
+                        );
                         $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
                         $rating = $ratingMeta['label'];
                         $ratingColor = $ratingMeta['color'];

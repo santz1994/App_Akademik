@@ -18,6 +18,7 @@ use App\Http\Controllers\KepalaController;
 use App\Http\Controllers\SettingLembagaController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\LaporanFormatController;
+use App\Http\Controllers\PenilaianMetodeController;
 
 // Root redirect
 Route::get('/', fn() => redirect()->route('login'));
@@ -97,6 +98,8 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/format', [LaporanFormatController::class, 'edit'])->name('laporan.format.edit');
     Route::put('/laporan/format', [LaporanFormatController::class, 'update'])->name('laporan.format.update');
+    Route::get('/penilaian/metode', [PenilaianMetodeController::class, 'edit'])->name('penilaian-metode.edit');
+    Route::put('/penilaian/metode', [PenilaianMetodeController::class, 'update'])->name('penilaian-metode.update');
     Route::get('/laporan/print', [LaporanController::class, 'printView'])->name('laporan.print');
     Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
     Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');

@@ -14,6 +14,15 @@
             }
         }
 
+        $karyawanFotoSrc = null;
+        if (!empty($karyawan->foto_path)) {
+            $normalizedFotoPath = ltrim((string) $karyawan->foto_path, '/');
+            $publicFotoPath = public_path('storage/' . $normalizedFotoPath);
+            if (is_file($publicFotoPath)) {
+                $karyawanFotoSrc = $publicFotoPath;
+            }
+        }
+
         $namaLembaga = trim((string) ($setting?->nama_lembaga ?? ''));
         $namaYayasan = trim((string) ($setting?->nama_yayasan ?? ''));
 
@@ -86,6 +95,24 @@
         .header-subtitle-main { text-transform: uppercase; font-weight: 600; }
         .header-contact { margin-top: 2px; font-size: 10px; color: #334155; line-height: 1.3; }
         .header-line { border-top: 2px solid #0f172a; border-bottom: 1px solid #0f172a; height: 2px; margin: 10px 0 14px; }
+        .karyawan-photo-wrap { width: 100%; text-align: right; margin: 0 0 10px; }
+        .karyawan-photo-box {
+            width: 94px;
+            height: 124px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+        }
+        .karyawan-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
         .profile-meta { margin-bottom: 10px; }
         .profile-meta strong { font-size: 12px; }
@@ -135,6 +162,14 @@
         </div>
     </div>
     <div class="header-line"></div>
+
+    @if($karyawanFotoSrc)
+        <div class="karyawan-photo-wrap">
+            <span class="karyawan-photo-box">
+                <img src="{{ $karyawanFotoSrc }}" alt="Foto {{ $karyawan->nama_karyawan }}">
+            </span>
+        </div>
+    @endif
 
     <div class="profile-meta">
         <strong>{{ $karyawan->nama_karyawan }}</strong>

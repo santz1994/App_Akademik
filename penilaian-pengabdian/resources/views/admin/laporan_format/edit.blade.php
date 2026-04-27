@@ -214,15 +214,16 @@
                         <div class="col-md-6">
                             <label class="form-label">Cara Hitung Nilai Akhir</label>
                             <select name="laporan_scoring_method" id="scoringMethod" class="form-select">
-                                <option value="weighted_kategori" {{ old('laporan_scoring_method', $setting->laporan_scoring_method ?? 'weighted_kategori') === 'weighted_kategori' ? 'selected' : '' }}>Rata-rata per Kategori (skip kosong/0)</option>
-                                <option value="average_kinerja_kegiatan" {{ old('laporan_scoring_method', $setting->laporan_scoring_method ?? 'weighted_kategori') === 'average_kinerja_kegiatan' ? 'selected' : '' }}>Rata-rata Kinerja & Kegiatan</option>
+                                <option value="weighted_kategori" {{ old('laporan_scoring_method', $setting->laporan_scoring_method ?? 'weighted_kinerja_kegiatan') === 'weighted_kategori' ? 'selected' : '' }}>Rata-rata per Kategori (skip kosong/0)</option>
+                                <option value="weighted_kinerja_kegiatan" {{ in_array(old('laporan_scoring_method', $setting->laporan_scoring_method ?? 'weighted_kinerja_kegiatan'), ['weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true) ? 'selected' : '' }}>Bobot Kinerja + Kegiatan (atur persen di menu Cara Penilaian)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <div class="alert alert-info py-2 mb-0" style="font-size:.82rem;">
                                 Formula mode Rata-rata per Kategori (N):<br>
                                 <strong>Total Nilai N = (n + n + ... ) / jumlah indikator bernilai</strong><br>
-                                <strong>Nilai Akhir = (Total N1 + Total N2 + ... ) / jumlah kategori bernilai</strong>
+                                <strong>Nilai Akhir = (Total N1 + Total N2 + ... ) / jumlah kategori bernilai</strong><br>
+                                Formula mode Bobot Kinerja + Kegiatan diatur pada menu <strong>Cara Penilaian</strong>.
                             </div>
                         </div>
                     </div>
@@ -517,7 +518,7 @@
 
         const labels = getLabelMap();
         const visibleColumns = getVisibleColumns();
-        const sampleRows = scoringMethod === 'average_kinerja_kegiatan' ? sampleRowsAverage : sampleRowsWeighted;
+        const sampleRows = scoringMethod === 'weighted_kinerja_kegiatan' ? sampleRowsAverage : sampleRowsWeighted;
 
         const base = sizeMap[paperSize] || sizeMap.a4;
         const rawW = orientation === 'landscape' ? base.h : base.w;
@@ -546,8 +547,8 @@
         previewPaper.style.setProperty('--pv-text-align', textAlign);
         previewPaper.style.setProperty('--pv-header-align', headerAlign);
 
-        const scoringText = scoringMethod === 'average_kinerja_kegiatan'
-            ? 'Formula Rata-rata Kinerja/Kegiatan'
+        const scoringText = scoringMethod === 'weighted_kinerja_kegiatan'
+            ? 'Formula Bobot Kinerja/Kegiatan'
             : 'Formula Rata-rata per Kategori';
         const jenisText = defaultJenis === 'rinci' ? 'Rinci' : 'Ringkas';
         const scalePercent = Math.round(previewScale * 100);

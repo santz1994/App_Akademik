@@ -66,6 +66,8 @@ class SettingLembaga extends Model
         'laporan_label_nilai_akhir',
         'laporan_label_rating',
         'laporan_scoring_method',
+        'laporan_bobot_kinerja',
+        'laporan_bobot_kegiatan',
         'tahun_penilaian_id',
         'is_active',
     ];
@@ -99,6 +101,8 @@ class SettingLembaga extends Model
         'laporan_col_width_pangkalan' => 'integer',
         'laporan_col_width_nilai' => 'integer',
         'laporan_col_width_rating' => 'integer',
+        'laporan_bobot_kinerja' => 'float',
+        'laporan_bobot_kegiatan' => 'float',
         'is_active' => 'boolean',
     ];
 

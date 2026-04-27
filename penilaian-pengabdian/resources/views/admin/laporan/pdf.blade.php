@@ -32,7 +32,9 @@
             'col_width_rating' => 108,
             'column_order' => ['no', 'kode_karyawan', 'nama_karyawan', 'pangkalan', 'detail_kompetensi', 'nilai_akhir', 'rating'],
             'labels' => [],
-            'scoring_method' => 'weighted_kategori',
+            'scoring_method' => 'weighted_kinerja_kegiatan',
+            'score_weight_kinerja' => 70,
+            'score_weight_kegiatan' => 30,
         ], $reportFormat ?? []);
 
         $namaLembaga = trim((string) ($setting?->nama_lembaga ?? ''));
@@ -142,6 +144,23 @@
             }
         }
 
+        $karyawanFotoSrc = null;
+        $karyawanFotoNama = null;
+        $karyawanItems = $karyawanList instanceof \Illuminate\Support\Collection
+            ? $karyawanList
+            : collect($karyawanList ?? []);
+        $singleKaryawan = $karyawanItems->count() === 1 ? $karyawanItems->first() : null;
+        if ($singleKaryawan && !empty($singleKaryawan->foto_path)) {
+            $normalizedFotoPath = ltrim((string) $singleKaryawan->foto_path, '/');
+            $publicFotoPath = public_path('storage/' . $normalizedFotoPath);
+            if (is_file($publicFotoPath)) {
+                $karyawanFotoSrc = $isPdfOutput
+                    ? $publicFotoPath
+                    : asset('storage/' . $normalizedFotoPath);
+                $karyawanFotoNama = trim((string) ($singleKaryawan->nama_karyawan ?? ''));
+            }
+        }
+
         $marginTop = number_format((float) $reportFormat['margin_top'], 2, '.', '');
         $marginRight = number_format((float) $reportFormat['margin_right'], 2, '.', '');
         $marginBottom = number_format((float) $reportFormat['margin_bottom'], 2, '.', '');
@@ -219,6 +238,38 @@
             object-fit: contain;
             display: block;
         }
+        .karyawan-photo-wrap {
+            width: 100%;
+            text-align: right;
+            margin: 0 0 10px;
+        }
+        .karyawan-photo-card {
+            display: inline-block;
+            text-align: center;
+        }
+        .karyawan-photo-frame {
+            width: 92px;
+            height: 122px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .karyawan-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .karyawan-photo-caption {
+            margin-top: 3px;
+            font-size: {{ max($fontSize - 2, 8) }}px;
+            color: #334155;
+            max-width: 140px;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +296,19 @@
         </div>
     </div>
     <div class="kop-line"></div>
+
+    @if($karyawanFotoSrc)
+    <div class="karyawan-photo-wrap">
+        <div class="karyawan-photo-card">
+            <div class="karyawan-photo-frame">
+                <img src="{{ $karyawanFotoSrc }}" alt="Foto {{ $karyawanFotoNama !== '' ? $karyawanFotoNama : 'Karyawan' }}">
+            </div>
+            @if($karyawanFotoNama !== '')
+                <div class="karyawan-photo-caption">{{ $karyawanFotoNama }}</div>
+            @endif
+        </div>
+    </div>
+    @endif
 
     <table>
         <thead>
@@ -297,7 +361,15 @@
                         ->filter(fn($t) => $t->nilai !== null)
                         ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
                         ->keyBy('kompetensi_id');
-                    $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate($kategoriUntukKaryawan, $trxByKompetensi, $reportFormat['scoring_method']);
+                    $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                        $kategoriUntukKaryawan,
+                        $trxByKompetensi,
+                        $reportFormat['scoring_method'],
+                        [
+                            'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                            'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                        ]
+                    );
                     $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
                 @endphp
                 <tr>
