@@ -1,0 +1,12 @@
+[27-Apr-2026 09:34:39 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:39 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/artisan(10): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:35:29 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:35:29 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/artisan(10): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20

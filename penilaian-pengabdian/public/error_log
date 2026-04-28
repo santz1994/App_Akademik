@@ -650,3 +650,47 @@ Stack trace:
 #10 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(23): Illuminate\Foundation\Application->handleRequest()
 #11 {main}
   thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/laravel/framework/src/Illuminate/Foundation/Configuration/Middleware.php on line 185
+[27-Apr-2026 09:17:26 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/app/Http/Controllers/KaryawanController.php on line 5
+[27-Apr-2026 09:17:29 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/app/Http/Controllers/KaryawanController.php on line 5
+[27-Apr-2026 09:34:29 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:29 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:32 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:32 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:34 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:34 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:48 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:34:48 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:56:07 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 09:56:07 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 16:09:25 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 16:09:25 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 23:59:24 UTC] PHP Warning:  require_once(/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php): Failed to open stream: No such file or directory in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20
+[27-Apr-2026 23:59:24 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/composer/autoload_real.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php:20
+Stack trace:
+#0 /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/public/index.php(17): require()
+#1 {main}
+  thrown in /home/ypphmugo/apk.ypphmugomulyo.id/penilaian-pengabdian/vendor/autoload.php on line 20

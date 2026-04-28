@@ -12,8 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Intervention\Image\Laravel\Facades\Image;
-use Intervention\Image\Format;
 
 class KaryawanController extends Controller
 {
@@ -92,7 +90,7 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:200|dimensions:ratio=3/4',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id',
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
@@ -188,77 +186,60 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:200|dimensions:ratio=3/4',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id,' . $karyawan->id,
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
-    
-        // AWAL: Gunakan path lama sebagai default agar tidak undefined
+
         $fotoPath = $karyawan->foto_path;
-    
         if ($request->hasFile('foto')) {
-            try {
-                // Hapus foto lama jika ada file baru yang masuk
-                if ($karyawan->foto_path && \Storage::disk('public')->exists($karyawan->foto_path)) {
-                    \Storage::disk('public')->delete($karyawan->foto_path);
-                }
-    
-                $file = $request->file('foto');
-                $filename = time() . '.png';
-                
-                // Membaca file gambar dari temporary path menggunakan decodePath (v4.x API)
-                $img = Image::decodePath($file->getRealPath());
-                
-                // Melakukan auto-crop dengan rasio 3:4
-                $img->cover(300, 400);
-                
-                $savePath = 'karyawan-foto/' . $filename;
-                
-                // Encode menggunakan PNG format (v4.x API) dan simpan ke storage
-                $encoded = $img->encodeUsingFormat(Format::PNG);
-                \Storage::disk('public')->put($savePath, (string) $encoded);
-                
-                // Update variabel path untuk database
-                $fotoPath = $savePath;
-    
-            } catch (\Throwable $e) {
-                // Gunakan \Throwable agar Error fatal tetap tertangkap dan kembali ke form
-                return back()->withInput()->withErrors(['foto' => 'Gagal memproses gambar: ' . $e->getMessage()]);
+            if ($fotoPath) {
+                Storage::disk('public')->delete($fotoPath);
             }
+            $fotoPath = $request->file('foto')->store('karyawan-foto', 'public');
         }
-    
-        $linkedUser = $request->filled('user_id') ? \App\Models\User::find($request->user_id) : null;
+
+        $linkedUser = $request->filled('user_id') ? User::find($request->user_id) : null;
         $resolvedNamaKaryawan = trim((string) $request->input('nama_karyawan', ''));
-        
         if ($resolvedNamaKaryawan === '' && $linkedUser) {
             $resolvedNamaKaryawan = trim((string) $linkedUser->name);
         }
-        
         if ($resolvedNamaKaryawan === '') {
-            return back()->withInput()->withErrors(['nama_karyawan' => 'Nama karyawan wajib diisi.']);
+            return back()->withInput()->withErrors([
+                'nama_karyawan' => 'Nama karyawan wajib diisi atau pilih user account yang memiliki nama.',
+            ]);
         }
-    
-        $resolvedPangkalanId = $request->pangkalan_id ?: $karyawan->pangkalan_id;
-        if ($linkedUser?->pangkalan_id) { 
-            $resolvedPangkalanId = $linkedUser->pangkalan_id; 
+
+        $resolvedPangkalanId = $request->pangkalan_id ?: null;
+
+        if ($linkedUser?->pangkalan_id) {
+            $resolvedPangkalanId = $linkedUser->pangkalan_id;
         }
-    
-        // UPDATE DATABASE
+
+        if ($linkedUser?->is_kepala) {
+            if (!$linkedUser->pangkalan_id) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['user_id' => 'User kepala harus memiliki pangkalan. Silakan perbarui data user terlebih dahulu.']);
+            }
+            $resolvedPangkalanId = $linkedUser->pangkalan_id;
+        }
+
         $karyawan->update([
-            'nama_karyawan'       => $resolvedNamaKaryawan,
-            'nomor_induk'         => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
-            'jenis_kelamin'       => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
-            'nomor_surat_tugas'   => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
+            'nama_karyawan' => $resolvedNamaKaryawan,
+            'nomor_induk'   => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
+            'jenis_kelamin' => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
+            'nomor_surat_tugas' => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
             'tanggal_surat_tugas' => $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
-            'is_active'           => $request->boolean('is_active', true),
-            'alamat'              => $request->alamat,
-            'foto_path'           => $fotoPath, // Sekarang variabel ini pasti ada isinya
-            'user_id'             => $request->user_id ?: null,
-            'pangkalan_id'        => $resolvedPangkalanId,
-            'tugas_khusus'        => $request->tugas_khusus,
+            'is_active'     => $request->boolean('is_active', true),
+            'alamat'        => $request->alamat,
+            'foto_path'     => $fotoPath,
+            'user_id'       => $request->user_id ?: null,
+            'pangkalan_id'  => $resolvedPangkalanId,
+            'tugas_khusus'  => $request->tugas_khusus,
         ]);
-    
+
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil diperbarui.');
     }

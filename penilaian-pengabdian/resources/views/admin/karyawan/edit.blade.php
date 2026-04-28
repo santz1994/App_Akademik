@@ -6,7 +6,7 @@
 <div class="card">
     <div class="card-header py-2 fw-semibold"><i class="bi bi-pencil me-2"></i>Form Edit Karyawan</div>
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.karyawan.update', $karyawan) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('admin.karyawan.update', $karyawan->id) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             <div class="mb-3">
                 <label class="form-label fw-semibold">Kode Karyawan</label>
