@@ -1,3 +1,8 @@
+<IfModule mod_headers.c>
+    # Tambahkan https://cdn.jsdelivr.net ke dalam script-src
+    Header set Content-Security-Policy "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.apk.ypphmugomulyo.id https://cdn.jsdelivr.net;"
+</IfModule>
+
 # Force index.php sebagai halaman utama
 DirectoryIndex index.php
 Options -Indexes
@@ -13,6 +18,13 @@ Options -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Paksa ke WWW dan HTTPS agar sinkron dengan browser
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteRule ^(.*)$ https://www.apk.ypphmugomulyo.id/$1 [L,R=301]
+    
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
