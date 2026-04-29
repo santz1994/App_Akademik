@@ -20,7 +20,7 @@
 
             <div>
                 <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Pangkalan:</label>
-                <select name="pangkalan_id" class="form-select form-select-sm" style="min-width:220px;">
+                <select name="pangkalan_id" class="form-select form-select-sm" style="min-width:220px;" onchange="this.form.submit()">
                     <option value="">-- Semua Pangkalan --</option>
                     @foreach($pangkalanList as $p)
                         <option value="{{ $p->id }}" {{ (string)($filterPangkalan ?? '') === (string)$p->id ? 'selected' : '' }}>
@@ -32,7 +32,7 @@
 
             <div>
                 <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Status:</label>
-                <select name="status_aktif" class="form-select form-select-sm" style="min-width:145px;">
+                <select name="status_aktif" class="form-select form-select-sm" style="min-width:145px;" onchange="this.form.submit()">
                     <option value="">-- Semua --</option>
                     <option value="aktif" {{ ($filterStatusAktif ?? '') === 'aktif' ? 'selected' : '' }}>Aktif</option>
                     <option value="nonaktif" {{ ($filterStatusAktif ?? '') === 'nonaktif' ? 'selected' : '' }}>Tidak Aktif</option>
@@ -41,7 +41,7 @@
 
             <div>
                 <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Jabatan:</label>
-                <select name="status_kepala" class="form-select form-select-sm" style="min-width:165px;">
+                <select name="status_kepala" class="form-select form-select-sm" style="min-width:165px;" onchange="this.form.submit()">
                     <option value="">-- Semua --</option>
                     <option value="kepala" {{ ($filterStatusKepala ?? '') === 'kepala' ? 'selected' : '' }}>Kepala</option>
                     <option value="nonkepala" {{ ($filterStatusKepala ?? '') === 'nonkepala' ? 'selected' : '' }}>Bukan Kepala</option>
@@ -49,10 +49,6 @@
             </div>
 
             @include('components.per-page-select')
-
-            <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-search me-1"></i>Terapkan
-            </button>
 
             @if(request()->hasAny(['q', 'pangkalan_id', 'status_aktif', 'status_kepala', 'per_page']))
                 <a href="{{ route('admin.karyawan.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>

@@ -31,7 +31,7 @@
     @if(!$isKepalaView)
     <div>
         <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Pangkalan:</label>
-        <select name="pangkalan_id" class="form-select form-select-sm" style="min-width:220px;">
+        <select name="pangkalan_id" class="form-select form-select-sm" style="min-width:220px;" onchange="this.form.submit()">
             <option value="">-- Semua Pangkalan --</option>
             @foreach($pangkalanList as $p)
                 <option value="{{ $p->id }}" {{ (string)($filterPangkalan ?? '') === (string)$p->id ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
 
     <div>
         <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Status Karyawan:</label>
-        <select name="status_aktif" class="form-select form-select-sm" style="min-width:160px;">
+        <select name="status_aktif" class="form-select form-select-sm" style="min-width:160px;" onchange="this.form.submit()">
             <option value="">-- Semua --</option>
             <option value="aktif" {{ ($filterStatusAktif ?? '') === 'aktif' ? 'selected' : '' }}>Aktif</option>
             <option value="nonaktif" {{ ($filterStatusAktif ?? '') === 'nonaktif' ? 'selected' : '' }}>Tidak Aktif</option>
@@ -52,7 +52,7 @@
 
     <div>
         <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Status Lock:</label>
-        <select name="status_lock" class="form-select form-select-sm" style="min-width:160px;">
+        <select name="status_lock" class="form-select form-select-sm" style="min-width:160px;" onchange="this.form.submit()">
             <option value="">-- Semua --</option>
             <option value="locked" {{ ($filterStatusLock ?? '') === 'locked' ? 'selected' : '' }}>Locked</option>
             <option value="unlocked" {{ ($filterStatusLock ?? '') === 'unlocked' ? 'selected' : '' }}>Unlocked</option>
@@ -62,7 +62,7 @@
 
     <div>
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;"><i class="bi bi-funnel me-1"></i>Tahun Ajaran:</label>
-    <select name="tahun_penilaian_id" class="form-select form-select-sm" style="min-width:200px;">
+    <select name="tahun_penilaian_id" class="form-select form-select-sm" style="min-width:200px;" onchange="this.form.submit()">
         <option value="">-- Semua Tahun --</option>
         @foreach($tahunList as $t)
         <option value="{{ $t->id }}" {{ $selectedTahun == $t->id ? 'selected' : '' }}>
@@ -73,10 +73,6 @@
     </div>
 
     @include('components.per-page-select')
-
-    <button type="submit" class="btn btn-sm btn-primary">
-        <i class="bi bi-search me-1"></i>Terapkan
-    </button>
 
     @if(request()->hasAny(['q', 'pangkalan_id', 'status_aktif', 'status_lock', 'tahun_penilaian_id', 'per_page']))
         <a href="{{ route($routePrefix . '.transaksi.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>

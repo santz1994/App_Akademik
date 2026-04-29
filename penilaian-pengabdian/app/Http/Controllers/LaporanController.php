@@ -234,9 +234,6 @@ class LaporanController extends Controller
             $jenisLaporan = 'ringkas';
         }
 
-        if (!$reportFormat['show_detail_kompetensi'] && $jenisLaporan === 'rinci') {
-            $jenisLaporan = 'ringkas';
-        }
 
         $filterPangkalan = $mode === 'perdireksi' ? $request->input('pangkalan_id') : null;
         $filterKaryawan = $mode === 'perorangan' ? $request->input('karyawan_id') : null;

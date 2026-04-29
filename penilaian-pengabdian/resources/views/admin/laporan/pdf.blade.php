@@ -189,9 +189,8 @@
         $totalKompetensiCount = $kategoriList->sum(fn($k) => $k->kompetensi->count());
         $periodeLabel = $selectedTahunData?->periode_penilaian ?? '-';
 
-        // Calculate average score and distribution for summary
+        // Calculate average score for summary
         $allScores = collect();
-        $ratingDistribution = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
         foreach($karyawanList as $k) {
             $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
             $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
@@ -210,11 +209,6 @@
             );
             if ($nilai !== null) {
                 $allScores->push($nilai);
-                $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilai);
-                $ratingLetter = substr($ratingMeta['label'], 0, 1);
-                if (isset($ratingDistribution[$ratingLetter])) {
-                    $ratingDistribution[$ratingLetter]++;
-                }
             }
         }
         $avgScore = $allScores->isNotEmpty() ? $allScores->avg() : null;
@@ -406,35 +400,6 @@
             font-weight: 500;
             margin-top: 2px;
         }
-
-        /* ===== RATING DISTRIBUTION ===== */
-        .rating-dist {
-            width: 100%;
-            margin-bottom: 14px;
-            display: table;
-            border-collapse: collapse;
-        }
-        .rating-dist-cell {
-            display: table-cell;
-            text-align: center;
-            padding: 5px 4px;
-            border: 1px solid #e5e7eb;
-        }
-        .rating-dist-letter {
-            font-weight: 800;
-            font-size: {{ $fontSize }}px;
-            margin-bottom: 1px;
-        }
-        .rating-dist-count {
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #6b7280;
-            font-weight: 600;
-        }
-        .rating-a { color: #059669; background: #ecfdf5; }
-        .rating-b { color: #2563eb; background: #eff6ff; }
-        .rating-c { color: #d97706; background: #fffbeb; }
-        .rating-d { color: #dc2626; background: #fef2f2; }
-        .rating-e { color: #6b7280; background: #f9fafb; }
 
         /* ===== PHOTO (single karyawan) ===== */
         .karyawan-photo-wrap {
@@ -679,30 +644,6 @@
         <div class="summary-item">
             <div class="summary-value purple">{{ $minScore !== null ? number_format($minScore, 1) : '-' }}</div>
             <div class="summary-label">Nilai Terendah</div>
-        </div>
-    </div>
-
-    {{-- ===== RATING DISTRIBUTION ===== --}}
-    <div class="rating-dist">
-        <div class="rating-dist-cell rating-a">
-            <div class="rating-dist-letter">A</div>
-            <div class="rating-dist-count">{{ $ratingDistribution['A'] }} orang</div>
-        </div>
-        <div class="rating-dist-cell rating-b">
-            <div class="rating-dist-letter">B</div>
-            <div class="rating-dist-count">{{ $ratingDistribution['B'] }} orang</div>
-        </div>
-        <div class="rating-dist-cell rating-c">
-            <div class="rating-dist-letter">C</div>
-            <div class="rating-dist-count">{{ $ratingDistribution['C'] }} orang</div>
-        </div>
-        <div class="rating-dist-cell rating-d">
-            <div class="rating-dist-letter">D</div>
-            <div class="rating-dist-count">{{ $ratingDistribution['D'] }} orang</div>
-        </div>
-        <div class="rating-dist-cell rating-e">
-            <div class="rating-dist-letter">E</div>
-            <div class="rating-dist-count">{{ $ratingDistribution['E'] }} orang</div>
         </div>
     </div>
 

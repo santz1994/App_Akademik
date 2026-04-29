@@ -10,13 +10,23 @@ class KategoriKinerjaController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim((string) $request->input('q'));
+        $filterJenis = $request->input('jenis');
+
         $data = KategoriKinerja::withCount('kompetensi')
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('kategori', 'like', "%{$search}%")
+                        ->orWhere('kode_kategori', 'like', "%{$search}%");
+                });
+            })
+            ->when(in_array($filterJenis, ['kinerja', 'kegiatan']), fn($q) => $q->where('jenis', $filterJenis))
             ->orderBy('jenis')
             ->orderBy('kode_kategori');
 
         $data = $this->paginateWithPerPage($data, $request, 10);
 
-        return view('admin.kategori_kinerja.index', compact('data'));
+        return view('admin.kategori_kinerja.index', compact('data', 'search', 'filterJenis'));
     }
 
     public function create()

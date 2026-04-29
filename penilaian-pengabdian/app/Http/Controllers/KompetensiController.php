@@ -11,9 +11,23 @@ class KompetensiController extends Controller
 {
     public function index(Request $request)
     {
-        $data = Kompetensi::with('kategoriKinerja')->latest();
+        $search = trim((string) $request->input('q'));
+        $filterKategori = $request->input('kategori_id');
+
+        $data = Kompetensi::with('kategoriKinerja')
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('kompetensi', 'like', "%{$search}%")
+                        ->orWhere('kode_kompetensi', 'like', "%{$search}%");
+                });
+            })
+            ->when($filterKategori, fn($q) => $q->where('kategori_kinerja_id', $filterKategori))
+            ->latest();
+
+        $kategoriList = \App\Models\KategoriKinerja::orderBy('jenis')->orderBy('kode_kategori')->get();
         $data = $this->paginateWithPerPage($data, $request, 10);
-        return view('admin.kompetensi.index', compact('data'));
+
+        return view('admin.kompetensi.index', compact('data', 'search', 'filterKategori', 'kategoriList'));
     }
 
     public function create()
