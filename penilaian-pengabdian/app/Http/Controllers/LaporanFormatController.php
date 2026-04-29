@@ -131,10 +131,6 @@ class LaporanFormatController extends Controller
             $data['laporan_show_rating'] = false;
         }
 
-        if (!$data['laporan_show_detail_kompetensi'] && $data['laporan_default_jenis'] === 'rinci') {
-            $data['laporan_default_jenis'] = 'ringkas';
-        }
-
         $setting->update($data);
 
         return redirect()->route('admin.laporan.format.edit')

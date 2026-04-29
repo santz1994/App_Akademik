@@ -89,7 +89,7 @@
             'rating' => 'Rating',
         ], is_array($reportFormat['labels'] ?? null) ? $reportFormat['labels'] : []);
 
-        $showDetailColumns = $jenisLaporan === 'rinci' && (bool) $reportFormat['show_detail_kompetensi'];
+        $showDetailColumns = $jenisLaporan === 'rinci';
         $ringkasKategoriList = $jenisLaporan === 'ringkas'
             ? $kategoriList->values()
             : collect();
