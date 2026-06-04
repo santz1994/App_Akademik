@@ -92,9 +92,14 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
+            'email'         => 'nullable|email|max:150',
+            'no_hp'         => 'nullable|string|max:20',
+            'kontak_darurat'=> 'nullable|string|max:150',
             'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id',
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
+            'pangkalan_tambahan' => 'nullable|array',
+            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
 
@@ -136,6 +141,9 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas'=> $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
             'is_active'          => $request->boolean('is_active', true),
             'alamat'             => $request->alamat,
+            'email'              => $request->filled('email') ? trim((string) $request->email) : null,
+            'no_hp'              => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
+            'kontak_darurat'     => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
             'foto_path'          => $fotoPath,
             'tahun_penilaian_id' => $tahunAktif?->id,
             'user_id'            => $request->user_id ?: null,
@@ -164,6 +172,17 @@ class KaryawanController extends Controller
                 ->withErrors(['nama_karyawan' => 'Gagal membuat kode karyawan unik. Silakan coba lagi.']);
         }
 
+        // Sync pangkalan tambahan pivot table
+        $lastKaryawan = Karyawan::latest('id')->first();
+        if ($lastKaryawan) {
+            $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
+            $allPangkalanIds = array_unique(array_merge(
+                $resolvedPangkalanId ? [$resolvedPangkalanId] : [],
+                array_map('intval', $pangkalanTambahan)
+            ));
+            $lastKaryawan->pangkalanLain()->sync($allPangkalanIds);
+        }
+
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil ditambahkan.');
     }
@@ -188,9 +207,14 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => 'nullable|date',
             'is_active'     => 'required|boolean',
             'alamat'        => 'nullable|string',
+            'email'         => 'nullable|email|max:150',
+            'no_hp'         => 'nullable|string|max:20',
+            'kontak_darurat'=> 'nullable|string|max:150',
             'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id,' . $karyawan->id,
             'pangkalan_id'  => 'nullable|exists:pangkalan,id',
+            'pangkalan_tambahan' => 'nullable|array',
+            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
     
@@ -253,12 +277,23 @@ class KaryawanController extends Controller
             'tanggal_surat_tugas' => $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
             'is_active'           => $request->boolean('is_active', true),
             'alamat'              => $request->alamat,
+            'email'              => $request->filled('email') ? trim((string) $request->email) : null,
+            'no_hp'              => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
+            'kontak_darurat'     => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
             'foto_path'           => $fotoPath, // Sekarang variabel ini pasti ada isinya
             'user_id'             => $request->user_id ?: null,
             'pangkalan_id'        => $resolvedPangkalanId,
             'tugas_khusus'        => $request->tugas_khusus,
         ]);
     
+        // Sync pangkalan tambahan pivot table
+        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
+        $allPangkalanIds = array_unique(array_merge(
+            $resolvedPangkalanId ? [$resolvedPangkalanId] : [],
+            array_map('intval', $pangkalanTambahan)
+        ));
+        $karyawan->pangkalanLain()->sync($allPangkalanIds);
+
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil diperbarui.');
     }

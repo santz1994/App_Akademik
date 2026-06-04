@@ -184,7 +184,11 @@
 <div class="login-card">
     
     <div class="logo-container">
-        <img src="path/to/your/logo.png" alt="Logo">
+        @if(!empty($loginLogoUrl))
+            <img src="{{ $loginLogoUrl }}" alt="Logo">
+        @else
+            <i class="bi bi-award-fill" style="font-size:48px; color:#1e3a8a;"></i>
+        @endif
         <h5>Penilaian Pengabdian</h5>
     </div>
 
@@ -212,7 +216,7 @@
                        name="username"
                        class="form-control @error('username') is-invalid @enderror"
                        value="{{ old('username') }}"
-                       placeholder="Username"
+                       placeholder="Username atau Email"
                        required
                        autofocus>
             </div>
@@ -231,11 +235,13 @@
             </div>
 
             <div class="captcha-container">
-                <div class="captcha-box">
-                    <span class="code-6">6</span><span class="code-8">8</span><span class="code-6">6</span><span class="code-3">3</span>
+                <div class="captcha-box" style="letter-spacing: 3px; user-select: none; font-family: 'Courier New', monospace; font-style: italic; text-decoration: line-through; opacity: 0.85;">
+                    @foreach(str_split($captchaCode) as $i => $digit)
+                        <span class="code-{{ $digit }}" style="color: {{ ['#d63384','#6f42c1','#0dcaf0','#198754','#dc3545','#fd7e14','#0d6efd','#6610f2','#20c997','#ffc107'][$digit] }};">{{ $digit }}</span>
+                    @endforeach
                 </div>
                 <div class="input-group-underline captcha-input">
-                    <input type="text" name="captcha" class="form-control" placeholder="Captcha" required>
+                    <input type="text" name="captcha" class="form-control" placeholder="Masukkan captcha" required maxlength="4" autocomplete="off">
                 </div>
             </div>
 
@@ -246,6 +252,13 @@
 
             <button type="submit" class="btn-login">Login</button>
         </form>
+
+        <div class="text-center mt-3" style="position: relative; z-index: 1;">
+            <span style="color: #888; font-size: 0.85rem;">Belum punya akun?</span>
+            <a href="{{ route('activate') }}" style="color: #3b82f6; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+                Aktivasi Akun
+            </a>
+        </div>
     </div>
 
     </div>

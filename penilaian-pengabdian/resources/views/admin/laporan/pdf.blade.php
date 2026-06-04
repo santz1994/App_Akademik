@@ -188,6 +188,36 @@
             margin: {{ $marginTop }}cm {{ $marginRight }}cm {{ $marginBottom }}cm {{ $marginLeft }}cm;
         }
 
+        @media print {
+            @page {
+                size: {{ $paperSize }} landscape;
+                margin: 1.5cm;
+            }
+            body {
+                font-size: 9px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            table {
+                width: 100% !important;
+                table-layout: fixed;
+                word-wrap: break-word;
+                font-size: 8px !important;
+            }
+            th, td {
+                padding: 3px 4px !important;
+                font-size: 8px !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .kop-title { font-size: 14px !important; }
+            .kop-subtitle, .kop-contact { font-size: 8px !important; }
+            .detail-head { font-size: 7px !important; }
+            .detail-subhead { font-size: 6px !important; }
+            .signatures { page-break-inside: avoid; }
+            .karyawan-photo-wrap { display: none; }
+        }
+
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: {{ $fontSize }}px;

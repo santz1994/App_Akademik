@@ -13,13 +13,15 @@ class KepalaController extends Controller
     {
         $user = Auth::user();
 
-        $pangkalanId = $user->pangkalan_id;
+        $pangkalanIds = $user->getAllPangkalanIds();
         $tahunAktif = TahunPenilaian::where('is_active', true)->first();
         $tahunId = $tahunAktif?->id;
 
-        $karyawanIds = Karyawan::where('pangkalan_id', $pangkalanId)
+        $karyawanIds = Karyawan::whereIn('pangkalan_id', $pangkalanIds)
             ->bukanKepala()
             ->pluck('id');
+
+        $pangkalanNames = \App\Models\Pangkalan::whereIn('id', $pangkalanIds)->pluck('nama_pangkalan')->implode(', ');
 
         $totalKaryawan = $karyawanIds->count();
         $totalPenilaian = Transaksi::whereIn('karyawan_id', $karyawanIds)
@@ -32,7 +34,7 @@ class KepalaController extends Controller
             ->count('karyawan_id');
 
         $stats = [
-            'pangkalan' => $user->pangkalan?->nama_pangkalan ?? '-',
+            'pangkalan' => $pangkalanNames ?: '-',
             'tahun_aktif' => $tahunAktif?->periode_penilaian ?? '-',
             'total_karyawan' => $totalKaryawan,
             'total_penilaian' => $totalPenilaian,

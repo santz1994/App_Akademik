@@ -40,6 +40,8 @@ class UserManagementController extends Controller
             'password' => 'required|min:6|confirmed',
             'role'     => 'required|in:admin,user',
             'pangkalan_id' => 'nullable|exists:pangkalan,id',
+            'pangkalan_tambahan' => 'nullable|array',
+            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
             'is_kepala' => 'nullable|boolean',
         ]);
 
@@ -62,7 +64,8 @@ class UserManagementController extends Controller
             'is_kepala' => $isAdmin ? false : $isKepala,
         ]);
 
-        $this->syncPimpinanPosByUser($createdUser, null);
+        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
+        $this->syncPimpinanPosByUser($createdUser, null, $pangkalanTambahan);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil ditambahkan.');
@@ -83,6 +86,8 @@ class UserManagementController extends Controller
             'role'     => 'required|in:admin,user',
             'password' => 'nullable|min:6|confirmed',
             'pangkalan_id' => 'nullable|exists:pangkalan,id',
+            'pangkalan_tambahan' => 'nullable|array',
+            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
             'is_kepala' => 'nullable|boolean',
         ]);
 
@@ -109,7 +114,8 @@ class UserManagementController extends Controller
         }
 
         $user->update($data);
-        $this->syncPimpinanPosByUser($user->fresh(), $before);
+        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
+        $this->syncPimpinanPosByUser($user->fresh(), $before, $pangkalanTambahan);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil diperbarui.');
@@ -276,10 +282,23 @@ class UserManagementController extends Controller
         return null;
     }
 
-    private function syncPimpinanPosByUser(User $user, ?array $before): void
+    private function syncPimpinanPosByUser(User $user, ?array $before, array $pangkalanTambahan = []): void
     {
         if ($before) {
             $this->clearPimpinanPosIfOwned($before);
+        }
+
+        // Sync kepala_pangkalan pivot table
+        if ($user->is_kepala && $user->pangkalan_id) {
+            // Collect all pangkalan IDs: primary + tambahan
+            $allPangkalanIds = array_unique(array_merge(
+                [$user->pangkalan_id],
+                array_map('intval', $pangkalanTambahan)
+            ));
+            $user->kepalaPangkalan()->sync($allPangkalanIds);
+        } else {
+            // If not kepala, remove all pivot entries
+            $user->kepalaPangkalan()->detach();
         }
 
         if (!$user->is_kepala || !$user->pangkalan_id) {

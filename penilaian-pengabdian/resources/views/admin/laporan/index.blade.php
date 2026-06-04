@@ -5,8 +5,6 @@
 
 @php
     $routePrefix = $routePrefix ?? 'admin';
-    $showPangkalanFilter = $showPangkalanFilter ?? false;
-    $showKaryawanFilter = $showKaryawanFilter ?? false;
     $totalKaryawanFiltered = $totalKaryawanFiltered ?? $karyawanList->count();
     $ratedCount = $ratedCount ?? 0;
     $reportFormat = array_merge([
@@ -44,41 +42,16 @@
         @endforeach
     </select>
 
-    @if($routePrefix !== 'user')
-    <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Mode:</label>
-    <select name="mode" id="modeFilter" class="form-select form-select-sm" style="max-width:180px;">
-        <option value="keseluruhan" {{ $mode === 'keseluruhan' ? 'selected' : '' }}>Keseluruhan</option>
-        @if($routePrefix === 'admin')
-        <option value="perdireksi" {{ $mode === 'perdireksi' ? 'selected' : '' }}>Per Direksi/Pangkalan</option>
-        @endif
-        <option value="perorangan" {{ $mode === 'perorangan' ? 'selected' : '' }}>Perorangan</option>
-    </select>
-    @endif
-
     @if($routePrefix === 'admin')
-    <div id="pangkalanFilterWrap" class="{{ $showPangkalanFilter ? '' : 'd-none' }}">
+    <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Pangkalan:</label>
     <select name="pangkalan_id" id="filterPangkalanSelect" class="form-select form-select-sm" style="max-width:220px;">
-        <option value="">-- Pilih Pangkalan --</option>
+        <option value="">-- Semua Pangkalan --</option>
         @foreach($pangkalanList as $p)
             <option value="{{ $p->id }}" {{ (string)$filterPangkalan === (string)$p->id ? 'selected' : '' }}>
                 {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
             </option>
         @endforeach
     </select>
-    </div>
-    @endif
-
-    @if($routePrefix !== 'user')
-    <div id="karyawanFilterWrap" class="{{ $showKaryawanFilter ? '' : 'd-none' }}">
-    <select name="karyawan_id" id="filterKaryawanSelect" class="form-select form-select-sm" style="max-width:240px;">
-        <option value="">-- Pilih Karyawan --</option>
-        @foreach($karyawanFilterList as $kfilter)
-            <option value="{{ $kfilter->id }}" {{ (string)$filterKaryawan === (string)$kfilter->id ? 'selected' : '' }}>
-                {{ $kfilter->kode_karyawan }} — {{ $kfilter->nama_karyawan }}
-            </option>
-        @endforeach
-    </select>
-    </div>
     @endif
 
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Jenis Output:</label>
@@ -89,8 +62,7 @@
 
     @include('components.per-page-select')
 
-    <button type="submit" class="btn btn-sm btn-primary">Terapkan</button>
-    @if(request()->hasAny(['tahun_penilaian_id', 'mode', 'pangkalan_id', 'karyawan_id', 'jenis_laporan', 'per_page']))
+    @if(request()->hasAny(['tahun_penilaian_id', 'pangkalan_id', 'jenis_laporan', 'per_page']))
         <a href="{{ route($routePrefix . '.laporan.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
     @endif
 </form>
@@ -139,14 +111,14 @@
 
 {{-- Rekapitulasi Tabel --}}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
+    <div class="card-header d-flex justify-content-between align-items-center py-2 flex-wrap gap-2">
         <span class="fw-semibold">
             <i class="bi bi-table me-2"></i>Rekapitulasi Nilai Pengabdian
             @if($selectedTahunData)
                 <span class="text-primary ms-1"> {{ $selectedTahunData->periode_penilaian }}</span>
             @endif
         </span>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route($routePrefix . '.laporan.print', request()->query()) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-printer me-1"></i>Cetak
             </a>
@@ -177,6 +149,7 @@
                         @endforeach
                         <th class="align-middle text-center">Nilai Akhir</th>
                         <th class="align-middle text-center">Rating</th>
+                        <th class="align-middle text-center" width="60">Aksi</th>
                     </tr>
                     @else
                     <tr>
@@ -186,13 +159,11 @@
                         @foreach($kategoriList as $kat)
                         <th colspan="{{ $kat->kompetensi->count() }}" class="text-center">
                             {{ $kat->kategori }}
-                            @if($reportFormat['show_bobot_kategori'] ?? true)
-                                <div class="badge bg-info text-dark fw-normal" style="font-size:.7rem;">Bobot {{ $kat->bobot }}%</div>
-                            @endif
                         </th>
                         @endforeach
                         <th rowspan="2" class="align-middle text-center">Nilai Akhir</th>
                         <th rowspan="2" class="align-middle text-center">Rating</th>
+                        <th rowspan="2" class="align-middle text-center" width="60">Aksi</th>
                     </tr>
                     <tr class="table-secondary">
                         @foreach($kategoriList as $kat)
@@ -291,10 +262,16 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
+                        <td class="text-center">
+                            <a href="{{ route($routePrefix . '.laporan.perorangan-pdf', ['karyawan_id' => $k->id, 'tahun_penilaian_id' => $selectedTahun]) }}"
+                               target="_blank" class="btn btn-outline-danger btn-sm" style="padding:.15rem .4rem; font-size:.72rem;" title="PDF Perorangan">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $isRingkas ? (3 + $kategoriList->count() + 2) : (3 + $kategoriList->sum(fn($k) => $k->kompetensi->count()) + 2) }}"
+                        <td colspan="{{ $isRingkas ? (3 + $kategoriList->count() + 3) : (3 + $kategoriList->sum(fn($k) => $k->kompetensi->count()) + 3) }}"
                             class="text-center text-muted py-4">
                             Tidak ada data untuk tahun ini.
                         </td>
@@ -309,51 +286,16 @@
     @endif
 </div>
 
-@if($routePrefix !== 'user')
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const modeSelect = document.getElementById('modeFilter');
-        const pangkalanWrap = document.getElementById('pangkalanFilterWrap');
-        const karyawanWrap = document.getElementById('karyawanFilterWrap');
-        const pangkalanSelect = document.getElementById('filterPangkalanSelect');
-        const karyawanSelect = document.getElementById('filterKaryawanSelect');
-
-        if (!modeSelect) {
-            return;
+        const filterForm = document.querySelector('.card.mb-3 form');
+        if (filterForm) {
+            filterForm.querySelectorAll('select').forEach(function (sel) {
+                sel.addEventListener('change', function () { filterForm.submit(); });
+            });
         }
-
-        const toggleFilterVisibility = () => {
-            const mode = modeSelect.value;
-            const showPangkalan = mode === 'perdireksi';
-            const showKaryawan = mode === 'perorangan';
-
-            if (pangkalanWrap) {
-                pangkalanWrap.classList.toggle('d-none', !showPangkalan);
-            }
-            if (karyawanWrap) {
-                karyawanWrap.classList.toggle('d-none', !showKaryawan);
-            }
-
-            if (pangkalanSelect) {
-                pangkalanSelect.disabled = !showPangkalan;
-                if (!showPangkalan) {
-                    pangkalanSelect.value = '';
-                }
-            }
-
-            if (karyawanSelect) {
-                karyawanSelect.disabled = !showKaryawan;
-                if (!showKaryawan) {
-                    karyawanSelect.value = '';
-                }
-            }
-        };
-
-        modeSelect.addEventListener('change', toggleFilterVisibility);
-        toggleFilterVisibility();
     });
 </script>
 @endpush
-@endif
 @endsection

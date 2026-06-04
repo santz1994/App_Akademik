@@ -119,7 +119,7 @@ class TransaksiController extends Controller
             'penilaianLocks' => fn($q) => $q->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun)),
         ])
         ->bukanKepala()
-        ->where('pangkalan_id', $user->pangkalan_id)
+        ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
         ->when($search !== '', function ($q) use ($search) {
             $q->where(function ($sub) use ($search) {
                 $sub->where('nama_karyawan', 'like', "%{$search}%")
@@ -229,7 +229,7 @@ class TransaksiController extends Controller
 
         $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja')
             ->bukanKepala()
-            ->where('pangkalan_id', $user->pangkalan_id)
+            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
             ->orderBy('nama_karyawan')
             ->get();
         $tahunList     = TahunPenilaian::orderByDesc('periode_penilaian')->get();
@@ -250,7 +250,7 @@ class TransaksiController extends Controller
         if ($request->filled('karyawan_id') && $request->filled('tahun_penilaian_id')) {
             $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja')
                 ->bukanKepala()
-                ->where('pangkalan_id', $user->pangkalan_id)
+                ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
                 ->find($request->karyawan_id);
 
             $selectedTahun = TahunPenilaian::find($request->tahun_penilaian_id);
@@ -322,10 +322,10 @@ class TransaksiController extends Controller
         }
 
         if ($user && $user->is_kepala) {
-            $isAllowed = (int) $karyawan->pangkalan_id === (int) $user->pangkalan_id;
+            $isAllowed = in_array((int) $karyawan->pangkalan_id, $user->getAllPangkalanIds(), true);
 
             if (!$isAllowed) {
-                return back()->with('error', 'Anda hanya dapat menilai karyawan dalam pangkalan yang sama.');
+                return back()->with('error', 'Anda hanya dapat menilai karyawan dalam pangkalan yang Anda pimpin.');
             }
         }
 
@@ -408,6 +408,12 @@ class TransaksiController extends Controller
         $counter    = Transaksi::max('id') ?? 0;
         $savedAny = false;
 
+        // Pre-save lock check: re-verify lock state right before saving
+        $currentLockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId);
+        if ($currentLockState['is_locked']) {
+            return back()->withInput()->with('error', 'Nilai sudah terkunci oleh proses lain. Silakan refresh halaman.');
+        }
+
         foreach ($nilaiInput as $kompetensiId => $nilai) {
             $kompetensiId = (int) $kompetensiId;
             if (!$allowedKompetensiIds->contains($kompetensiId)) {
@@ -470,13 +476,32 @@ class TransaksiController extends Controller
 
         $karyawan = Karyawan::with('user')
             ->where('id', $karyawanId)
-            ->where('pangkalan_id', $user->pangkalan_id)
+            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
             ->first();
 
         $isAllowed = $karyawan && !($karyawan->user?->is_kepala);
 
         if (!$isAllowed) {
             return back()->with('error', 'Akses ditolak untuk karyawan ini.');
+        }
+
+        // Verify scores exist before allowing final submission
+        $hasScores = Transaksi::where('karyawan_id', $karyawanId)
+            ->where('tahun_penilaian_id', $tahunId)
+            ->whereNotNull('nilai')
+            ->exists();
+
+        if (!$hasScores) {
+            return back()->with('error', 'Belum ada nilai tersimpan. Silakan input nilai terlebih dahulu.');
+        }
+
+        // Check if already locked
+        $existingLock = PenilaianLock::where('karyawan_id', $karyawanId)
+            ->where('tahun_penilaian_id', $tahunId)
+            ->first();
+
+        if ($existingLock && (bool) $existingLock->is_locked) {
+            return back()->with('error', 'Nilai sudah terkunci sebelumnya.');
         }
 
         PenilaianLock::updateOrCreate(
@@ -622,7 +647,7 @@ class TransaksiController extends Controller
 
         $karyawan = Karyawan::with('user')
             ->where('id', $karyawanId)
-            ->where('pangkalan_id', $user->pangkalan_id)
+            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
             ->first();
 
         $isAllowed = $karyawan && !($karyawan->user?->is_kepala);

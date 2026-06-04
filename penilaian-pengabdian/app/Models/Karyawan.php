@@ -19,6 +19,9 @@ class Karyawan extends Model
         'tanggal_surat_tugas',
         'is_active',
         'alamat',
+        'email',
+        'no_hp',
+        'kontak_darurat',
         'foto_path',
         'tugas_khusus',
         'tahun_penilaian_id',
@@ -39,6 +42,27 @@ class Karyawan extends Model
     public function pangkalan()
     {
         return $this->belongsTo(Pangkalan::class);
+    }
+
+    /**
+     * Pangkalan tambahan tempat karyawan bekerja (many-to-many).
+     */
+    public function pangkalanLain()
+    {
+        return $this->belongsToMany(Pangkalan::class, 'karyawan_pangkalan', 'karyawan_id', 'pangkalan_id')->withTimestamps();
+    }
+
+    /**
+     * Mendapatkan semua pangkalan tempat karyawan bekerja.
+     * Termasuk pangkalan utama (pangkalan_id) dan pangkalan tambahan.
+     */
+    public function getAllPangkalanIds(): array
+    {
+        $ids = $this->pangkalanLain()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        if ($this->pangkalan_id && !in_array((int) $this->pangkalan_id, $ids, true)) {
+            $ids[] = (int) $this->pangkalan_id;
+        }
+        return array_unique($ids);
     }
 
     public function tahunPenilaian()

@@ -50,10 +50,6 @@
 
             @include('components.per-page-select')
 
-            <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-search me-1"></i>Terapkan
-            </button>
-
             @if(request()->hasAny(['q', 'pangkalan_id', 'status_aktif', 'status_kepala', 'per_page']))
                 <a href="{{ route('admin.karyawan.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
             @endif
@@ -174,6 +170,26 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Auto-submit search/filter form
+        const form = document.querySelector('.card.mb-3 form');
+        if (form) {
+            let debounceTimer;
+            const textInput = form.querySelector('input[name="q"]');
+            const selects = form.querySelectorAll('select');
+
+            if (textInput) {
+                textInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () { form.submit(); }, 500);
+                });
+            }
+
+            selects.forEach(function (sel) {
+                sel.addEventListener('change', function () { form.submit(); });
+            });
+        }
+
+        // Clickable rows
         document.querySelectorAll('tr.karyawan-clickable').forEach(function (row) {
             row.addEventListener('click', function (event) {
                 if (event.target.closest('a, button, input, form, .no-preview')) {

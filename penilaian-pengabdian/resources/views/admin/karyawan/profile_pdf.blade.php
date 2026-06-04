@@ -133,9 +133,8 @@
             text-align: center;
         }
 
-        .col-attr { width: 28%; }
-        .col-value { width: 34%; }
-        .col-note { width: 38%; }
+        .col-attr { width: 35%; }
+        .col-value { width: 65%; }
 
         .text-muted { color: #64748b; }
     </style>
@@ -181,44 +180,36 @@
             <tr>
                 <th class="col-attr">Atribut</th>
                 <th class="col-value">Isian</th>
-                <th class="col-note">Keterangan</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Kode Karyawan</td>
                 <td>{{ $karyawan->kode_karyawan }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Nama Karyawan</td>
                 <td>{{ $karyawan->nama_karyawan }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Nomor Induk</td>
                 <td>{{ $karyawan->nomor_induk ?: '-' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Jenis Kelamin</td>
                 <td>{{ $jenisKelaminLabel }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Nomor Surat Tugas</td>
                 <td>{{ $karyawan->nomor_surat_tugas ?: '-' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Tanggal Surat Tugas</td>
                 <td>{{ $karyawan->tanggal_surat_tugas ? $karyawan->tanggal_surat_tugas->format('d-m-Y') : '-' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Status Karyawan</td>
                 <td>{{ $karyawan->is_active ? 'Aktif' : 'Tidak Aktif' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Pangkalan Job</td>
@@ -229,17 +220,14 @@
                         -
                     @endif
                 </td>
-                <td></td>
             </tr>
             <tr>
                 <td>Tugas Khusus</td>
                 <td>{{ $karyawan->tugas_khusus ?: '-' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>Alamat</td>
                 <td>{{ $karyawan->alamat ?: '-' }}</td>
-                <td></td>
             </tr>
             <tr>
                 <td>User Account</td>
@@ -250,17 +238,10 @@
                         -
                     @endif
                 </td>
-                <td></td>
             </tr>
             <tr>
                 <td>Tahun Penilaian</td>
                 <td>{{ $karyawan->tahunPenilaian?->periode_penilaian ?? '-' }}</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Foto Profil 3x4</td>
-                <td>{{ $karyawan->foto_path ? 'Tersedia' : 'Tidak tersedia' }}</td>
-                <td></td>
             </tr>
         </tbody>
     </table>

@@ -197,4 +197,151 @@ class LaporanScoreCalculator
             ->unique()
             ->values();
     }
+
+    /**
+     * Calculate scores broken down by pangkalan for a karyawan.
+     * Returns an array with per-pangkalan scores and the averaged final score.
+     *
+     * @param Collection $kategoriList  All kategori (kinerja + kegiatan)
+     * @param Collection $trxByKompetensi  Transaction records keyed by kompetensi_id
+     * @param array      $allPangkalanIds  All pangkalan IDs the karyawan is assigned to
+     * @param Collection $pangkalanList  Pangkalan models with kategoriKinerja loaded
+     * @param array      $options  ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
+     * @return array  [
+     *     'perPangkalan' => [[ 'pangkalan' => Pangkalan, 'kinerjaAvg' => float|null, 'kategoriDetails' => [...] ], ...],
+     *     'kegiatanAvg' => float|null,
+     *     'kinerjaFinal' => float|null,  // average of per-pangkalan kinerja averages
+     *     'nilaiAkhir' => float|null,
+     * ]
+     */
+    public static function calculatePerPangkalan(
+        Collection $kategoriList,
+        Collection $trxByKompetensi,
+        array $allPangkalanIds,
+        Collection $pangkalanList,
+        array $options = []
+    ): array {
+        $kinerjaKategori = $kategoriList
+            ->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')
+            ->values();
+        $kegiatanKategori = $kategoriList
+            ->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kegiatan')
+            ->values();
+
+        // Build per-pangkalan kinerja breakdown
+        $perPangkalan = [];
+        foreach ($allPangkalanIds as $pId) {
+            $pIdInt = (int) $pId;
+            $pangkalan = $pangkalanList->first(fn($p) => (int) $p->id === $pIdInt);
+
+            // Get kategori_kinerja IDs mapped to this pangkalan
+            $mappedKategoriIds = collect();
+            if ($pangkalan && $pangkalan->relationLoaded('kategoriKinerja')) {
+                $mappedKategoriIds = $pangkalan->kategoriKinerja
+                    ->pluck('id')
+                    ->map(fn($id) => (int) $id)
+                    ->unique()
+                    ->values();
+            } elseif (Schema::hasTable('pangkalan_kategori_kinerja')) {
+                $mappedKategoriIds = DB::table('pangkalan_kategori_kinerja')
+                    ->where('pangkalan_id', $pIdInt)
+                    ->pluck('kategori_kinerja_id')
+                    ->map(fn($id) => (int) $id)
+                    ->unique()
+                    ->values();
+            }
+
+            // Filter kinerja kategori that are mapped to this pangkalan
+            $pangkalanKinerjaKategori = $mappedKategoriIds->isNotEmpty()
+                ? $kinerjaKategori->filter(fn($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
+                : $kinerjaKategori;
+
+            // Calculate average per kategori for this pangkalan
+            $kategoriDetails = [];
+            $kategoriAverages = [];
+            foreach ($pangkalanKinerjaKategori as $kat) {
+                $values = [];
+                foreach ($kat->kompetensi as $komp) {
+                    $t = $trxByKompetensi->get($komp->id);
+                    if ($t && self::isScored($t->nilai)) {
+                        $values[] = (float) $t->nilai;
+                    }
+                }
+                $avg = count($values) > 0 ? array_sum($values) / count($values) : null;
+                $kategoriDetails[] = [
+                    'kategori' => $kat,
+                    'average' => $avg,
+                    'kompetensiCount' => count($values),
+                ];
+                if ($avg !== null) {
+                    $kategoriAverages[] = $avg;
+                }
+            }
+
+            $pangkalanKinerjaAvg = count($kategoriAverages) > 0
+                ? array_sum($kategoriAverages) / count($kategoriAverages)
+                : null;
+
+            $perPangkalan[] = [
+                'pangkalan' => $pangkalan,
+                'pangkalan_id' => $pIdInt,
+                'kinerjaAvg' => $pangkalanKinerjaAvg,
+                'kategoriDetails' => $kategoriDetails,
+            ];
+        }
+
+        // Calculate kegiatan average (not per-pangkalan, it's global)
+        $kegiatanValues = [];
+        foreach ($kegiatanKategori as $kat) {
+            foreach ($kat->kompetensi as $komp) {
+                $t = $trxByKompetensi->get($komp->id);
+                if ($t && self::isScored($t->nilai)) {
+                    $kegiatanValues[] = (float) $t->nilai;
+                }
+            }
+        }
+        $kegiatanAvg = count($kegiatanValues) > 0
+            ? array_sum($kegiatanValues) / count($kegiatanValues)
+            : null;
+
+        // Average kinerja across all pangkalan
+        $validPangkalanAvgs = collect($perPangkalan)
+            ->pluck('kinerjaAvg')
+            ->filter(fn($v) => $v !== null)
+            ->values();
+
+        $kinerjaFinal = $validPangkalanAvgs->isNotEmpty()
+            ? $validPangkalanAvgs->sum() / $validPangkalanAvgs->count()
+            : null;
+
+        // Final weighted score
+        $nilaiAkhir = null;
+        $bobotKinerja = self::normalizedPercent((float) ($options['bobot_kinerja'] ?? 70));
+        $bobotKegiatan = self::normalizedPercent((float) ($options['bobot_kegiatan'] ?? 30));
+
+        if ($kinerjaFinal !== null || $kegiatanAvg !== null) {
+            $weightedSum = 0.0;
+            $usedWeight = 0.0;
+
+            if ($kinerjaFinal !== null) {
+                $weightedSum += ($bobotKinerja * $kinerjaFinal);
+                $usedWeight += $bobotKinerja;
+            }
+            if ($kegiatanAvg !== null) {
+                $weightedSum += ($bobotKegiatan * $kegiatanAvg);
+                $usedWeight += $bobotKegiatan;
+            }
+
+            if ($usedWeight > 0.0) {
+                $nilaiAkhir = $weightedSum / $usedWeight;
+            }
+        }
+
+        return [
+            'perPangkalan' => $perPangkalan,
+            'kegiatanAvg' => $kegiatanAvg,
+            'kinerjaFinal' => $kinerjaFinal,
+            'nilaiAkhir' => $nilaiAkhir,
+        ];
+    }
 }

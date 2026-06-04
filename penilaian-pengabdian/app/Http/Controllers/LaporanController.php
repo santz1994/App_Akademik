@@ -24,6 +24,14 @@ class LaporanController extends Controller
         return view('admin.laporan.index', $data);
     }
 
+    public function perorangan(Request $request)
+    {
+        $data = $this->buildPeroranganPageData($request, 'admin');
+        $data['routePrefix'] = 'admin';
+
+        return view('admin.laporan.perorangan', $data);
+    }
+
     public function kepalaIndex(Request $request)
     {
         $user = Auth::user();
@@ -33,6 +41,17 @@ class LaporanController extends Controller
         $data['routePrefix'] = 'kepala';
 
         return view('admin.laporan.index', $data);
+    }
+
+    public function kepalaPerorangan(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user->is_kepala, 403);
+
+        $data = $this->buildPeroranganPageData($request, 'kepala');
+        $data['routePrefix'] = 'kepala';
+
+        return view('admin.laporan.perorangan', $data);
     }
 
     public function userIndex(Request $request)
@@ -46,6 +65,12 @@ class LaporanController extends Controller
     public function printView(Request $request)
     {
         $scope = $this->resolveScope();
+
+        // If perorangan mode with specific karyawan, use the dedicated perorangan PDF view
+        if ($request->input('mode') === 'perorangan' && $request->filled('karyawan_id')) {
+            return $this->peroranganPdf($request);
+        }
+
         $data = $this->buildReportData($request, $scope, true);
 
         return view('admin.laporan.pdf', $data);
@@ -53,6 +78,11 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request)
     {
+        // If perorangan mode with specific karyawan, use the dedicated perorangan PDF view
+        if ($request->input('mode') === 'perorangan' && $request->filled('karyawan_id')) {
+            return $this->peroranganPdf($request);
+        }
+
         $scope = $this->resolveScope();
         $data = $this->buildReportData($request, $scope, true);
 
@@ -133,8 +163,8 @@ class LaporanController extends Controller
         $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : $tahunAktif;
 
         $allowedModes = $scope === 'admin'
-            ? ['keseluruhan', 'perdireksi', 'perorangan']
-            : ($scope === 'kepala' ? ['keseluruhan', 'perorangan'] : ['keseluruhan']);
+            ? ['keseluruhan', 'perdireksi']
+            : ['keseluruhan'];
         $mode = (string) $request->input('mode', 'keseluruhan');
         if (!in_array($mode, $allowedModes, true)) {
             $mode = 'keseluruhan';
@@ -258,7 +288,7 @@ class LaporanController extends Controller
         ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun));
 
         if ($scope === 'kepala') {
-            $karyawanQuery->where('pangkalan_id', $user->pangkalan_id);
+            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
             if ($mode === 'perorangan' && $filterKaryawan) {
                 $karyawanQuery->where('id', $filterKaryawan);
             }
@@ -316,7 +346,7 @@ class LaporanController extends Controller
             $karyawanFilterList = Karyawan::query()
                 ->bukanKepala()
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
-                ->when($scope === 'kepala', fn($q) => $q->where('pangkalan_id', $user->pangkalan_id))
+                ->when($scope === 'kepala', fn($q) => $q->whereIn('pangkalan_id', $user->getAllPangkalanIds()))
                 ->when($scope === 'user', fn($q) => $q->where('id', $user->karyawan?->id ?? 0))
                 ->orderBy('nama_karyawan')
                 ->get();
@@ -343,5 +373,261 @@ class LaporanController extends Controller
             'pangkalanList',
             'karyawanFilterList'
         );
+    }
+
+    public function peroranganPdf(Request $request)
+    {
+        $user = Auth::user();
+        $scope = $this->resolveScope();
+
+        $setting = SettingLembaga::where('is_active', true)->latest()->first()
+            ?? SettingLembaga::latest()->first();
+
+        $tahunAktif = TahunPenilaian::where('is_active', true)->first();
+        $selectedTahun = $request->input('tahun_penilaian_id', $tahunAktif?->id);
+        $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : $tahunAktif;
+
+        $karyawanId = $request->input('karyawan_id');
+
+        if (!$karyawanId) {
+            return back()->with('error', 'Pilih karyawan terlebih dahulu.');
+        }
+
+        $karyawanQuery = Karyawan::with([
+            'pangkalan.kategoriKinerja',
+            'pangkalanLain.kategoriKinerja',
+            'transaksi' => fn($q) => $q
+                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+                ->with('kompetensi.kategoriKinerja'),
+            'tahunPenilaian',
+            'user',
+        ])
+        ->bukanKepala()
+        ->where('id', $karyawanId);
+
+        if ($scope === 'kepala') {
+            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
+        } elseif ($scope === 'user') {
+            $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
+        }
+
+        $karyawan = $karyawanQuery->first();
+
+        if (!$karyawan) {
+            return back()->with('error', 'Data karyawan tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        $kategoriList = KategoriKinerja::with('kompetensi')
+            ->orderBy('jenis')
+            ->orderBy('kode_kategori')
+            ->get();
+
+        $kategoriList = LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $karyawan);
+
+        $reportFormat = [
+            'scoring_method' => $setting?->laporan_scoring_method ?: 'weighted_kinerja_kegiatan',
+            'score_weight_kinerja' => (float) ($setting?->laporan_bobot_kinerja ?? 70),
+            'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
+        ];
+
+        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+            $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
+        }
+
+        $trxByKompetensi = $karyawan->transaksi
+            ->filter(fn($t) => $t->nilai !== null)
+            ->keyBy('kompetensi_id');
+
+        // Determine jenis_laporan for perorangan (ringkas vs rinci)
+        $jenisLaporan = $request->input('jenis_laporan', 'rinci');
+        if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
+            $jenisLaporan = 'rinci';
+        }
+
+        // Get all pangkalan IDs for this karyawan
+        $allPangkalanIds = $karyawan->getAllPangkalanIds();
+
+        // Load all pangkalan with kategoriKinerja relation
+        $allPangkalan = Pangkalan::with('kategoriKinerja')
+            ->whereIn('id', $allPangkalanIds)
+            ->get();
+
+        // Calculate per-pangkalan breakdown
+        $perPangkalanData = LaporanScoreCalculator::calculatePerPangkalan(
+            $kategoriList,
+            $trxByKompetensi,
+            $allPangkalanIds,
+            $allPangkalan,
+            [
+                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+            ]
+        );
+
+        $nilaiAkhir = $perPangkalanData['nilaiAkhir'];
+        $ratingMeta = LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+
+        $fileName = 'laporan-pegawai-' . strtolower($karyawan->kode_karyawan) . '.pdf';
+
+        $viewName = $jenisLaporan === 'ringkas'
+            ? 'admin.laporan.perorangan_ringkas_pdf'
+            : 'admin.laporan.perorangan_pdf';
+
+        return Pdf::loadView($viewName, compact(
+            'karyawan',
+            'kategoriList',
+            'trxByKompetensi',
+            'nilaiAkhir',
+            'ratingMeta',
+            'setting',
+            'selectedTahunData',
+            'reportFormat',
+            'perPangkalanData',
+            'allPangkalan',
+            'jenisLaporan'
+        ))
+        ->setPaper('a4', 'portrait')
+        ->stream($fileName);
+    }
+
+    /**
+     * Build data for inline perorangan display in laporan index.
+     */
+    private function buildPeroranganData(Request $request, string $scope): array
+    {
+        $user = Auth::user();
+        $setting = SettingLembaga::where('is_active', true)->latest()->first()
+            ?? SettingLembaga::latest()->first();
+
+        $selectedTahun = $request->input('tahun_penilaian_id');
+        $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : null;
+        $karyawanId = $request->input('karyawan_id');
+
+        $karyawanQuery = Karyawan::with([
+            'pangkalan.kategoriKinerja',
+            'pangkalanLain.kategoriKinerja',
+            'transaksi' => fn($q) => $q
+                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+                ->with('kompetensi.kategoriKinerja'),
+            'tahunPenilaian',
+            'user',
+        ])
+        ->bukanKepala()
+        ->where('id', $karyawanId);
+
+        if ($scope === 'kepala') {
+            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
+        } elseif ($scope === 'user') {
+            $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
+        }
+
+        $karyawan = $karyawanQuery->first();
+
+        if (!$karyawan) {
+            return ['peroranganKaryawan' => null];
+        }
+
+        $kategoriList = KategoriKinerja::with('kompetensi')
+            ->orderBy('jenis')
+            ->orderBy('kode_kategori')
+            ->get();
+
+        $kategoriList = LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $karyawan);
+
+        $reportFormat = [
+            'scoring_method' => $setting?->laporan_scoring_method ?: 'weighted_kinerja_kegiatan',
+            'score_weight_kinerja' => (float) ($setting?->laporan_bobot_kinerja ?? 70),
+            'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
+        ];
+
+        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+            $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
+        }
+
+        $trxByKompetensi = $karyawan->transaksi
+            ->filter(fn($t) => $t->nilai !== null)
+            ->keyBy('kompetensi_id');
+
+        // Get all pangkalan IDs for this karyawan
+        $allPangkalanIds = $karyawan->getAllPangkalanIds();
+
+        // Load all pangkalan with kategoriKinerja relation
+        $allPangkalan = Pangkalan::with('kategoriKinerja')
+            ->whereIn('id', $allPangkalanIds)
+            ->get();
+
+        // Calculate per-pangkalan breakdown
+        $perPangkalanData = LaporanScoreCalculator::calculatePerPangkalan(
+            $kategoriList,
+            $trxByKompetensi,
+            $allPangkalanIds,
+            $allPangkalan,
+            [
+                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+            ]
+        );
+
+        $nilaiAkhir = $perPangkalanData['nilaiAkhir'];
+        $ratingMeta = LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+
+        return [
+            'peroranganKaryawan' => $karyawan,
+            'peroranganKategoriList' => $kategoriList,
+            'peroranganTrxByKompetensi' => $trxByKompetensi,
+            'peroranganNilaiAkhir' => $nilaiAkhir,
+            'peroranganRatingMeta' => $ratingMeta,
+            'peroranganSetting' => $setting,
+            'peroranganReportFormat' => $reportFormat,
+            'peroranganPerPangkalanData' => $perPangkalanData,
+            'peroranganAllPangkalan' => $allPangkalan,
+        ];
+    }
+
+    /**
+     * Build data for the standalone perorangan page.
+     */
+    private function buildPeroranganPageData(Request $request, string $scope): array
+    {
+        $user = Auth::user();
+        $setting = SettingLembaga::where('is_active', true)->latest()->first()
+            ?? SettingLembaga::latest()->first();
+
+        $tahunList = TahunPenilaian::orderByDesc('periode_penilaian')->get();
+        $tahunAktif = TahunPenilaian::where('is_active', true)->first();
+        $defaultTahunId = $setting?->tahun_penilaian_id ?: $tahunAktif?->id;
+        $selectedTahun = $request->input('tahun_penilaian_id', $defaultTahunId);
+        $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : $tahunAktif;
+
+        $jenisLaporan = $request->input('jenis_laporan', 'rinci');
+        if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
+            $jenisLaporan = 'rinci';
+        }
+
+        // Build karyawan filter list
+        $karyawanFilterList = Karyawan::query()
+            ->bukanKepala()
+            ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+            ->when($scope === 'kepala', fn($q) => $q->whereIn('pangkalan_id', $user->getAllPangkalanIds()))
+            ->orderBy('nama_karyawan')
+            ->get();
+
+        $data = [
+            'tahunList' => $tahunList,
+            'selectedTahun' => $selectedTahun,
+            'selectedTahunData' => $selectedTahunData,
+            'setting' => $setting,
+            'jenisLaporan' => $jenisLaporan,
+            'karyawanFilterList' => $karyawanFilterList,
+            'peroranganKaryawan' => null,
+        ];
+
+        // If karyawan selected, build perorangan detail
+        if ($request->filled('karyawan_id')) {
+            $peroranganData = $this->buildPeroranganData($request, $scope);
+            $data = array_merge($data, $peroranganData);
+        }
+
+        return $data;
     }
 }

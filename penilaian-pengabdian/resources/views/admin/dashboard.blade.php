@@ -25,7 +25,7 @@
                     <div class="progress-bar bg-success" style="width: {{ $stats['progres_dinilai_tahun_aktif'] }}%;"></div>
                 </div>
                 <div class="mt-2 text-muted" style="font-size:.78rem;">
-                    {{ $stats['sudah_dinilai_tahun_aktif'] }} dari {{ $stats['total_karyawan'] }} karyawan sudah dinilai
+                    {{ $stats['sudah_dinilai_tahun_aktif'] }} dari {{ $stats['total_karyawan_aktif'] }} karyawan aktif sudah dinilai
                 </div>
             </div>
         </div>

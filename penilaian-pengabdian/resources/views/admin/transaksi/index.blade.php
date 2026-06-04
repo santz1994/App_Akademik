@@ -74,10 +74,6 @@
 
     @include('components.per-page-select')
 
-    <button type="submit" class="btn btn-sm btn-primary">
-        <i class="bi bi-search me-1"></i>Terapkan
-    </button>
-
     @if(request()->hasAny(['q', 'pangkalan_id', 'status_aktif', 'status_lock', 'tahun_penilaian_id', 'per_page']))
         <a href="{{ route($routePrefix . '.transaksi.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
     @endif
@@ -306,6 +302,26 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Auto-submit search/filter form
+        const filterForm = document.querySelector('form.mb-3');
+        if (filterForm) {
+            let debounceTimer;
+            const textInput = filterForm.querySelector('input[name="q"]');
+            const selects = filterForm.querySelectorAll('select');
+
+            if (textInput) {
+                textInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () { filterForm.submit(); }, 500);
+                });
+            }
+
+            selects.forEach(function (sel) {
+                sel.addEventListener('change', function () { filterForm.submit(); });
+            });
+        }
+
+        // Batch unlock
         const selectAll = document.getElementById('selectAllUnlock');
         const checks = Array.from(document.querySelectorAll('.batch-unlock-check'));
         const batchBtn = document.getElementById('batchUnlockBtn');

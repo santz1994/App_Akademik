@@ -40,6 +40,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Pangkalan yang dipimpin oleh kepala (many-to-many).
+     */
+    public function kepalaPangkalan()
+    {
+        return $this->belongsToMany(Pangkalan::class, 'kepala_pangkalan', 'user_id', 'pangkalan_id')->withTimestamps();
+    }
+
+    /**
+     * Mendapatkan semua pangkalan yang bisa diakses kepala.
+     * Termasuk pangkalan utama (pangkalan_id) dan pangkalan tambahan.
+     */
+    public function getAllPangkalanIds(): array
+    {
+        $ids = $this->kepalaPangkalan()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        if ($this->pangkalan_id && !in_array((int) $this->pangkalan_id, $ids, true)) {
+            $ids[] = (int) $this->pangkalan_id;
+        }
+        return array_unique($ids);
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

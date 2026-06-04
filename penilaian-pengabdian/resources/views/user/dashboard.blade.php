@@ -17,6 +17,9 @@
             <div class="fw-semibold">{{ $user->name }}</div>
             <small class="text-muted">{{ $user->username }}</small>
             <small class="d-block text-muted">{{ $user->email }}</small>
+            <a href="{{ route('user.profile') }}" class="btn btn-sm btn-outline-primary mt-2">
+                <i class="bi bi-pencil me-1"></i>Edit Profil
+            </a>
         </div>
     </div>
     <div class="col-md-8">

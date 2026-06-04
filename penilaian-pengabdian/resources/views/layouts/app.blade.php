@@ -8,12 +8,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        :root { --sb: #1e293b; --sb-active: #1a56db; }
+        :root { --sb: #1e293b; --sb-active: #1a56db; --sb-width: 240px; --sb-collapsed-width: 60px; }
         body { background: #f1f5f9; font-family: 'Segoe UI', sans-serif; }
 
         /* ---- Sidebar ---- */
-        .sidebar { width:240px; min-height:100vh; background:var(--sb); position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; }
-        .sb-brand { padding:1rem 1.2rem; border-bottom:1px solid #334155; color:#fff; }
+        .sidebar { width:var(--sb-width); min-height:100vh; max-height:100vh; background:var(--sb); position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; transition:width 0.3s cubic-bezier(0.4,0,0.2,1); overflow:hidden; }
+        .sidebar.collapsed { width:var(--sb-collapsed-width); }
+        .sidebar.collapsed .sb-brand-text { display:none !important; }
+        .sidebar.collapsed .sb-section { display:none !important; }
+        .sidebar.collapsed .sb-user small { display:none !important; }
+        .sidebar.collapsed a.nav-link span:not(.badge) { display:none !important; }
+        .sidebar.collapsed a.nav-link .ms-auto { display:none !important; }
+        .sidebar.collapsed a.nav-link { justify-content:center; padding:.55rem; }
+        .sidebar.collapsed a.nav-link.sub { padding-left:.55rem; }
+        .sidebar.collapsed .sb-brand { padding:.75rem .5rem; text-align:center; }
+        .sidebar.collapsed .sb-brand-head { justify-content:center; }
+        .sidebar.collapsed .sb-user { padding:.5rem; text-align:center; }
+        .sb-brand { padding:1rem 1.2rem; border-bottom:1px solid #334155; color:#fff; transition:padding 0.3s cubic-bezier(0.4,0,0.2,1); }
         .sb-brand-link { color:#fff; text-decoration:none; display:block; }
         .sb-brand-head { display:flex; align-items:center; gap:.6rem; }
         .sb-brand-logo-wrap,
@@ -34,21 +45,27 @@
         }
         .sb-brand-logo { width:auto; height:auto; max-height:28px; max-width:94px; object-fit:contain; display:block; }
         .sb-brand-icon { background:#334155; color:#cbd5e1; font-size:.9rem; }
-        .sb-brand-text { min-width:0; }
+        .sb-brand-text { min-width:0; transition:opacity 0.2s ease; }
         .sb-brand h6 { margin:0 0 .15rem 0; font-weight:700; font-size:.85rem; }
         .sb-brand small { color:#94a3b8; font-size:.72rem; display:block; line-height:1.25; }
-        .sb-section { color:#475569; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; padding:.8rem 1.2rem .2rem; }
-        .sidebar a.nav-link { color:#cbd5e1; padding:.45rem 1.2rem; font-size:.82rem; display:flex; align-items:center; gap:.5rem; border-radius:0; }
+        .sb-section { color:#475569; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; padding:.8rem 1.2rem .2rem; transition:opacity 0.2s ease; }
+        .sidebar a.nav-link { color:#cbd5e1; padding:.45rem 1.2rem; font-size:.82rem; display:flex; align-items:center; gap:.5rem; border-radius:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); }
         .sidebar a.nav-link:hover, .sidebar a.nav-link.active { background:var(--sb-active); color:#fff; }
         .sidebar a.nav-link.sub { padding-left:2.5rem; font-size:.78rem; color:#94a3b8; }
         .sidebar a.nav-link.sub:hover, .sidebar a.nav-link.sub.active { background:#334155; color:#fff; }
+        .sidebar a.nav-link i { flex-shrink:0; width:20px; text-align:center; }
+        .sidebar a.nav-link span { white-space:nowrap; overflow:hidden; transition:opacity 0.2s ease; }
         .collapse-toggle { cursor:pointer; }
-        .sb-user { padding:.75rem 1.2rem; border-top:1px solid #334155; margin-top:auto; }
+        .sb-user { padding:.75rem 1.2rem; border-top:1px solid #334155; margin-top:auto; transition:padding 0.3s cubic-bezier(0.4,0,0.2,1); }
         .sb-user small { color:#94a3b8; font-size:.73rem; }
 
         /* ---- Main ---- */
-        .main-wrap { margin-left:240px; min-height:100vh; }
-        .topbar { background:#fff; border-bottom:1px solid #e2e8f0; padding:.65rem 1.5rem; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:240px; right:0; z-index:900; height:56px; }
+        .main-wrap { margin-left:var(--sb-width); min-height:100vh; transition:margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .main-wrap.sidebar-collapsed { margin-left:var(--sb-collapsed-width); }
+        .topbar { background:#fff; border-bottom:1px solid #e2e8f0; padding:.65rem 1.5rem; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:var(--sb-width); right:0; z-index:900; height:56px; transition:left 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .topbar.sidebar-collapsed { left:var(--sb-collapsed-width); }
+        .sb-toggle { background:none; border:none; color:#475569; font-size:1.15rem; cursor:pointer; padding:.25rem .4rem; border-radius:4px; transition:color .15s,background .15s; }
+        .sb-toggle:hover { background:#f1f5f9; color:#1e293b; }
         .topbar .page-title { font-weight:600; font-size:.95rem; color:#1e293b; }
         .content { padding:1.25rem; padding-top:calc(1.25rem + 56px); }
         .card { border:0; box-shadow:0 1px 4px rgba(0,0,0,.07); }
@@ -58,8 +75,14 @@
         .badge-user  { background:#dbeafe; color:#1d4ed8; font-size:.7rem; }
         .btn-action  { padding:.25rem .55rem; font-size:.78rem; }
 
+        /* Responsive for 1366x768 and similar */
+        @media (max-height: 800px) {
+            .sidebar { max-height:100vh; }
+            .sidebar nav { overflow-y:auto; overflow-x:hidden; }
+        }
+
         @media (max-width: 991.98px) {
-            .sidebar { width:220px; }
+            :root { --sb-width:220px; }
             .main-wrap { margin-left:220px; }
             .topbar { left:220px; padding:.6rem 1rem; }
             .content { padding:1rem; padding-top:calc(1rem + 56px); }
@@ -80,7 +103,7 @@
         }
 
         @media (max-width: 767.98px) {
-            .sidebar { width:188px; }
+            :root { --sb-width:188px; }
             .main-wrap { margin-left:188px; }
             .topbar { left:188px; padding:.55rem .75rem; }
             .content { padding:.85rem; padding-top:calc(.85rem + 56px); }
@@ -169,113 +192,128 @@
 
     <nav class="pt-1 overflow-auto flex-grow-1">
         @if(auth()->user()->role === 'admin')
-            {{-- Home --}}
+            {{-- Dashboard --}}
             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
             </a>
 
             {{-- Setting Lembaga --}}
             <a href="{{ route('admin.setting-lembaga.edit') }}" class="nav-link {{ request()->routeIs('admin.setting-lembaga.*') ? 'active' : '' }}">
-                <i class="bi bi-building-gear"></i> Setting Lembaga
+                <i class="bi bi-building-gear"></i> <span>Setting Lembaga</span>
             </a>
-
-            {{-- MASTER --}}
-            <div class="sb-section">Master</div>
 
             {{-- User Account --}}
             <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> User Account
+                <i class="bi bi-people"></i> <span>User Account</span>
             </a>
 
             {{-- Karyawan --}}
-            <a href="{{ route('admin.karyawan.index', ['status_kepala' => 'nonkepala']) }}" class="nav-link {{ request()->routeIs('admin.karyawan.*') && request('status_kepala', 'nonkepala') !== 'kepala' ? 'active' : '' }}">
-                <i class="bi bi-person-badge"></i> Data Karyawan
+            <div class="sb-section">Karyawan</div>
+            <a href="{{ route('admin.karyawan.index', ['status_kepala' => 'nonkepala', 'status_aktif' => 'aktif']) }}" class="nav-link {{ request()->routeIs('admin.karyawan.*') && request('status_kepala', 'nonkepala') !== 'kepala' && request('status_aktif') !== '' ? 'active' : '' }}">
+                <i class="bi bi-person-badge"></i> <span>Karyawan Aktif</span>
             </a>
             <a href="{{ route('admin.karyawan.index', ['status_kepala' => 'kepala']) }}" class="nav-link sub {{ request()->routeIs('admin.karyawan.*') && request('status_kepala') === 'kepala' ? 'active' : '' }}">
-                <i class="bi bi-person-workspace"></i> Data Kepala
+                <i class="bi bi-person-workspace"></i> <span>Data Kepala</span>
+            </a>
+            <a href="{{ route('admin.karyawan.index') }}" class="nav-link sub {{ request()->routeIs('admin.karyawan.*') && !request()->has('status_kepala') && !request()->has('status_aktif') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i> <span>Semua Data Karyawan</span>
             </a>
 
             {{-- Tahun Penilaian --}}
             <a href="{{ route('admin.tahun-penilaian.index') }}" class="nav-link {{ request()->routeIs('admin.tahun-penilaian.*') ? 'active' : '' }}">
-                <i class="bi bi-calendar3"></i> Tahun Penilaian
+                <i class="bi bi-calendar3"></i> <span>Tahun Penilaian</span>
             </a>
 
-            {{-- Kategori Kinerja --}}
+            {{-- Data --}}
+            <div class="sb-section">Data</div>
             <a href="{{ route('admin.kategori-kinerja.index') }}" class="nav-link {{ request()->routeIs('admin.kategori-kinerja.*') ? 'active' : '' }}">
-                <i class="bi bi-tag"></i> Kategori
+                <i class="bi bi-tag"></i> <span>Data Kategori</span>
             </a>
-
-            {{-- Pangkalan Job --}}
             <a href="{{ route('admin.pangkalan.index') }}" class="nav-link {{ request()->routeIs('admin.pangkalan.*') ? 'active' : '' }}">
-                <i class="bi bi-building"></i> Pangkalan Job
+                <i class="bi bi-building"></i> <span>Data Pangkalan Job</span>
             </a>
-
-            {{-- Kompetensi --}}
             <a href="{{ route('admin.kompetensi.index') }}" class="nav-link {{ request()->routeIs('admin.kompetensi.*') ? 'active' : '' }}">
-                <i class="bi bi-clipboard-check"></i> Kompetensi
+                <i class="bi bi-clipboard-check"></i> <span>Data List Kompetensi</span>
             </a>
-
-            {{-- Performance Rating --}}
             <a href="{{ route('admin.performance-rating.index') }}" class="nav-link {{ request()->routeIs('admin.performance-rating.*') ? 'active' : '' }}">
-                <i class="bi bi-star-half"></i> Performance Rating
+                <i class="bi bi-star-half"></i> <span>Data Performance Rating</span>
             </a>
 
-            {{-- Mutasi & Laporan --}}
+            {{-- Mutasi --}}
+            <div class="sb-section">Mutasi</div>
+            <a href="{{ route('admin.mutasi.index') }}" class="nav-link {{ request()->routeIs('admin.mutasi.index') ? 'active' : '' }}">
+                <i class="bi bi-calendar-event"></i> <span>Mutasi Tahun Ajaran</span>
+            </a>
+            <a href="{{ route('admin.mutasi.pangkalan') }}" class="nav-link {{ request()->routeIs('admin.mutasi.pangkalan') ? 'active' : '' }}">
+                <i class="bi bi-building"></i> <span>Mutasi Antar Pangkalan Job</span>
+            </a>
+
+            {{-- Transaksi --}}
             <div class="sb-section">Transaksi</div>
-            <a href="{{ route('admin.mutasi.index') }}" class="nav-link {{ request()->routeIs('admin.mutasi.*') ? 'active' : '' }}">
-                <i class="bi bi-arrow-left-right"></i> Mutasi
-            </a>
-            <a href="{{ route('admin.transaksi.index') }}" class="nav-link {{ request()->routeIs('admin.transaksi.*') ? 'active' : '' }}">
-                <i class="bi bi-receipt"></i> Transaksi
+            <a href="{{ route('admin.transaksi.index') }}" class="nav-link {{ request()->routeIs('admin.transaksi.*') && !request()->routeIs('admin.transaksi.unlock-requests') ? 'active' : '' }}">
+                <i class="bi bi-receipt"></i> <span>Penilaian Karyawan</span>
                 @if($pendingUnlockRequests > 0)
                     <span class="badge bg-danger ms-auto">{{ $pendingUnlockRequests }}</span>
                 @endif
-            </a>
-            <a href="{{ route('admin.transaksi.unlock-requests') }}" class="nav-link sub {{ request()->routeIs('admin.transaksi.unlock-requests') ? 'active' : '' }}">
-                <i class="bi bi-bell"></i> Request Unlock
-                @if($pendingUnlockRequests > 0)
-                    <span class="badge bg-danger ms-auto">{{ $pendingUnlockRequests }}</span>
-                @endif
-            </a>
-
-            <div class="sb-section">Laporan</div>
-            <a href="{{ route('admin.laporan.index') }}" class="nav-link {{ request()->routeIs('admin.laporan.index') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Laporan
             </a>
             <a href="{{ route('admin.penilaian-metode.edit') }}" class="nav-link {{ request()->routeIs('admin.penilaian-metode.*') ? 'active' : '' }}">
-                <i class="bi bi-calculator"></i> Cara Penilaian
+                <i class="bi bi-calculator"></i> <span>Pengaturan Bobot Penilaian</span>
+            </a>
+            <a href="{{ route('admin.transaksi.unlock-requests') }}" class="nav-link sub {{ request()->routeIs('admin.transaksi.unlock-requests') ? 'active' : '' }}">
+                <i class="bi bi-bell"></i> <span>Request Unlock</span>
+                @if($pendingUnlockRequests > 0)
+                    <span class="badge bg-danger ms-auto">{{ $pendingUnlockRequests }}</span>
+                @endif
+            </a>
+
+            {{-- Laporan --}}
+            <div class="sb-section">Laporan</div>
+            <a href="{{ route('admin.laporan.index') }}" class="nav-link {{ request()->routeIs('admin.laporan.index') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart-line"></i> <span>Laporan Nilai Keseluruhan</span>
+            </a>
+            <a href="{{ route('admin.laporan.perorangan') }}" class="nav-link {{ request()->routeIs('admin.laporan.perorangan') ? 'active' : '' }}">
+                <i class="bi bi-person-lines-fill"></i> <span>Laporan Nilai Perorangan</span>
             </a>
             <a href="{{ route('admin.laporan.format.edit') }}" class="nav-link {{ request()->routeIs('admin.laporan.format.*') ? 'active' : '' }}">
-                <i class="bi bi-sliders"></i> Format Cetak Laporan
+                <i class="bi bi-sliders"></i> <span>Format Cetak Laporan</span>
             </a>
+
+            {{-- FAQ --}}
+            <div class="sb-section">FAQ</div>
             <a href="{{ route('help.index') }}" class="nav-link {{ request()->routeIs('help.index') ? 'active' : '' }}">
-                <i class="bi bi-question-circle"></i> Help / QnA
+                <i class="bi bi-question-circle"></i> <span>Help</span>
+            </a>
+            <a href="{{ route('help.index') }}" class="nav-link sub {{ request()->routeIs('help.index') ? 'active' : '' }}">
+                <i class="bi bi-chat-dots"></i> <span>FAQ</span>
             </a>
 
         @elseif(auth()->user()->is_kepala)
             {{-- KEPALA MENU --}}
             <a href="{{ route('kepala.dashboard') }}" class="nav-link {{ request()->routeIs('kepala.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
             </a>
             <a href="{{ route('kepala.transaksi.index') }}" class="nav-link {{ request()->routeIs('kepala.transaksi.*') ? 'active' : '' }}">
-                <i class="bi bi-receipt"></i> Transaksi
+                <i class="bi bi-receipt"></i> <span>Transaksi</span>
             </a>
             <a href="{{ route('kepala.laporan.index') }}" class="nav-link {{ request()->routeIs('kepala.laporan.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Laporan
+                <i class="bi bi-bar-chart-line"></i> <span>Laporan</span>
             </a>
             <a href="{{ route('help.index') }}" class="nav-link {{ request()->routeIs('help.index') ? 'active' : '' }}">
-                <i class="bi bi-question-circle"></i> Help / QnA
+                <i class="bi bi-question-circle"></i> <span>Help / QnA</span>
             </a>
         @else
             {{-- USER MENU --}}
             <a href="{{ route('user.dashboard') }}" class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-house"></i> Dashboard
+                <i class="bi bi-house"></i> <span>Dashboard</span>
+            </a>
+            <a href="{{ route('user.profile') }}" class="nav-link {{ request()->routeIs('user.profile') ? 'active' : '' }}">
+                <i class="bi bi-person-gear"></i> <span>Profil Saya</span>
             </a>
             <a href="{{ route('user.laporan.index') }}" class="nav-link {{ request()->routeIs('user.laporan.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Laporan
+                <i class="bi bi-bar-chart-line"></i> <span>Laporan</span>
             </a>
             <a href="{{ route('help.index') }}" class="nav-link {{ request()->routeIs('help.index') ? 'active' : '' }}">
-                <i class="bi bi-question-circle"></i> Help / QnA
+                <i class="bi bi-question-circle"></i> <span>Help / QnA</span>
             </a>
         @endif
     </nav>
@@ -294,7 +332,12 @@
 
 <div class="main-wrap">
     <header class="topbar">
-        <span class="page-title">@yield('page-title', 'Dashboard')</span>
+        <div class="d-flex align-items-center gap-2">
+            <button class="sb-toggle" id="sidebarToggle" title="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="page-title">@yield('page-title', 'Dashboard')</span>
+        </div>
         <div class="d-flex align-items-center gap-3">
             <span class="text-muted" style="font-size:.8rem;"><i class="bi bi-clock me-1"></i>{{ now()->format('d/m/Y') }}</span>
             @if(auth()->user()->role === 'admin')
@@ -307,10 +350,23 @@
                     @endif
                 </a>
             @endif
+                @php
+                    $topbarFotoUrl = null;
+                    if (auth()->user()->karyawan && !empty(auth()->user()->karyawan->foto_path)) {
+                        $topbarFotoPath = ltrim((string) auth()->user()->karyawan->foto_path, '/');
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($topbarFotoPath)) {
+                            $topbarFotoUrl = asset('storage/' . $topbarFotoPath);
+                        }
+                    }
+                @endphp
                 <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->is_kepala ? route('kepala.dashboard') : route('user.dashboard')) }}"
                class="d-flex align-items-center gap-2 text-decoration-none text-dark border rounded px-2 py-1"
                style="font-size:.82rem;">
-                <i class="bi bi-person-circle fs-5 text-secondary"></i>
+                @if($topbarFotoUrl)
+                    <img src="{{ $topbarFotoUrl }}" alt="Foto" style="width:28px;height:28px;object-fit:cover;border-radius:50%;border:1px solid #e2e8f0;">
+                @else
+                    <i class="bi bi-person-circle fs-5 text-secondary"></i>
+                @endif
                 <span>{{ auth()->user()->name }}</span>
                     @if(auth()->user()->is_kepala)
                         <span class="badge bg-warning text-dark ms-1">Kepala Pimpinan Pos</span>
@@ -345,6 +401,30 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.querySelector('.sidebar');
+    const mainWrap = document.querySelector('.main-wrap');
+    const topbar = document.querySelector('.topbar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+
+    if (toggleBtn && sidebar) {
+        // Restore state from localStorage
+        if (localStorage.getItem('sb-collapsed') === '1') {
+            sidebar.classList.add('collapsed');
+            if (mainWrap) mainWrap.classList.add('sidebar-collapsed');
+            if (topbar) topbar.classList.add('sidebar-collapsed');
+        }
+
+        toggleBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('collapsed');
+            if (mainWrap) mainWrap.classList.toggle('sidebar-collapsed');
+            if (topbar) topbar.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sb-collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+        });
+    }
+});
+</script>
 @stack('scripts')
 </body>
 </html>

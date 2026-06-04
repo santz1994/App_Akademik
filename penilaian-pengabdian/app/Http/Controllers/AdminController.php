@@ -26,13 +26,13 @@ class AdminController extends Controller
 
         $sudahDinilaiAktifTahun = $tahunAktifId
             ? Transaksi::where('tahun_penilaian_id', $tahunAktifId)
-                ->whereHas('karyawan', fn($q) => $q->bukanKepala())
+                ->whereHas('karyawan', fn($q) => $q->bukanKepala()->where('is_active', true))
                 ->distinct('karyawan_id')
                 ->count('karyawan_id')
             : 0;
 
-        $progresDinilaiAktifTahun = $totalKaryawan > 0
-            ? round(($sudahDinilaiAktifTahun / $totalKaryawan) * 100)
+        $progresDinilaiAktifTahun = $totalKaryawanAktif > 0
+            ? round(($sudahDinilaiAktifTahun / $totalKaryawanAktif) * 100)
             : 0;
 
         $rataNilaiAktifTahun = $tahunAktifId
