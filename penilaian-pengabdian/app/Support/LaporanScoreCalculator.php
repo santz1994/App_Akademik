@@ -65,26 +65,26 @@ class LaporanScoreCalculator
     public static function ratingMeta(?float $nilaiAkhir): array
     {
         if ($nilaiAkhir === null) {
-            return ['label' => '-', 'color' => 'secondary', 'bg' => '#e5e7eb', 'text' => '#6b7280'];
+            return ['label' => '-', 'color' => 'secondary'];
         }
 
         if ($nilaiAkhir >= 90) {
-            return ['label' => 'A - Sangat Baik', 'color' => 'success', 'bg' => '#dcfce7', 'text' => '#166534'];
+            return ['label' => 'A - Sangat Baik', 'color' => 'success'];
         }
 
         if ($nilaiAkhir >= 80) {
-            return ['label' => 'B - Baik', 'color' => 'primary', 'bg' => '#dbeafe', 'text' => '#1e40af'];
+            return ['label' => 'B - Baik', 'color' => 'primary'];
         }
 
         if ($nilaiAkhir >= 70) {
-            return ['label' => 'C - Cukup', 'color' => 'warning', 'bg' => '#fef3c7', 'text' => '#92400e'];
+            return ['label' => 'C - Cukup', 'color' => 'warning'];
         }
 
         if ($nilaiAkhir >= 60) {
-            return ['label' => 'D - Kurang', 'color' => 'danger', 'bg' => '#fee2e2', 'text' => '#991b1b'];
+            return ['label' => 'D - Kurang', 'color' => 'danger'];
         }
 
-        return ['label' => 'E - Sangat Kurang', 'color' => 'dark', 'bg' => '#f3f4f6', 'text' => '#374151'];
+        return ['label' => 'E - Sangat Kurang', 'color' => 'dark'];
     }
 
     private static function calculateWeightedByJenis(

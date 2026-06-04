@@ -12,7 +12,6 @@
             'show_nilai_akhir' => true,
             'show_rating' => true,
             'show_detail_kompetensi' => true,
-            'show_bobot_kategori' => true,
             'paper_size' => 'a4',
             'orientation' => 'portrait',
             'margin_top' => 2.54,
@@ -89,7 +88,7 @@
             'rating' => 'Rating',
         ], is_array($reportFormat['labels'] ?? null) ? $reportFormat['labels'] : []);
 
-        $showDetailColumns = $jenisLaporan === 'rinci';
+        $showDetailColumns = $jenisLaporan === 'rinci' && (bool) $reportFormat['show_detail_kompetensi'];
         $ringkasKategoriList = $jenisLaporan === 'ringkas'
             ? $kategoriList->values()
             : collect();
@@ -182,38 +181,6 @@
             'nilai_akhir' => (int) $reportFormat['col_width_nilai'],
             'rating' => (int) $reportFormat['col_width_rating'],
         ];
-
-        // Calculate stats for summary section
-        $totalKaryawan = $karyawanItems->count();
-        $totalKategori = $kategoriList->count();
-        $totalKompetensiCount = $kategoriList->sum(fn($k) => $k->kompetensi->count());
-        $periodeLabel = $selectedTahunData?->periode_penilaian ?? '-';
-
-        // Calculate average score for summary
-        $allScores = collect();
-        foreach($karyawanList as $k) {
-            $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
-            $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
-            $trxByKompetensi = $k->transaksi
-                ->filter(fn($t) => $t->nilai !== null)
-                ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
-                ->keyBy('kompetensi_id');
-            $nilai = \App\Support\LaporanScoreCalculator::calculate(
-                $kategoriUntukKaryawan,
-                $trxByKompetensi,
-                $reportFormat['scoring_method'],
-                [
-                    'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
-                    'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-                ]
-            );
-            if ($nilai !== null) {
-                $allScores->push($nilai);
-            }
-        }
-        $avgScore = $allScores->isNotEmpty() ? $allScores->avg() : null;
-        $maxScore = $allScores->isNotEmpty() ? $allScores->max() : null;
-        $minScore = $allScores->isNotEmpty() ? $allScores->min() : null;
     @endphp
     <style>
         @page {
@@ -221,39 +188,45 @@
             margin: {{ $marginTop }}cm {{ $marginRight }}cm {{ $marginBottom }}cm {{ $marginLeft }}cm;
         }
 
-        * { box-sizing: border-box; }
-
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: {{ $fontSize }}px;
-            color: #1a1a2e;
+            color: #111827;
             text-align: {{ $textAlign }};
-            line-height: 1.5;
-            margin: 0;
-            padding: 0;
         }
 
-        /* ===== HEADER / KOP SURAT ===== */
-        .kop-header {
-            width: 100%;
-            display: table;
-            margin-bottom: 0;
-            padding-bottom: 8px;
-        }
-        .kop-logo {
-            width: {{ $kopLogoSlotWidth }}px;
-            display: table-cell;
-            vertical-align: middle;
-            text-align: left;
-        }
+        .kop-wrap { width: 100%; display: table; margin-bottom: 2px; }
+        .kop-logo { width: {{ $kopLogoSlotWidth }}px; display: table-cell; vertical-align: middle; text-align: left; }
+        .kop-center { display: table-cell; vertical-align: middle; text-align: center; padding-right: {{ $kopLogoSlotWidth }}px; }
+        .kop-title { font-size: {{ $titleFontSize }}px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+        .kop-subtitle { font-size: {{ max($fontSize - 1, 9) }}px; color: #111827; line-height: 1.35; }
+        .kop-subtitle-main { text-transform: uppercase; font-weight: 600; }
+        .kop-contact { font-size: {{ max($fontSize - 2, 8) }}px; color: #334155; line-height: 1.3; }
+        .kop-line { border-top: 2px solid #111827; border-bottom: 1px solid #111827; height: 2px; margin: 8px 0 12px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: {{ $borderWidth }}px solid #d1d5db; padding: {{ $cellPadding }}px; vertical-align: top; }
+        th { background: #f3f4f6; text-align: {{ $headerAlign }}; }
+        td { text-align: {{ $textAlign }}; }
+
+        .text-center { text-align: center; }
+        .detail-head { font-size: {{ max($fontSize - 2, 8) }}px; }
+        .detail-subhead { display:block; color:#475569; font-size: {{ max($fontSize - 3, 7) }}px; }
+
+        .signatures { margin-top: 28px; width: 100%; }
+        .sign-col { width: 50%; text-align: center; float: left; }
+        .sign-space { height: 64px; }
+        .sign-note { margin-bottom: 2px; }
+        .sign-role { margin-bottom: 2px; }
+        .clearfix::after { content: ""; display: table; clear: both; }
         .kop-logo-box {
             width: {{ $kopLogoBoxSize }}px;
             height: {{ $kopLogoBoxSize }}px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #1a56db;
-            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             background: #ffffff;
             overflow: hidden;
         }
@@ -265,143 +238,6 @@
             object-fit: contain;
             display: block;
         }
-        .kop-center {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: center;
-            padding-right: {{ $kopLogoSlotWidth }}px;
-        }
-        .kop-title {
-            font-size: {{ $titleFontSize + 2 }}px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #1a1a2e;
-            margin-bottom: 2px;
-            letter-spacing: 0.5px;
-        }
-        .kop-institution {
-            font-size: {{ $titleFontSize - 2 }}px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #1a56db;
-            margin-bottom: 2px;
-        }
-        .kop-contact {
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #4a5568;
-            line-height: 1.4;
-        }
-
-        /* Double line separator */
-        .kop-line {
-            border: 0;
-            border-top: 3px double #1a56db;
-            margin: 6px 0 14px;
-        }
-
-        /* ===== REPORT TITLE SECTION ===== */
-        .report-title-section {
-            text-align: center;
-            margin-bottom: 14px;
-        }
-        .report-main-title {
-            font-size: {{ $titleFontSize }}px;
-            font-weight: 800;
-            color: #1a1a2e;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-        .report-subtitle {
-            font-size: {{ $fontSize + 1 }}px;
-            font-weight: 600;
-            color: #1a56db;
-            margin-bottom: 2px;
-        }
-        .report-period {
-            font-size: {{ $fontSize - 1 }}px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-
-        /* ===== INFO BOX ===== */
-        .info-box {
-            width: 100%;
-            margin-bottom: 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .info-box-header {
-            background: linear-gradient(135deg, #1a56db, #2563eb);
-            color: #fff;
-            font-size: {{ $fontSize - 1 }}px;
-            font-weight: 700;
-            padding: 5px 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .info-box-body {
-            padding: 6px 10px;
-            font-size: {{ $fontSize - 1 }}px;
-            color: #374151;
-        }
-        .info-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 2px;
-        }
-        .info-label {
-            display: table-cell;
-            width: 130px;
-            font-weight: 600;
-            color: #4a5568;
-            vertical-align: top;
-        }
-        .info-value {
-            display: table-cell;
-            color: #1a1a2e;
-            vertical-align: top;
-        }
-
-        /* ===== SUMMARY STATS ===== */
-        .summary-grid {
-            width: 100%;
-            margin-bottom: 14px;
-            display: table;
-        }
-        .summary-item {
-            display: table-cell;
-            width: 25%;
-            text-align: center;
-            padding: 8px 6px;
-            border: 1px solid #d1d5db;
-            background: #f8fafc;
-            vertical-align: middle;
-        }
-        .summary-item:first-child {
-            border-radius: 4px 0 0 4px;
-        }
-        .summary-item:last-child {
-            border-radius: 0 4px 4px 0;
-        }
-        .summary-value {
-            font-size: {{ $fontSize + 4 }}px;
-            font-weight: 800;
-            color: #1a56db;
-            line-height: 1.2;
-        }
-        .summary-value.green { color: #059669; }
-        .summary-value.orange { color: #d97706; }
-        .summary-value.purple { color: #7c3aed; }
-        .summary-label {
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #6b7280;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-
-        /* ===== PHOTO (single karyawan) ===== */
         .karyawan-photo-wrap {
             width: 100%;
             text-align: right;
@@ -414,7 +250,7 @@
         .karyawan-photo-frame {
             width: 92px;
             height: 122px;
-            border: 2px solid #1a56db;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
             background: #ffffff;
             overflow: hidden;
@@ -432,142 +268,12 @@
             margin-top: 3px;
             font-size: {{ max($fontSize - 2, 8) }}px;
             color: #334155;
-            font-weight: 600;
             max-width: 140px;
-        }
-
-        /* ===== MAIN TABLE ===== */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0;
-            font-size: {{ max($fontSize - 1, 9) }}px;
-        }
-        .data-table th,
-        .data-table td {
-            border: {{ $borderWidth }}px solid #9ca3af;
-            padding: {{ $cellPadding }}px {{ max($cellPadding - 1, 3) }}px;
-            vertical-align: middle;
-        }
-
-        /* Table header */
-        .data-table thead th {
-            background: linear-gradient(180deg, #1a56db 0%, #1e40af 100%);
-            color: #ffffff;
-            text-align: {{ $headerAlign }};
-            font-weight: 700;
-            font-size: {{ max($fontSize - 1, 9) }}px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            padding: {{ $cellPadding + 2 }}px {{ max($cellPadding - 1, 3) }}px;
-            border-color: #1e40af;
-        }
-
-        /* Sub-header for grouped columns */
-        .data-table thead tr.sub-header th {
-            background: #e0e7ff;
-            color: #1e3a8a;
-            font-weight: 600;
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            border-color: #9ca3af;
-        }
-
-        /* Table body */
-        .data-table tbody td {
-            text-align: {{ $textAlign }};
-            color: #1f2937;
-        }
-        .data-table tbody tr:nth-child(even) {
-            background: #f8fafc;
-        }
-        .data-table tbody tr:nth-child(odd) {
-            background: #ffffff;
-        }
-
-        /* Alignment helpers */
-        .text-center { text-align: center !important; }
-        .text-right { text-align: right !important; }
-        .fw-bold { font-weight: 700; }
-        .fw-semibold { font-weight: 600; }
-
-        /* Detail kompetensi headers */
-        .detail-head {
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            line-height: 1.3;
-        }
-        .detail-subhead {
-            display: block;
-            color: #6b7280;
-            font-size: {{ max($fontSize - 3, 7) }}px;
-            font-weight: 400;
-        }
-
-        /* Rating badge style */
-        .rating-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            font-weight: 700;
-            text-align: center;
-        }
-
-        /* Alternating row number */
-        .row-number {
-            color: #6b7280;
-            font-weight: 600;
-        }
-
-        /* ===== FOOTER SUMMARY ===== */
-        .report-footer-info {
-            margin-top: 12px;
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #6b7280;
-        }
-
-        /* ===== SIGNATURES ===== */
-        .signatures {
-            margin-top: 28px;
-            width: 100%;
-            display: table;
-        }
-        .sign-col {
-            width: 50%;
-            display: table-cell;
-            text-align: center;
-            vertical-align: top;
-            padding: 0 10px;
-        }
-        .sign-space { height: 64px; }
-        .sign-note { margin-bottom: 2px; font-weight: 600; color: #374151; }
-        .sign-role { margin-bottom: 2px; color: #4a5568; font-size: {{ max($fontSize - 1, 9) }}px; }
-        .sign-name {
-            font-weight: 700;
-            color: #1a1a2e;
-            border-top: 1px solid #1a1a2e;
-            padding-top: 3px;
-            margin-top: 0;
-            display: inline-block;
-            min-width: 150px;
-        }
-        .sign-nip {
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #6b7280;
-            margin-top: 1px;
-        }
-
-        /* ===== PAGE NUMBER ===== */
-        .page-number {
-            text-align: center;
-            font-size: {{ max($fontSize - 2, 8) }}px;
-            color: #9ca3af;
-            margin-top: 16px;
         }
     </style>
 </head>
 <body>
-    {{-- ===== HEADER / KOP SURAT ===== --}}
-    <div class="kop-header">
+    <div class="kop-wrap">
         <div class="kop-logo">
         @if($kopLogoSrc)
             <span class="kop-logo-box">
@@ -577,77 +283,20 @@
         </div>
         <div class="kop-center">
             <div class="kop-title">Laporan Penilaian Pengabdian</div>
-            <div class="kop-institution">{{ $kopInstitution }}</div>
+            <div class="kop-subtitle kop-subtitle-main">{{ $kopInstitution }}</div>
             @if($kopAddress !== '')
                 <div class="kop-contact">{{ $kopAddress }}</div>
             @endif
             @if($kopContact !== '')
                 <div class="kop-contact">{{ $kopContact }}</div>
             @endif
+            @if($setting?->show_tahun_ajaran)
+                <div class="kop-subtitle">Tahun Ajaran: {{ $selectedTahunData?->periode_penilaian ?? '-' }}</div>
+            @endif
         </div>
     </div>
-    <hr class="kop-line">
+    <div class="kop-line"></div>
 
-    {{-- ===== REPORT TITLE ===== --}}
-    <div class="report-title-section">
-        <div class="report-main-title">Rekapitulasi Nilai Pengabdian</div>
-        @if($setting?->show_tahun_ajaran)
-            <div class="report-period">Periode: {{ $periodeLabel }}</div>
-        @endif
-    </div>
-
-    {{-- ===== INFO BOX ===== --}}
-    <div class="info-box">
-        <div class="info-box-header">Informasi Laporan</div>
-        <div class="info-box-body">
-            <div class="info-row">
-                <span class="info-label">Jenis Laporan</span>
-                <span class="info-value">: {{ $jenisLaporan === 'rinci' ? 'Rinci (Detail Kompetensi)' : 'Ringkas (Per Kategori)' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Periode</span>
-                <span class="info-value">: {{ $periodeLabel }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Jumlah Karyawan</span>
-                <span class="info-value">: {{ $totalKaryawan }} orang</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Kategori Kinerja</span>
-                <span class="info-value">: {{ $totalKategori }} kategori ({{ $totalKompetensiCount }} indikator)</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Metode Penilaian</span>
-                <span class="info-value">: {{ $reportFormat['scoring_method'] === 'weighted_kinerja_kegiatan' ? 'Rata-rata Berbobot (Kinerja '. $reportFormat['score_weight_kinerja'] .'% / Kegiatan '. $reportFormat['score_weight_kegiatan'] .'%)' : ($reportFormat['scoring_method'] === 'weighted_kategori' ? 'Rata-rata Berbobot per Kategori' : 'Rata-rata') }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tanggal Cetak</span>
-                <span class="info-value">: {{ now()->format('d F Y H:i') }}</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- ===== SUMMARY STATS ===== --}}
-    <div class="summary-grid">
-        <div class="summary-item">
-            <div class="summary-value">{{ $totalKaryawan }}</div>
-            <div class="summary-label">Total Karyawan</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-value green">{{ $avgScore !== null ? number_format($avgScore, 1) : '-' }}</div>
-            <div class="summary-label">Rata-rata Nilai</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-value orange">{{ $maxScore !== null ? number_format($maxScore, 1) : '-' }}</div>
-            <div class="summary-label">Nilai Tertinggi</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-value purple">{{ $minScore !== null ? number_format($minScore, 1) : '-' }}</div>
-            <div class="summary-label">Nilai Terendah</div>
-        </div>
-    </div>
-
-    {{-- ===== SINGLE KARYAWAN PHOTO ===== --}}
     @if($karyawanFotoSrc)
     <div class="karyawan-photo-wrap">
         <div class="karyawan-photo-card">
@@ -661,42 +310,33 @@
     </div>
     @endif
 
-    {{-- ===== DATA TABLE ===== --}}
-    <table class="data-table">
+    <table>
         <thead>
             <tr>
                 @foreach($visibleColumns as $columnKey)
                     @if($columnKey === 'detail_kompetensi')
                         @if($jenisLaporan === 'ringkas')
                             @foreach($ringkasKategoriList as $kategori)
-                                <th class="detail-head text-center">
-                                    {{ $kategori->kategori }}
-                                    @if(($reportFormat['show_bobot_kategori'] ?? true) && $kategori->bobot)
-                                        <br><span style="font-size:{{ max($fontSize - 3, 7) }}px; font-weight:400; opacity:0.85;">Bobot {{ $kategori->bobot }}%</span>
-                                    @endif
-                                </th>
+                                <th class="detail-head">{{ $kategori->kategori }}</th>
                             @endforeach
                         @else
                             @foreach($kategoriList as $kategori)
                                 @if($kategori->kompetensi->isNotEmpty())
-                                    <th class="detail-head text-center" colspan="{{ $kategori->kompetensi->count() }}">
+                                    <th class="detail-head" colspan="{{ $kategori->kompetensi->count() }}">
                                         {{ $kategori->kategori }}
-                                        @if(($reportFormat['show_bobot_kategori'] ?? true) && $kategori->bobot)
-                                            <br><span style="font-size:{{ max($fontSize - 3, 7) }}px; font-weight:400; opacity:0.85;">Bobot {{ $kategori->bobot }}%</span>
-                                        @endif
                                     </th>
                                 @endif
                             @endforeach
                         @endif
                     @else
-                        <th width="{{ $colWidthMap[$columnKey] ?? 80 }}" {{ $detailHasGroupedHeader ? 'rowspan=2' : '' }} class="text-center">
+                        <th width="{{ $colWidthMap[$columnKey] ?? 80 }}" {{ $detailHasGroupedHeader ? 'rowspan=2' : '' }}>
                             {{ $labels[$columnKey] ?? ucfirst(str_replace('_', ' ', $columnKey)) }}
                         </th>
                     @endif
                 @endforeach
             </tr>
             @if($detailHasGroupedHeader)
-            <tr class="sub-header">
+            <tr>
                 @foreach($visibleColumns as $columnKey)
                     @if($columnKey === 'detail_kompetensi')
                         @foreach($kategoriList as $kategori)
@@ -713,12 +353,8 @@
             @endif
         </thead>
         <tbody>
-            @php
-                $rowIndex = 0;
-            @endphp
             @foreach($karyawanList as $i => $k)
                 @php
-                    $rowIndex++;
                     $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
                     $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
                     $trxByKompetensi = $k->transaksi
@@ -739,11 +375,11 @@
                 <tr>
                     @foreach($visibleColumns as $columnKey)
                         @if($columnKey === 'no')
-                            <td class="text-center row-number">{{ $rowIndex }}</td>
+                            <td class="text-center">{{ $i + 1 }}</td>
                         @elseif($columnKey === 'kode_karyawan')
-                            <td class="text-center">{{ $k->kode_karyawan }}</td>
+                            <td>{{ $k->kode_karyawan }}</td>
                         @elseif($columnKey === 'nama_karyawan')
-                            <td class="fw-semibold">{{ $k->nama_karyawan }}</td>
+                            <td>{{ $k->nama_karyawan }}</td>
                         @elseif($columnKey === 'pangkalan')
                             <td>{{ $k->pangkalan?->nama_pangkalan ?? '-' }}</td>
                         @elseif($columnKey === 'detail_kompetensi')
@@ -764,11 +400,11 @@
                                     @endphp
                                     <td class="text-center">
                                         @if(!$isApplicableKategori)
-                                            <span style="color:#9ca3af;">-</span>
+                                            -
                                         @elseif($kategoriAvg !== null)
-                                            <span class="fw-bold">{{ number_format($kategoriAvg, 2) }}</span>
+                                            {{ number_format($kategoriAvg, 2) }}
                                         @else
-                                            <span style="color:#9ca3af;">-</span>
+                                            -
                                         @endif
                                     </td>
                                 @endforeach
@@ -777,7 +413,7 @@
                                     @php $trx = $trxByKompetensi->get($kompetensi->id); @endphp
                                     <td class="text-center">
                                         @if(!$applicableKompetensiIds->contains((int) $kompetensi->id))
-                                            <span style="color:#9ca3af;">-</span>
+                                            -
                                         @else
                                             {{ $trx && $trx->nilai !== null ? number_format($trx->nilai, 0) : '-' }}
                                         @endif
@@ -785,74 +421,41 @@
                                 @endforeach
                             @endif
                         @elseif($columnKey === 'nilai_akhir')
-                            <td class="text-center fw-bold" style="font-size:{{ $fontSize }}px;">
-                                @if($nilaiAkhir !== null)
-                                    {{ number_format($nilaiAkhir, 2) }}
-                                @else
-                                    <span style="color:#9ca3af;">-</span>
-                                @endif
-                            </td>
+                            <td class="text-center">{{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}</td>
                         @elseif($columnKey === 'rating')
-                            <td class="text-center">
-                                @if($nilaiAkhir !== null)
-                                    <span class="rating-badge" style="background-color:{{ $ratingMeta['bg'] ?? '#e5e7eb' }}; color:{{ $ratingMeta['text'] ?? '#374151' }};">
-                                        {{ $ratingMeta['label'] }}
-                                    </span>
-                                @else
-                                    <span style="color:#9ca3af;">-</span>
-                                @endif
-                            </td>
+                            <td class="text-center">{{ $ratingMeta['label'] }}</td>
                         @endif
                     @endforeach
                 </tr>
             @endforeach
-            @if($karyawanList->isEmpty())
-                <tr>
-                    <td colspan="{{ count($visibleColumns) > 0 ? count($visibleColumns) : 7 }}" class="text-center" style="padding:20px; color:#9ca3af;">
-                        Tidak ada data untuk ditampilkan.
-                    </td>
-                </tr>
-            @endif
         </tbody>
     </table>
 
-    {{-- ===== FOOTER INFO ===== --}}
-    <div class="report-footer-info">
-        <em>Dicetak pada: {{ now()->format('d/m/Y H:i:s') }} | Total data: {{ $totalKaryawan }} karyawan</em>
-    </div>
-
-    {{-- ===== SIGNATURES ===== --}}
     @if($setting && $setting->show_nama_pimpinan)
     @php
         $lokasiSurat = $setting->lokasi_surat ?: '................';
-        $tanggalCetak = now()->format('d F Y');
+        $tanggalCetak = now()->format('d-m-Y');
     @endphp
-    <div class="signatures">
+    <div class="signatures clearfix">
         <div class="sign-col">
             <div class="sign-note">Mengetahui,</div>
             <div class="sign-role">Ketua Yayasan</div>
             <div class="sign-space">
                 @if($setting->show_tanda_tangan && $setting->ttd_ketua_yayasan_path)
-                    @php $ttdPath = public_path('storage/' . $setting->ttd_ketua_yayasan_path); @endphp
-                    @if(is_file($ttdPath))
-                        <img src="{{ $isPdfOutput ? $ttdPath : asset('storage/' . $setting->ttd_ketua_yayasan_path) }}" alt="TTD" style="max-height:60px;">
-                    @endif
+                    <img src="{{ public_path('storage/' . $setting->ttd_ketua_yayasan_path) }}" alt="TTD Ketua Yayasan" style="max-height:60px;">
                 @endif
             </div>
-            <div><span class="sign-name">{{ $setting->nama_ketua_yayasan ?? '................' }}</span></div>
+            <div><strong>{{ $setting->nama_ketua_yayasan ?? '-' }}</strong></div>
         </div>
         <div class="sign-col">
             <div class="sign-note">{{ $lokasiSurat }}, {{ $tanggalCetak }}</div>
             <div class="sign-role">Ketua Babinlumni</div>
             <div class="sign-space">
                 @if($setting->show_tanda_tangan && $setting->ttd_ketua_babinlumni_path)
-                    @php $ttdPath = public_path('storage/' . $setting->ttd_ketua_babinlumni_path); @endphp
-                    @if(is_file($ttdPath))
-                        <img src="{{ $isPdfOutput ? $ttdPath : asset('storage/' . $setting->ttd_ketua_babinlumni_path) }}" alt="TTD" style="max-height:60px;">
-                    @endif
+                    <img src="{{ public_path('storage/' . $setting->ttd_ketua_babinlumni_path) }}" alt="TTD Ketua Babinlumni" style="max-height:60px;">
                 @endif
             </div>
-            <div><span class="sign-name">{{ $setting->nama_ketua_babinlumni ?? '................' }}</span></div>
+            <div><strong>{{ $setting->nama_ketua_babinlumni ?? '-' }}</strong></div>
         </div>
     </div>
     @endif

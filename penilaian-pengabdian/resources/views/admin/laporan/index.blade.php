@@ -35,7 +35,7 @@
     <div class="card-body py-2">
 <form method="GET" action="{{ route($routePrefix . '.laporan.index') }}" class="d-flex align-items-end gap-2 flex-wrap">
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;"><i class="bi bi-funnel me-1"></i>Tahun Ajaran:</label>
-    <select name="tahun_penilaian_id" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+    <select name="tahun_penilaian_id" class="form-select form-select-sm" style="max-width:200px;">
         <option value="">-- Semua Tahun --</option>
         @foreach($tahunList as $t)
         <option value="{{ $t->id }}" {{ $selectedTahun == $t->id ? 'selected' : '' }}>
@@ -46,7 +46,7 @@
 
     @if($routePrefix !== 'user')
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Mode:</label>
-    <select name="mode" id="modeFilter" class="form-select form-select-sm" style="max-width:180px;" onchange="this.form.submit()">
+    <select name="mode" id="modeFilter" class="form-select form-select-sm" style="max-width:180px;">
         <option value="keseluruhan" {{ $mode === 'keseluruhan' ? 'selected' : '' }}>Keseluruhan</option>
         @if($routePrefix === 'admin')
         <option value="perdireksi" {{ $mode === 'perdireksi' ? 'selected' : '' }}>Per Direksi/Pangkalan</option>
@@ -57,7 +57,7 @@
 
     @if($routePrefix === 'admin')
     <div id="pangkalanFilterWrap" class="{{ $showPangkalanFilter ? '' : 'd-none' }}">
-    <select name="pangkalan_id" id="filterPangkalanSelect" class="form-select form-select-sm" style="max-width:220px;" onchange="this.form.submit()">
+    <select name="pangkalan_id" id="filterPangkalanSelect" class="form-select form-select-sm" style="max-width:220px;">
         <option value="">-- Pilih Pangkalan --</option>
         @foreach($pangkalanList as $p)
             <option value="{{ $p->id }}" {{ (string)$filterPangkalan === (string)$p->id ? 'selected' : '' }}>
@@ -70,7 +70,7 @@
 
     @if($routePrefix !== 'user')
     <div id="karyawanFilterWrap" class="{{ $showKaryawanFilter ? '' : 'd-none' }}">
-    <select name="karyawan_id" id="filterKaryawanSelect" class="form-select form-select-sm" style="max-width:240px;" onchange="this.form.submit()">
+    <select name="karyawan_id" id="filterKaryawanSelect" class="form-select form-select-sm" style="max-width:240px;">
         <option value="">-- Pilih Karyawan --</option>
         @foreach($karyawanFilterList as $kfilter)
             <option value="{{ $kfilter->id }}" {{ (string)$filterKaryawan === (string)$kfilter->id ? 'selected' : '' }}>
@@ -81,16 +81,15 @@
     </div>
     @endif
 
-    <div>
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Jenis Output:</label>
-    <select name="jenis_laporan" class="form-select form-select-sm" style="max-width:180px;" onchange="this.form.submit()">
+    <select name="jenis_laporan" class="form-select form-select-sm" style="max-width:180px;">
         <option value="ringkas" {{ ($jenisLaporan ?? 'ringkas') === 'ringkas' ? 'selected' : '' }}>Ringkas</option>
-        <option value="rinci" {{ ($jenisLaporan ?? 'ringkas') === 'rinci' ? 'selected' : '' }}>Rinci</option>
+        <option value="rinci" {{ ($jenisLaporan ?? 'ringkas') === 'rinci' ? 'selected' : '' }} {{ ($reportFormat['show_detail_kompetensi'] ?? true) ? '' : 'disabled' }}>Rinci</option>
     </select>
-    </div>
 
     @include('components.per-page-select')
 
+    <button type="submit" class="btn btn-sm btn-primary">Terapkan</button>
     @if(request()->hasAny(['tahun_penilaian_id', 'mode', 'pangkalan_id', 'karyawan_id', 'jenis_laporan', 'per_page']))
         <a href="{{ route($routePrefix . '.laporan.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
     @endif
@@ -338,18 +337,21 @@
 
             if (pangkalanSelect) {
                 pangkalanSelect.disabled = !showPangkalan;
+                if (!showPangkalan) {
+                    pangkalanSelect.value = '';
+                }
             }
 
             if (karyawanSelect) {
                 karyawanSelect.disabled = !showKaryawan;
+                if (!showKaryawan) {
+                    karyawanSelect.value = '';
+                }
             }
         };
 
-        // Run on page load to set correct visibility
-        toggleFilterVisibility();
-
-        // Toggle filter visibility dynamically when mode changes (without page reload)
         modeSelect.addEventListener('change', toggleFilterVisibility);
+        toggleFilterVisibility();
     });
 </script>
 @endpush
