@@ -12,17 +12,18 @@
 ## Repair Bugs
 | No | Tugas | Status | Keterangan |
 |----|-------|--------|------------|
-| 1 | Auto-search tanpa Terapkan | Sesuai | Debounce 500ms, select auto-submit. |
+| 1 | Auto-search tanpa Terapkan | | Debounce 500ms, select auto-submit. |
 | 2 | Laporan perorangan Portrait A4 | | Ringkas/Rinci, multi-pangkalan, per-pangkalan scoring. PDF ringkas + rinci terpisah. |
 | 3 | Laporan keseluruhan terpotong Ctrl+P | | Ditambah @media print CSS: force landscape, font kecil, table-layout fixed. |
-| 4 | Foto user dari karyawan | Sesuai | Topbar foto karyawan. |
-| 5 | Semua pencarian auto-submit | Sesuai | Karyawan, Transaksi, Laporan. |
-| 6 | Sidemenu Semua Data Karyawan | Sesuai | Karyawan Aktif, Kepala, Semua. |
-| 7 | Profil PDF hapus foto text | Sesuai | Row foto & kolom keterangan dihapus. |
-| 8 | Sidebar responsive 1366x768 | Sesuai | max-height, overflow-y, media query. |
+| 4 | Foto user dari karyawan | | Topbar foto karyawan. |
+| 5 | Semua pencarian auto-submit | | Karyawan, Transaksi, Laporan. |
+| 6 | Sidemenu Semua Data Karyawan | | Karyawan Aktif, Kepala, Semua. |
+| 7 | Profil PDF hapus foto text | | Row foto & kolom keterangan dihapus. |
+| 8 | Sidebar responsive 1366x768 | | max-height, overflow-y, media query. |
 | 9 | Collapse sidebar | | CSS !important + cubic-bezier transition 0.3s. Text hidden, only icons. |
-| 10 | Dashboard progress aktif | Sesuai | Filter is_active=true. |
+| 10 | Dashboard progress aktif | | Filter is_active=true. |
 | 11 | Lock setelah kepala nilai | | Pre-save lock check. |
+| 12 | Pisah halaman laporan keseluruhan & perorangan | | Route /laporan/perorangan terpisah. Controller + view baru. |
 | 13 | Multi-bagian | | Multiple select pangkalan di user & karyawan create/edit. getAllPangkalanIds() di laporan. |
 | 14 | Mutasi 2 jenis | | Tahun Ajaran + Antar Pangkalan. |
 | 15 | Field email, no_hp, kontak_darurat | | Migration + form. |
@@ -30,6 +31,17 @@
 | 17 | User self-update | | profile.blade.php. |
 | 18 | Hapus bobot di laporan | | Badge bobot dihapus. |
 | 19 | Bobot configurable | | PenilaianMetodeController. |
+| 20 | Login email/username + remember me | | Support login pakai email atau username. Remember me checkbox. |
+
+## Bug Fix Tambahan
+| No | Tugas | Status | Keterangan |
+|----|-------|--------|------------|
+| 1 | Session corruption setelah 404 | | Session driver database → file. Prevent session lock/corruption. |
+| 2 | Redirect loop / ↔ /login | | Root route cek Auth::check(), redirect ke dashboard sesuai role. |
+| 3 | 404 pada /admin/, /kepala/, /user/ | | Tambah root redirect ke dashboard masing-masing prefix. |
+| 4 | Custom 404 error page | | errors/404.blade.php standalone tanpa session dependency. |
+| 5 | @else/@endif orphaned di index.blade.php | | Hapus @else dan @endif sisa perorangan yang dihapus. |
+| 6 | Database backup | | mysqldump UTF-8 tanpa BOM via --result-file. |
 
 ## Sidebar Menu
 | No | Menu | Status |
@@ -45,15 +57,24 @@
 | 9 | Laporan > Keseluruhan, Perorangan, Format | |
 | 10 | FAQ > Help, FAQ | |
 
-## Perubahan Fix Terakhir- LaporanScoreCalculator: tambah method calculatePerPangkalan() untuk scoring per-pangkalan + rata-rata multi-pangkalan
+## Perubahan Fix Terakhir
+- LaporanScoreCalculator: tambah method calculatePerPangkalan() untuk scoring per-pangkalan + rata-rata multi-pangkalan
 - LaporanController: peroranganPdf & buildPeroranganData gunakan calculatePerPangkalan, load pangkalanLain relation
 - LaporanController: peroranganPdf routing ke perorangan_ringkas_pdf vs perorangan_pdf berdasarkan jenis_laporan
-- index.blade.php: Ringkas = kinerja per pangkalan (tabel), kegiatan per kategori (tabel). Rinci = flat indicator tanpa list pangkalan
-- perorangan_pdf.blade.php: multi-pangkalan grouping, summary pakai perPangkalanData, hapus list semua pangkalan
-- perorangan_ringkas_pdf.blade.php: view baru PDF ringkas (kinerja per pangkalan, kegiatan per kategori)- LaporanController: printView & exportPdf redirect ke perorangan_pdf saat mode=perorangan
+- LaporanController: tambah method perorangan(), kepalaPerorangan(), buildPeroranganPageData()
+- index.blade.php: hapus mode=perorangan, hanya keseluruhan + perdireksi
+- perorangan.blade.php: view baru standalone laporan perorangan
+- perorangan_pdf.blade.php: multi-pangkalan grouping, summary pakai perPangkalanData
+- perorangan_ringkas_pdf.blade.php: view baru PDF ringkas (kinerja per pangkalan, kegiatan per kategori)
 - Laporan PDF: @media print CSS (landscape, font kecil, table-layout fixed)
 - Sidebar CSS: !important pada display:none, cubic-bezier transition 0.3s
+- Sidebar: link perorangan ke route terpisah admin.laporan.perorangan
 - KaryawanController: tambah validasi pangkalan_tambahan + sync pivot
 - UserManagementController: tambah validasi pangkalan_tambahan + sync pivot
 - Karyawan create/edit: multi-select pangkalan tambahan
 - User create/edit: multi-select pangkalan tambahan
+- routes/web.php: tambah Auth facade import, root redirect cek role
+- routes/web.php: tambah /admin/, /kepala/, /user/ root redirect ke dashboard
+- bootstrap/app.php: revert exception handler (hapus redirect loop)
+- .env: SESSION_DRIVER=database → SESSION_DRIVER=file
+- errors/404.blade.php: custom 404 page standalone
