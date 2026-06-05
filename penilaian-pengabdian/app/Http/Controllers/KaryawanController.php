@@ -24,7 +24,7 @@ class KaryawanController extends Controller
         $filterStatusAktif = $request->input('status_aktif');
         $filterStatusKepala = $request->input('status_kepala', 'nonkepala');
 
-        $karyawan = Karyawan::with(['tahunPenilaian', 'pangkalan', 'user'])
+        $karyawan = Karyawan::with(['tahunPenilaian', 'pangkalan', 'pangkalans', 'user'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('nama_karyawan', 'like', "%{$search}%")
@@ -32,7 +32,7 @@ class KaryawanController extends Controller
                         ->orWhere('nomor_induk', 'like', "%{$search}%");
                 });
             })
-            ->when($filterPangkalan, fn($q) => $q->where('pangkalan_id', $filterPangkalan))
+            ->when($filterPangkalan, fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->where('pangkalan.id', $filterPangkalan)))
             ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('is_active', true))
             ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('is_active', false))
             ->when($filterStatusKepala === 'kepala', fn($q) =>
@@ -65,13 +65,13 @@ class KaryawanController extends Controller
         $kode         = $this->generateNextKodeKaryawan();
         $linkedUserIds = Karyawan::whereNotNull('user_id')->pluck('user_id');
         $users        = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
-        $pangkalan    = Pangkalan::orderBy('nama_pangkalan')->get();
+        $pangkalan    = Pangkalan::where('is_active', true)->orderBy('nama_pangkalan')->get();
         return view('admin.karyawan.create', compact('tahunAktif', 'kode', 'users', 'pangkalan'));
     }
 
     public function profilePdf(Karyawan $karyawan)
     {
-        $karyawan->load(['tahunPenilaian', 'pangkalan', 'user']);
+        $karyawan->load(['tahunPenilaian', 'pangkalan', 'pangkalans', 'user']);
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
 
@@ -97,9 +97,8 @@ class KaryawanController extends Controller
             'kontak_darurat'=> 'nullable|string|max:150',
             'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id',
-            'pangkalan_id'  => 'nullable|exists:pangkalan,id',
-            'pangkalan_tambahan' => 'nullable|array',
-            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
+            'pangkalan_ids' => 'nullable|array',
+            'pangkalan_ids.*' => 'exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
 
@@ -118,10 +117,14 @@ class KaryawanController extends Controller
             ]);
         }
 
-        $resolvedPangkalanId = $request->pangkalan_id ?: null;
+        $pangkalanIds = array_map('intval', $request->input('pangkalan_ids', []));
+        $resolvedPangkalanId = !empty($pangkalanIds) ? $pangkalanIds[0] : null;
 
         if ($linkedUser?->pangkalan_id) {
             $resolvedPangkalanId = $linkedUser->pangkalan_id;
+            if (!in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
+                array_unshift($pangkalanIds, $linkedUser->pangkalan_id);
+            }
         }
 
         if ($linkedUser?->is_kepala) {
@@ -154,7 +157,7 @@ class KaryawanController extends Controller
         $created = false;
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
-                Karyawan::create(array_merge($payload, [
+                $karyawan = Karyawan::create(array_merge($payload, [
                     'kode_karyawan' => $this->generateNextKodeKaryawan(),
                 ]));
                 $created = true;
@@ -172,16 +175,9 @@ class KaryawanController extends Controller
                 ->withErrors(['nama_karyawan' => 'Gagal membuat kode karyawan unik. Silakan coba lagi.']);
         }
 
-        // Sync pangkalan tambahan pivot table
-        $lastKaryawan = Karyawan::latest('id')->first();
-        if ($lastKaryawan) {
-            $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
-            $allPangkalanIds = array_unique(array_merge(
-                $resolvedPangkalanId ? [$resolvedPangkalanId] : [],
-                array_map('intval', $pangkalanTambahan)
-            ));
-            $lastKaryawan->pangkalanLain()->sync($allPangkalanIds);
-        }
+        // Sync semua pangkalan ke pivot table
+        $allPangkalanIds = array_unique(array_map('intval', $pangkalanIds));
+        $karyawan->syncPangkalan($allPangkalanIds);
 
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil ditambahkan.');
@@ -193,8 +189,14 @@ class KaryawanController extends Controller
             ->where('id', '!=', $karyawan->id)
             ->pluck('user_id');
         $users     = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
-        $pangkalan = Pangkalan::orderBy('nama_pangkalan')->get();
-        return view('admin.karyawan.edit', compact('karyawan', 'users', 'pangkalan'));
+        $pangkalan = Pangkalan::where('is_active', true)->orderBy('nama_pangkalan')->get();
+        // Load all pangkalan IDs from pivot table for multi-select
+        $pangkalanIds = $karyawan->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        // Fallback: if pivot is empty but pangkalan_id exists, use it
+        if (empty($pangkalanIds) && $karyawan->pangkalan_id) {
+            $pangkalanIds = [(int) $karyawan->pangkalan_id];
+        }
+        return view('admin.karyawan.edit', compact('karyawan', 'users', 'pangkalan', 'pangkalanIds'));
     }
 
     public function update(Request $request, Karyawan $karyawan)
@@ -212,9 +214,8 @@ class KaryawanController extends Controller
             'kontak_darurat'=> 'nullable|string|max:150',
             'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
             'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id,' . $karyawan->id,
-            'pangkalan_id'  => 'nullable|exists:pangkalan,id',
-            'pangkalan_tambahan' => 'nullable|array',
-            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
+            'pangkalan_ids' => 'nullable|array',
+            'pangkalan_ids.*' => 'exists:pangkalan,id',
             'tugas_khusus'  => 'nullable|string|max:255',
         ]);
     
@@ -267,7 +268,14 @@ class KaryawanController extends Controller
         if ($linkedUser?->pangkalan_id) { 
             $resolvedPangkalanId = $linkedUser->pangkalan_id; 
         }
-    
+
+        // Resolve all pangkalan IDs from multi-select
+        $pangkalanIds = array_map('intval', $request->input('pangkalan_ids', []));
+        if ($linkedUser?->pangkalan_id && !in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
+            array_unshift($pangkalanIds, $linkedUser->pangkalan_id);
+        }
+        $resolvedPangkalanId = !empty($pangkalanIds) ? $pangkalanIds[0] : $resolvedPangkalanId;
+
         // UPDATE DATABASE
         $karyawan->update([
             'nama_karyawan'       => $resolvedNamaKaryawan,
@@ -280,19 +288,14 @@ class KaryawanController extends Controller
             'email'              => $request->filled('email') ? trim((string) $request->email) : null,
             'no_hp'              => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
             'kontak_darurat'     => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
-            'foto_path'           => $fotoPath, // Sekarang variabel ini pasti ada isinya
+            'foto_path'           => $fotoPath,
             'user_id'             => $request->user_id ?: null,
             'pangkalan_id'        => $resolvedPangkalanId,
             'tugas_khusus'        => $request->tugas_khusus,
         ]);
     
-        // Sync pangkalan tambahan pivot table
-        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
-        $allPangkalanIds = array_unique(array_merge(
-            $resolvedPangkalanId ? [$resolvedPangkalanId] : [],
-            array_map('intval', $pangkalanTambahan)
-        ));
-        $karyawan->pangkalanLain()->sync($allPangkalanIds);
+        // Sync semua pangkalan ke pivot table (dan update derived pangkalan_id)
+        $karyawan->syncPangkalan(array_unique($pangkalanIds));
 
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil diperbarui.');
@@ -419,9 +422,17 @@ class KaryawanController extends Controller
 
             if ($existing) {
                 $existing->update($payload);
+                // Sync pangkalan to pivot table
+                if ($pangkalan) {
+                    $existing->syncPangkalan([$pangkalan->id]);
+                }
                 $updated++;
             } else {
-                Karyawan::create($payload);
+                $newKaryawan = Karyawan::create($payload);
+                // Sync pangkalan to pivot table
+                if ($pangkalan) {
+                    $newKaryawan->syncPangkalan([$pangkalan->id]);
+                }
                 $imported++;
             }
         }

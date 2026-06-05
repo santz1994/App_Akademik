@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pangkalan;
 use App\Models\KategoriKinerja;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 
@@ -11,11 +12,16 @@ class PangkalanController extends Controller
 {
     public function index(Request $request)
     {
-        $data = Pangkalan::with(['kategoriKinerja:id,kategori'])
-            ->withCount(['karyawan', 'kategoriKinerja'])
+        $filterStatusAktif = $request->input('status_aktif', 'aktif');
+
+        $data = Pangkalan::with(['kategoriKinerja:id,kategori', 'kepalaUser:id,name'])
+            ->withCount(['kategoriKinerja'])
+            ->withCount(['karyawan as karyawan_count' => fn($q) => $q->where('is_active', true)])
+            ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('pangkalan.is_active', true))
+            ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('pangkalan.is_active', false))
             ->latest();
         $data = $this->paginateWithPerPage($data, $request, 10);
-        return view('admin.pangkalan.index', compact('data'));
+        return view('admin.pangkalan.index', compact('data', 'filterStatusAktif'));
     }
 
     public function create()
@@ -25,8 +31,9 @@ class PangkalanController extends Controller
             ->where('jenis', 'kinerja')
             ->orderBy('kode_kategori')
             ->get();
+        $userList = User::where('role', '!=', 'admin')->orderBy('name')->get();
 
-        return view('admin.pangkalan.create', compact('kode', 'kategoriKinerjaList'));
+        return view('admin.pangkalan.create', compact('kode', 'kategoriKinerjaList', 'userList'));
     }
 
     public function store(Request $request)
@@ -35,6 +42,8 @@ class PangkalanController extends Controller
             'nama_pangkalan' => 'required|string|max:200',
             'pimpinan_pos'   => 'nullable|string|max:150',
             'keterangan'     => 'nullable|string',
+            'is_active'      => 'required|boolean',
+            'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
         ]);
@@ -46,11 +55,16 @@ class PangkalanController extends Controller
                     'nama_pangkalan' => $request->nama_pangkalan,
                     'pimpinan_pos'   => $request->pimpinan_pos,
                     'keterangan'     => $request->keterangan,
+                    'is_active'      => $request->boolean('is_active', true),
+                    'kepala_user_id' => $request->kepala_user_id ?: null,
                 ]);
 
                 $pangkalan->kategoriKinerja()->sync(
                     $this->sanitizeKategoriKinerjaIds((array) $request->input('kategori_kinerja_ids', []))
                 );
+
+                // Auto-sync is_kepala on User
+                $this->syncKepalaStatus($pangkalan);
 
                 return redirect()->route('admin.pangkalan.index')
                     ->with('success', 'Data pangkalan berhasil ditambahkan.');
@@ -73,8 +87,9 @@ class PangkalanController extends Controller
             ->where('jenis', 'kinerja')
             ->orderBy('kode_kategori')
             ->get();
+        $userList = User::where('role', '!=', 'admin')->orderBy('name')->get();
 
-        return view('admin.pangkalan.edit', compact('pangkalan', 'kategoriKinerjaList'));
+        return view('admin.pangkalan.edit', compact('pangkalan', 'kategoriKinerjaList', 'userList'));
     }
 
     public function update(Request $request, Pangkalan $pangkalan)
@@ -83,14 +98,21 @@ class PangkalanController extends Controller
             'nama_pangkalan' => 'required|string|max:200',
             'pimpinan_pos'   => 'nullable|string|max:150',
             'keterangan'     => 'nullable|string',
+            'is_active'      => 'required|boolean',
+            'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
         ]);
 
-        $pangkalan->update($request->only('nama_pangkalan', 'pimpinan_pos', 'keterangan'));
+        $oldKepalaUserId = $pangkalan->kepala_user_id;
+
+        $pangkalan->update($request->only('nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'kepala_user_id'));
         $pangkalan->kategoriKinerja()->sync(
             $this->sanitizeKategoriKinerjaIds((array) $request->input('kategori_kinerja_ids', []))
         );
+
+        // Auto-sync is_kepala on User (both old and new)
+        $this->syncKepalaStatus($pangkalan, $oldKepalaUserId);
 
         return redirect()->route('admin.pangkalan.index')
             ->with('success', 'Data pangkalan berhasil diperbarui.');
@@ -101,6 +123,65 @@ class PangkalanController extends Controller
         $pangkalan->delete();
         return redirect()->route('admin.pangkalan.index')
             ->with('success', 'Data pangkalan berhasil dihapus.');
+    }
+
+    public function toggleStatus(Pangkalan $pangkalan)
+    {
+        $pangkalan->update(['is_active' => !$pangkalan->is_active]);
+
+        return back()->with(
+            'success',
+            'Status pangkalan ' . $pangkalan->nama_pangkalan . ' berhasil diubah menjadi ' . ($pangkalan->is_active ? 'Aktif.' : 'Tidak Aktif.')
+        );
+    }
+
+    /**
+     * Auto-sync is_kepala on User based on pangkalan kepala assignment.
+     */
+    private function syncKepalaStatus(Pangkalan $pangkalan, ?int $oldKepalaUserId = null): void
+    {
+        // Set new kepala as is_kepala = true
+        if ($pangkalan->kepala_user_id) {
+            User::where('id', $pangkalan->kepala_user_id)->update(['is_kepala' => true]);
+
+            // Sync kepala_pangkalan pivot
+            $user = User::find($pangkalan->kepala_user_id);
+            if ($user) {
+                // Add this pangkalan to the user's kepala_pangkalan
+                if (!$user->kepalaPangkalan()->where('pangkalan_id', $pangkalan->id)->exists()) {
+                    $user->kepalaPangkalan()->attach($pangkalan->id);
+                }
+                // Update user's pangkalan_id if not set
+                if (!$user->pangkalan_id) {
+                    $user->update(['pangkalan_id' => $pangkalan->id]);
+                }
+
+                // Also add karyawan to this pangkalan's karyawan_pangkalan pivot
+                $karyawan = \App\Models\Karyawan::where('user_id', $user->id)->first();
+                if ($karyawan) {
+                    if (!$karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
+                        $karyawan->pangkalans()->attach($pangkalan->id);
+                    }
+                }
+            }
+        }
+
+        // Check if old kepala still leads other pangkalans
+        if ($oldKepalaUserId && $oldKepalaUserId != $pangkalan->kepala_user_id) {
+            $stillKepala = Pangkalan::where('kepala_user_id', $oldKepalaUserId)
+                ->where('id', '!=', $pangkalan->id)
+                ->exists();
+
+            if (!$stillKepala) {
+                User::where('id', $oldKepalaUserId)->update(['is_kepala' => false]);
+            }
+
+            // Remove from kepala_pangkalan pivot for this pangkalan
+            $oldUser = User::find($oldKepalaUserId);
+            if ($oldUser) {
+                $oldUser->kepalaPangkalan()->detach($pangkalan->id);
+            }
+        }
     }
 
     private function generateNextKodePangkalan(): string

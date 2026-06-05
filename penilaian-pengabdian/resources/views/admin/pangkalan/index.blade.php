@@ -10,11 +10,29 @@
 </div>
 @endif
 
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" action="{{ route('admin.pangkalan.index') }}" class="d-flex align-items-end gap-2 flex-wrap">
+            <div>
+                <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Status:</label>
+                <select name="status_aktif" class="form-select form-select-sm" style="min-width:145px;">
+                    <option value="">-- Semua --</option>
+                    <option value="aktif" {{ ($filterStatusAktif ?? '') === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                    <option value="nonaktif" {{ ($filterStatusAktif ?? '') === 'nonaktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                </select>
+            </div>
+            @include('components.per-page-select')
+            @if(request()->hasAny(['status_aktif', 'per_page']))
+                <a href="{{ route('admin.pangkalan.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            @endif
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="fw-semibold"><i class="bi bi-building me-2"></i>List Pangkalan Job</span>
         <div class="d-flex align-items-center gap-2">
-            @include('components.per-page-select', ['standalone' => true])
             <a href="{{ route('admin.pangkalan.create') }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-circle me-1"></i>Add Data
             </a>
@@ -28,10 +46,11 @@
                         <th width="40">No</th>
                         <th width="90">Kode</th>
                         <th>Nama Pangkalan / Job</th>
-                        <th>Pimpinan Pos</th>
+                        <th>Kepala Pimpinan Pos</th>
                         <th>Kategori Kinerja Terkait</th>
                         <th width="80" class="text-center">Karyawan</th>
-                        <th width="120">Aksi</th>
+                        <th width="80" class="text-center">Status</th>
+                        <th width="150">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +59,13 @@
                         <td>{{ $data->firstItem() + $i }}</td>
                         <td><span class="badge bg-secondary">{{ $p->kode_pangkalan }}</span></td>
                         <td class="fw-semibold">{{ $p->nama_pangkalan }}</td>
-                        <td>{{ $p->pimpinan_pos ?? '-' }}</td>
+                        <td>
+                            @if($p->kepalaUser)
+                                {{ $p->kepalaUser->name }}
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>
                             <div class="mb-1">
                                 <span class="badge bg-info text-dark">{{ $p->kategori_kinerja_count }} kategori</span>
@@ -54,7 +79,20 @@
                         <td class="text-center">
                             <span class="badge bg-primary">{{ $p->karyawan_count }}</span>
                         </td>
+                        <td class="text-center">
+                            <span class="badge {{ $p->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $p->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                            </span>
+                        </td>
                         <td>
+                            <form method="POST" action="{{ route('admin.pangkalan.toggle-status', $p) }}" class="d-inline"
+                                  onsubmit="return confirm('{{ $p->is_active ? 'Nonaktifkan' : 'Aktifkan' }} pangkalan ini?')">
+                                @csrf @method('PATCH')
+                                <button class="btn btn-{{ $p->is_active ? 'outline-secondary' : 'outline-success' }} btn-action"
+                                        title="{{ $p->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                    <i class="bi bi-{{ $p->is_active ? 'toggle-off' : 'toggle-on' }}"></i>
+                                </button>
+                            </form>
                             <a href="{{ route('admin.pangkalan.edit', $p) }}" class="btn btn-warning btn-action">
                                 <i class="bi bi-pencil"></i>
                             </a>
@@ -66,7 +104,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data pangkalan.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">Belum ada data pangkalan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -76,4 +114,17 @@
     <div class="card-footer">{{ $data->links() }}</div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('.card.mb-3 form');
+        if (form) {
+            form.querySelectorAll('select').forEach(function (sel) {
+                sel.addEventListener('change', function () { form.submit(); });
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

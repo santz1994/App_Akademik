@@ -56,7 +56,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Pangkalan Job Utama</label>
+                <label class="form-label fw-semibold">Pangkalan Job</label>
                 <select name="pangkalan_id" class="form-select @error('pangkalan_id') is-invalid @enderror">
                     <option value="">— Tidak ditetapkan —</option>
                     @foreach($pangkalanList as $p)
@@ -66,30 +66,18 @@
                     @endforeach
                 </select>
                 @error('pangkalan_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <small class="text-muted">Wajib diisi jika user dijadikan Kepala Pimpinan Pos.</small>
+                <small class="text-muted">Pangkalan tempat user ini bekerja.</small>
             </div>
 
-            @php
-                $existingPangkalanTambahan = old('pangkalan_tambahan', $user->kepalaPangkalan->pluck('id')->toArray());
-            @endphp
-            <div class="mb-3" id="pangkalanTambahanWrap">
-                <label class="form-label fw-semibold">Pangkalan Tambahan (Multi)</label>
-                <select name="pangkalan_tambahan[]" class="form-select @error('pangkalan_tambahan') is-invalid @enderror" multiple size="4">
-                    @foreach($pangkalanList as $p)
-                    <option value="{{ $p->id }}" {{ in_array($p->id, $existingPangkalanTambahan) ? 'selected' : '' }}>
-                        {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
-                    </option>
-                    @endforeach
-                </select>
-                @error('pangkalan_tambahan')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <small class="text-muted">Pilih pangkalan tambahan yang dipimpin oleh Kepala ini. Gunakan Ctrl+Click untuk memilih lebih dari satu.</small>
+            @if($user->is_kepala)
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Status Kepala</label>
+                <div>
+                    <span class="badge bg-warning text-dark"><i class="bi bi-star me-1"></i>Kepala Pimpinan Pos</span>
+                    <small class="text-muted d-block mt-1">Status kepala ditentukan dari data pangkalan. Untuk mengubah, edit data pangkalan terkait.</small>
+                </div>
             </div>
-
-            <div class="mb-4 form-check">
-                <input class="form-check-input" type="checkbox" name="is_kepala" value="1" id="isKepala"
-                    {{ old('is_kepala', $user->is_kepala) ? 'checked' : '' }}>
-                <label class="form-check-label fw-semibold" for="isKepala">Tetapkan sebagai Kepala Pimpinan Pos</label>
-            </div>
+            @endif
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Update</button>

@@ -22,15 +22,34 @@
                 @error('nama_pangkalan')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Pimpinan Pos</label>
-                <input type="text" name="pimpinan_pos" class="form-control @error('pimpinan_pos') is-invalid @enderror"
-                       value="{{ old('pimpinan_pos', $pangkalan->pimpinan_pos) }}">
-                @error('pimpinan_pos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <label class="form-label fw-semibold">Kepala Pimpinan Pos</label>
+                <select name="kepala_user_id" class="form-select @error('kepala_user_id') is-invalid @enderror">
+                    <option value="">— Tidak ditetapkan —</option>
+                    @foreach($userList as $u)
+                    <option value="{{ $u->id }}" {{ (string)old('kepala_user_id', $pangkalan->kepala_user_id) === (string)$u->id ? 'selected' : '' }}>
+                        {{ $u->name }} ({{ $u->username }})
+                    </option>
+                    @endforeach
+                </select>
+                @error('kepala_user_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @if(!$pangkalan->kepala_user_id && $pangkalan->pimpinan_pos)
+                    <small class="text-warning"><i class="bi bi-info-circle me-1"></i>Pimpinan pos lama: <strong>{{ $pangkalan->pimpinan_pos }}</strong>. Silakan pilih user yang sesuai.</small>
+                @else
+                    <small class="text-muted">Pilih user yang akan menjadi kepala pimpinan pos. User akan otomatis berstatus Kepala.</small>
+                @endif
             </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Keterangan</label>
                 <textarea name="keterangan" rows="3" class="form-control @error('keterangan') is-invalid @enderror">{{ old('keterangan', $pangkalan->keterangan) }}</textarea>
                 @error('keterangan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Status Pangkalan <span class="text-danger">*</span></label>
+                <select name="is_active" class="form-select @error('is_active') is-invalid @enderror">
+                    <option value="1" {{ (string)old('is_active', $pangkalan->is_active ? '1' : '0') === '1' ? 'selected' : '' }}>Aktif</option>
+                    <option value="0" {{ (string)old('is_active', $pangkalan->is_active ? '1' : '0') === '0' ? 'selected' : '' }}>Tidak Aktif</option>
+                </select>
+                @error('is_active')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <div class="mb-4">

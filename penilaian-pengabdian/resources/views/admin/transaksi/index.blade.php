@@ -175,7 +175,11 @@
                             <small class="text-muted">{{ $k->kode_karyawan }}</small>
                         </td>
                         <td>
-                            @if($k->pangkalan)
+                            @if($k->pangkalans && $k->pangkalans->count())
+                                @foreach($k->pangkalans as $p)
+                                    <small class="badge bg-light text-dark border">{{ $p->kode_pangkalan }}</small>{{ $loop->last ? '' : ' ' }}
+                                @endforeach
+                            @elseif($k->pangkalan)
                                 <small class="badge bg-light text-dark border">{{ $k->pangkalan->kode_pangkalan }}</small>
                                 {{ $k->pangkalan->nama_pangkalan }}
                             @else <span class="text-muted">-</span> @endif

@@ -8,7 +8,11 @@ class Pangkalan extends Model
 {
     protected $table = 'pangkalan';
 
-    protected $fillable = ['kode_pangkalan', 'nama_pangkalan', 'pimpinan_pos', 'keterangan'];
+    protected $fillable = ['kode_pangkalan', 'nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'kepala_user_id'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     public function karyawan()
     {
@@ -18,6 +22,22 @@ class Pangkalan extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * User yang menjadi kepala pangkalan ini.
+     */
+    public function kepalaUser()
+    {
+        return $this->belongsTo(User::class, 'kepala_user_id');
+    }
+
+    /**
+     * Semua karyawan yang bekerja di pangkalan ini (via pivot table).
+     */
+    public function karyawanPivot()
+    {
+        return $this->belongsToMany(Karyawan::class, 'karyawan_pangkalan', 'pangkalan_id', 'karyawan_id')->withTimestamps();
     }
 
     public function kategoriKinerja()

@@ -81,6 +81,8 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
 
     // Pangkalan Job
     Route::resource('pangkalan', PangkalanController::class)->except(['show']);
+    Route::patch('pangkalan/{pangkalan}/toggle-status', [PangkalanController::class, 'toggleStatus'])
+        ->name('pangkalan.toggle-status');
 
     // Kompetensi
     Route::resource('kompetensi', KompetensiController::class)->except(['show']);

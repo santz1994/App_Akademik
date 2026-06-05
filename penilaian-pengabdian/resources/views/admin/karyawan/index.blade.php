@@ -127,9 +127,13 @@
                             </span>
                         </td>
                         <td>
-                            @if($k->pangkalan)
-                            <small class="badge bg-info text-dark">{{ $k->pangkalan->kode_pangkalan }}</small>
-                            {{ $k->pangkalan->nama_pangkalan }}
+                            @if($k->pangkalans && $k->pangkalans->count())
+                                @foreach($k->pangkalans as $p)
+                                    <small class="badge bg-info text-dark">{{ $p->kode_pangkalan }}</small>{{ $loop->last ? '' : ', ' }}
+                                @endforeach
+                            @elseif($k->pangkalan)
+                                <small class="badge bg-info text-dark">{{ $k->pangkalan->kode_pangkalan }}</small>
+                                {{ $k->pangkalan->nama_pangkalan }}
                             @else <span class="text-muted">-</span> @endif
                         </td>
                         <td>{{ $k->tahunPenilaian->periode_penilaian ?? '-' }}</td>

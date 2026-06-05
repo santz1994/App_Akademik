@@ -214,8 +214,16 @@
             <tr>
                 <td>Pangkalan Job</td>
                 <td>
-                    @if($karyawan->pangkalan)
-                        {{ $karyawan->pangkalan->kode_pangkalan }} - {{ $karyawan->pangkalan->nama_pangkalan }}
+                    @php
+                        $allPangkalans = $karyawan->pangkalans ?? collect();
+                        if ($allPangkalans->isEmpty() && $karyawan->pangkalan) {
+                            $allPangkalans = collect([$karyawan->pangkalan]);
+                        }
+                    @endphp
+                    @if($allPangkalans->count())
+                        @foreach($allPangkalans as $p)
+                            {{ $p->kode_pangkalan }} - {{ $p->nama_pangkalan }}{!! $loop->last ? '' : '<br>' !!}
+                        @endforeach
                     @else
                         -
                     @endif

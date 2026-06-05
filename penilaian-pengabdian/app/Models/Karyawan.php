@@ -39,30 +39,47 @@ class Karyawan extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Pangkalan utama karyawan (derived dari pivot table, untuk backward compatibility).
+     */
     public function pangkalan()
     {
         return $this->belongsTo(Pangkalan::class);
     }
 
     /**
-     * Pangkalan tambahan tempat karyawan bekerja (many-to-many).
+     * Semua pangkalan tempat karyawan bekerja (many-to-many via pivot table).
+     * Ini adalah sumber kebenaran utama untuk relasi pangkalan.
      */
-    public function pangkalanLain()
+    public function pangkalans()
     {
         return $this->belongsToMany(Pangkalan::class, 'karyawan_pangkalan', 'karyawan_id', 'pangkalan_id')->withTimestamps();
     }
 
     /**
-     * Mendapatkan semua pangkalan tempat karyawan bekerja.
-     * Termasuk pangkalan utama (pangkalan_id) dan pangkalan tambahan.
+     * Alias untuk backward compatibility.
+     */
+    public function pangkalanLain()
+    {
+        return $this->pangkalans();
+    }
+
+    /**
+     * Mendapatkan semua ID pangkalan tempat karyawan bekerja dari pivot table.
      */
     public function getAllPangkalanIds(): array
     {
-        $ids = $this->pangkalanLain()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
-        if ($this->pangkalan_id && !in_array((int) $this->pangkalan_id, $ids, true)) {
-            $ids[] = (int) $this->pangkalan_id;
-        }
-        return array_unique($ids);
+        return $this->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+    }
+
+    /**
+     * Sync pangkalan dan update pangkalan_id (derived field) dari pivot table.
+     */
+    public function syncPangkalan(array $pangkalanIds): void
+    {
+        $this->pangkalans()->sync($pangkalanIds);
+        // Update derived pangkalan_id = first selected (or null)
+        $this->update(['pangkalan_id' => !empty($pangkalanIds) ? (int) $pangkalanIds[0] : null]);
     }
 
     public function tahunPenilaian()

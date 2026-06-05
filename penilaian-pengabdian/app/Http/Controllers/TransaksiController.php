@@ -28,10 +28,11 @@ class TransaksiController extends Controller
         $search = trim((string) $request->input('q'));
         $filterPangkalan = $request->input('pangkalan_id');
         $filterStatusLock = $request->input('status_lock');
-        $filterStatusAktif = $request->input('status_aktif');
+        $filterStatusAktif = $request->input('status_aktif', 'aktif');
 
         $karyawanList = Karyawan::with([
             'pangkalan.kategoriKinerja',
+            'pangkalans',
             'transaksi' => fn($q) => $q->when($selectedTahun, fn($q) =>
                 $q->where('tahun_penilaian_id', $selectedTahun))->with('kompetensi'),
             'penilaianLocks' => fn($q) => $q->when($selectedTahun, fn($q) =>
@@ -44,7 +45,7 @@ class TransaksiController extends Controller
                     ->orWhere('kode_karyawan', 'like', "%{$search}%");
             });
         })
-        ->when($filterPangkalan, fn($q) => $q->where('pangkalan_id', $filterPangkalan))
+        ->when($filterPangkalan, fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->where('pangkalan.id', $filterPangkalan)))
         ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('is_active', true))
         ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('is_active', false))
         ->when($filterStatusLock === 'locked' && $selectedTahun, fn($q) =>
@@ -113,12 +114,14 @@ class TransaksiController extends Controller
 
         $karyawanList = Karyawan::with([
             'pangkalan.kategoriKinerja',
+            'pangkalans',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi'),
             'penilaianLocks' => fn($q) => $q->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun)),
         ])
         ->bukanKepala()
+        ->where('is_active', true)
         ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
         ->when($search !== '', function ($q) use ($search) {
             $q->where(function ($sub) use ($search) {
@@ -173,7 +176,7 @@ class TransaksiController extends Controller
 
     public function create(Request $request)
     {
-        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja')->bukanKepala()->orderBy('nama_karyawan')->get();
+        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')->bukanKepala()->where('is_active', true)->orderBy('nama_karyawan')->get();
         $tahunList     = TahunPenilaian::orderByDesc('periode_penilaian')->get();
         $tahunAktif    = TahunPenilaian::where('is_active', true)->first();
         $kategoriBase = KategoriKinerja::with(['kompetensi' => fn($q) => $q->orderBy('kode_kompetensi')])
@@ -183,6 +186,8 @@ class TransaksiController extends Controller
 
         $selectedKaryawan = null;
         $selectedTahun    = null;
+        $selectedPangkalan = null;
+        $karyawanPangkalans = collect();
         $existingNilai    = [];
         $lockedKompetensiIds = [];
         $isLocked = false;
@@ -190,20 +195,38 @@ class TransaksiController extends Controller
         $hasPendingUnlockRequest = false;
 
         if ($request->filled('karyawan_id') && $request->filled('tahun_penilaian_id')) {
-            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja')->bukanKepala()->find($request->karyawan_id);
+            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')->bukanKepala()->where('is_active', true)->find($request->karyawan_id);
             $selectedTahun    = TahunPenilaian::find($request->tahun_penilaian_id);
 
             if ($selectedKaryawan) {
-                $existingNilai = Transaksi::where('karyawan_id', $request->karyawan_id)
-                    ->where('tahun_penilaian_id', $request->tahun_penilaian_id)
-                    ->whereNotNull('nilai')
-                    ->pluck('nilai', 'kompetensi_id')
-                    ->toArray();
+                $karyawanPangkalans = $selectedKaryawan->pangkalans;
 
-                $lockState = $this->resolveLockState((int) $request->karyawan_id, (int) $request->tahun_penilaian_id);
+                // Determine which pangkalan to assess
+                if ($request->filled('pangkalan_id') && $karyawanPangkalans->contains('id', (int) $request->pangkalan_id)) {
+                    $selectedPangkalan = $karyawanPangkalans->firstWhere('id', (int) $request->pangkalan_id);
+                } elseif ($karyawanPangkalans->count() === 1) {
+                    $selectedPangkalan = $karyawanPangkalans->first();
+                }
+
+                $existingNilai = [];
+                $lockState = ['is_locked' => false, 'has_scores' => false, 'lock' => null];
+
+                if ($selectedPangkalan) {
+                    $existingNilai = Transaksi::where('karyawan_id', $request->karyawan_id)
+                        ->where('tahun_penilaian_id', $request->tahun_penilaian_id)
+                        ->where('pangkalan_id', $selectedPangkalan->id)
+                        ->whereNotNull('nilai')
+                        ->pluck('nilai', 'kompetensi_id')
+                        ->toArray();
+
+                    $lockState = $this->resolveLockState((int) $request->karyawan_id, (int) $request->tahun_penilaian_id, (int) $selectedPangkalan->id);
+                }
+
                 $isLocked = $lockState['is_locked'];
                 $canEditLockedScores = $this->canEditLockedScores($lockState);
-                $kategoriList = $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
+                $kategoriList = $selectedPangkalan
+                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase)
+                    : $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
                 $lockedKompetensiIds = $canEditLockedScores
                     ? []
                     : array_map('intval', array_keys($existingNilai));
@@ -218,7 +241,8 @@ class TransaksiController extends Controller
 
         return view('admin.transaksi.create', compact(
             'karyawanList', 'tahunList', 'tahunAktif',
-            'kategoriList', 'selectedKaryawan', 'selectedTahun', 'existingNilai', 'lockedKompetensiIds', 'isLocked', 'canEditLockedScores', 'hasPendingUnlockRequest'
+            'kategoriList', 'selectedKaryawan', 'selectedTahun', 'selectedPangkalan', 'karyawanPangkalans',
+            'existingNilai', 'lockedKompetensiIds', 'isLocked', 'canEditLockedScores', 'hasPendingUnlockRequest'
         ));
     }
 
@@ -227,8 +251,9 @@ class TransaksiController extends Controller
         $user = Auth::user();
         abort_unless($user->is_kepala, 403);
 
-        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja')
+        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
             ->bukanKepala()
+            ->where('is_active', true)
             ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
             ->orderBy('nama_karyawan')
             ->get();
@@ -241,6 +266,8 @@ class TransaksiController extends Controller
 
         $selectedKaryawan = null;
         $selectedTahun    = null;
+        $selectedPangkalan = null;
+        $karyawanPangkalans = collect();
         $existingNilai    = [];
         $lockedKompetensiIds = [];
         $isLocked = false;
@@ -248,24 +275,46 @@ class TransaksiController extends Controller
         $hasPendingUnlockRequest = false;
 
         if ($request->filled('karyawan_id') && $request->filled('tahun_penilaian_id')) {
-            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja')
+            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
                 ->bukanKepala()
+                ->where('is_active', true)
                 ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
                 ->find($request->karyawan_id);
 
             $selectedTahun = TahunPenilaian::find($request->tahun_penilaian_id);
 
             if ($selectedKaryawan) {
-                $existingNilai = Transaksi::where('karyawan_id', $selectedKaryawan->id)
-                    ->where('tahun_penilaian_id', $request->tahun_penilaian_id)
-                    ->whereNotNull('nilai')
-                    ->pluck('nilai', 'kompetensi_id')
-                    ->toArray();
+                // Only show pangkalans that this kepala manages
+                $karyawanPangkalans = $selectedKaryawan->pangkalans->filter(
+                    fn($p) => in_array((int) $p->id, $user->getAllPangkalanIds(), true)
+                );
 
-                $lockState = $this->resolveLockState((int) $selectedKaryawan->id, (int) $request->tahun_penilaian_id);
+                // Determine which pangkalan to assess
+                if ($request->filled('pangkalan_id') && $karyawanPangkalans->contains('id', (int) $request->pangkalan_id)) {
+                    $selectedPangkalan = $karyawanPangkalans->firstWhere('id', (int) $request->pangkalan_id);
+                } elseif ($karyawanPangkalans->count() === 1) {
+                    $selectedPangkalan = $karyawanPangkalans->first();
+                }
+
+                $existingNilai = [];
+                $lockState = ['is_locked' => false, 'has_scores' => false, 'lock' => null];
+
+                if ($selectedPangkalan) {
+                    $existingNilai = Transaksi::where('karyawan_id', $selectedKaryawan->id)
+                        ->where('tahun_penilaian_id', $request->tahun_penilaian_id)
+                        ->where('pangkalan_id', $selectedPangkalan->id)
+                        ->whereNotNull('nilai')
+                        ->pluck('nilai', 'kompetensi_id')
+                        ->toArray();
+
+                    $lockState = $this->resolveLockState((int) $selectedKaryawan->id, (int) $request->tahun_penilaian_id, (int) $selectedPangkalan->id);
+                }
+
                 $isLocked = $lockState['is_locked'];
                 $canEditLockedScores = $this->canEditLockedScores($lockState);
-                $kategoriList = $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
+                $kategoriList = $selectedPangkalan
+                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase)
+                    : $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
                 $lockedKompetensiIds = $canEditLockedScores
                     ? []
                     : array_map('intval', array_keys($existingNilai));
@@ -287,6 +336,8 @@ class TransaksiController extends Controller
             'kategoriList',
             'selectedKaryawan',
             'selectedTahun',
+            'selectedPangkalan',
+            'karyawanPangkalans',
             'existingNilai',
             'lockedKompetensiIds',
             'routePrefix',
@@ -300,6 +351,7 @@ class TransaksiController extends Controller
     {
         $request->validate([
             'karyawan_id'        => 'required|exists:karyawan,id',
+            'pangkalan_id'       => 'required|exists:pangkalan,id',
             'tahun_penilaian_id' => 'required|exists:tahun_penilaian,id',
             'nilai'              => 'required|array',
             'nilai.*'            => 'nullable|numeric|min:0|max:100',
@@ -307,33 +359,42 @@ class TransaksiController extends Controller
 
         $karyawanId = $request->karyawan_id;
         $tahunId    = $request->tahun_penilaian_id;
+        $pangkalanId = (int) $request->pangkalan_id;
 
         $user = Auth::user();
         abort_unless($user && $user->canAccessPenilaianArea(), 403);
 
-        $karyawan = Karyawan::with(['pangkalan.kategoriKinerja', 'user'])->findOrFail($karyawanId);
+        $karyawan = Karyawan::with(['pangkalan.kategoriKinerja', 'pangkalans', 'user'])->findOrFail($karyawanId);
         if ($karyawan->user?->is_kepala) {
             return back()->withInput()->with('error', 'Data Kepala tidak termasuk objek penilaian karyawan.');
         }
 
-        $lockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId);
-        if ($lockState['is_locked']) {
-            return back()->withInput()->with('error', 'Nilai sudah terkunci. Ajukan unlock terlebih dahulu.');
+        // Validate karyawan is assigned to this pangkalan
+        if (!$karyawan->pangkalans->contains('id', $pangkalanId)) {
+            return back()->withInput()->with('error', 'Karyawan tidak terdaftar di pangkalan ini.');
         }
 
+        // Validate kepala can only assess for their pangkalan
         if ($user && $user->is_kepala) {
-            $isAllowed = in_array((int) $karyawan->pangkalan_id, $user->getAllPangkalanIds(), true);
-
-            if (!$isAllowed) {
+            if (!in_array($pangkalanId, $user->getAllPangkalanIds(), true)) {
                 return back()->with('error', 'Anda hanya dapat menilai karyawan dalam pangkalan yang Anda pimpin.');
             }
         }
 
-        $nilaiInput = (array) $request->input('nilai', []);
-        $kategoriList = $this->resolveKategoriListForKaryawan($karyawan);
+        $lockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId, $pangkalanId);
+        if ($lockState['is_locked']) {
+            return back()->withInput()->with('error', 'Nilai sudah terkunci. Ajukan unlock terlebih dahulu.');
+        }
+
+        // Get the selected pangkalan and resolve kategori for it
+        $selectedPangkalan = \App\Models\Pangkalan::with('kategoriKinerja')->find($pangkalanId);
+        $kategoriList = $this->resolveKategoriListForPangkalan($selectedPangkalan);
         $allowedKompetensiIds = $this->resolveAllowedKompetensiIds($kategoriList);
+
+        $nilaiInput = (array) $request->input('nilai', []);
         $existingScoredKompetensiIds = Transaksi::where('karyawan_id', $karyawanId)
             ->where('tahun_penilaian_id', $tahunId)
+            ->where('pangkalan_id', $pangkalanId)
             ->whereNotNull('nilai')
             ->pluck('kompetensi_id')
             ->map(fn($id) => (int) $id)
@@ -363,19 +424,17 @@ class TransaksiController extends Controller
             ]);
         }
 
-        if ($karyawan->pangkalan_id) {
-            $kinerjaKompetensiIds = $kategoriList
-                ->filter(fn($kategori) => strtolower((string) $kategori->jenis) === 'kinerja')
-                ->flatMap(fn($kategori) => $kategori->kompetensi->pluck('id'))
-                ->map(fn($id) => (int) $id)
-                ->unique()
-                ->values();
+        $kinerjaKompetensiIds = $kategoriList
+            ->filter(fn($kategori) => strtolower((string) $kategori->jenis) === 'kinerja')
+            ->flatMap(fn($kategori) => $kategori->kompetensi->pluck('id'))
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
 
-            if ($kinerjaKompetensiIds->isNotEmpty() && $finalScoredKompetensiIds->intersect($kinerjaKompetensiIds)->isEmpty()) {
-                return back()->withInput()->withErrors([
-                    'nilai' => 'Karyawan yang memiliki pangkalan wajib memiliki minimal satu penilaian kinerja (nilai 0 - 100).',
-                ]);
-            }
+        if ($kinerjaKompetensiIds->isNotEmpty() && $finalScoredKompetensiIds->intersect($kinerjaKompetensiIds)->isEmpty()) {
+            return back()->withInput()->withErrors([
+                'nilai' => 'Wajib memiliki minimal satu penilaian kinerja (nilai 0 - 100) untuk pangkalan ini.',
+            ]);
         }
 
         $missingMandatory = [];
@@ -408,8 +467,8 @@ class TransaksiController extends Controller
         $counter    = Transaksi::max('id') ?? 0;
         $savedAny = false;
 
-        // Pre-save lock check: re-verify lock state right before saving
-        $currentLockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId);
+        // Pre-save lock check
+        $currentLockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId, $pangkalanId);
         if ($currentLockState['is_locked']) {
             return back()->withInput()->with('error', 'Nilai sudah terkunci oleh proses lain. Silakan refresh halaman.');
         }
@@ -429,6 +488,7 @@ class TransaksiController extends Controller
             if ($numericNilai === null) {
                 Transaksi::where('karyawan_id', $karyawanId)
                     ->where('tahun_penilaian_id', $tahunId)
+                    ->where('pangkalan_id', $pangkalanId)
                     ->where('kompetensi_id', $kompetensiId)
                     ->delete();
                 continue;
@@ -438,6 +498,7 @@ class TransaksiController extends Controller
             Transaksi::updateOrCreate(
                 [
                     'karyawan_id'        => $karyawanId,
+                    'pangkalan_id'       => $pangkalanId,
                     'tahun_penilaian_id' => $tahunId,
                     'kompetensi_id'      => $kompetensiId,
                 ],
@@ -458,7 +519,7 @@ class TransaksiController extends Controller
         $routeName = ($user && $user->is_kepala) ? 'kepala.transaksi.index' : 'admin.transaksi.index';
 
         return redirect()->route($routeName, ['tahun_penilaian_id' => $tahunId])
-            ->with('success', 'Nilai penilaian berhasil disimpan.');
+            ->with('success', 'Nilai penilaian berhasil disimpan untuk ' . $selectedPangkalan->nama_pangkalan . '.');
     }
 
     public function submitFinal(Request $request)
@@ -877,17 +938,21 @@ class TransaksiController extends Controller
             ->with('success', 'Semua penilaian karyawan berhasil dihapus.');
     }
 
-    private function resolveLockState(int $karyawanId, int $tahunId): array
+    private function resolveLockState(int $karyawanId, int $tahunId, ?int $pangkalanId = null): array
     {
-        $lock = PenilaianLock::where('karyawan_id', $karyawanId)
-            ->where('tahun_penilaian_id', $tahunId)
-            ->first();
+        $lockQuery = PenilaianLock::where('karyawan_id', $karyawanId)
+            ->where('tahun_penilaian_id', $tahunId);
 
-        $hasScores = Transaksi::where('karyawan_id', $karyawanId)
+        $scoresQuery = Transaksi::where('karyawan_id', $karyawanId)
             ->where('tahun_penilaian_id', $tahunId)
-            ->whereNotNull('nilai')
-            ->exists();
+            ->whereNotNull('nilai');
 
+        if ($pangkalanId) {
+            $scoresQuery->where('pangkalan_id', $pangkalanId);
+        }
+
+        $lock = $lockQuery->first();
+        $hasScores = $scoresQuery->exists();
         $isLocked = $lock ? (bool) $lock->is_locked : false;
 
         return [
@@ -895,6 +960,44 @@ class TransaksiController extends Controller
             'has_scores' => $hasScores,
             'is_locked' => $isLocked,
         ];
+    }
+
+    /**
+     * Resolve kategori list for a specific pangkalan.
+     */
+    private function resolveKategoriListForPangkalan(?Pangkalan $pangkalan, $baseList = null): \Illuminate\Support\Collection
+    {
+        $kategoriList = $baseList ?? KategoriKinerja::with([
+            'kompetensi' => fn($q) => $q->orderBy('kode_kompetensi')
+        ])->orderBy('kode_kategori')->get();
+
+        if (!$pangkalan) {
+            return $kategoriList->values();
+        }
+
+        // Get kategori kinerja mapped to this pangkalan
+        $mappedKategoriIds = $pangkalan->kategoriKinerja
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $kategoriKinerja = $kategoriList
+            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kinerja')
+            ->values();
+
+        $selectedKinerja = $mappedKategoriIds->isNotEmpty()
+            ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
+            : $kategoriKinerja;
+
+        $mandatoryKegiatan = $kategoriList
+            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan' && (bool) ($kategori->is_wajib ?? false))
+            ->values();
+
+        return $selectedKinerja
+            ->concat($mandatoryKegiatan)
+            ->unique('id')
+            ->values();
     }
 
     private function extractScoredKompetensiIds(array $nilaiInput)

@@ -222,6 +222,10 @@
     @if(isset($perPangkalanData) && count($perPangkalanData['perPangkalan']) > 1)
     {{-- Multi-pangkalan: show per-pangkalan breakdown --}}
     @foreach($perPangkalanData['perPangkalan'] as $ppData)
+    @php
+        // Use per-pangkalan transaksi if available
+        $pangkalanTrx = isset($trxByPangkalan[$ppData['pangkalan_id']]) ? $trxByPangkalan[$ppData['pangkalan_id']] : $trxByKompetensi;
+    @endphp
     <div style="margin-bottom: 6px;">
         <div style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #e2e8f0; padding: 4px 8px;">
             @if($ppData['pangkalan'])
@@ -243,7 +247,7 @@
             @foreach($ppData['kategoriDetails'] as $kd)
                 @foreach($kd['kategori']->kompetensi as $komp)
                     @php
-                        $t = $trxByKompetensi->get($komp->id);
+                        $t = $pangkalanTrx->get($komp->id);
                         $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                     @endphp
                     <tr>

@@ -40,17 +40,7 @@ class UserManagementController extends Controller
             'password' => 'required|min:6|confirmed',
             'role'     => 'required|in:admin,user',
             'pangkalan_id' => 'nullable|exists:pangkalan,id',
-            'pangkalan_tambahan' => 'nullable|array',
-            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
-            'is_kepala' => 'nullable|boolean',
         ]);
-
-        $isKepala = $request->boolean('is_kepala');
-        if ($isKepala && !$request->filled('pangkalan_id')) {
-            return back()->withErrors([
-                'pangkalan_id' => 'Pangkalan wajib dipilih jika user ditetapkan sebagai Kepala Pimpinan Pos.',
-            ])->withInput();
-        }
 
         $isAdmin = $request->role === 'admin';
 
@@ -61,11 +51,8 @@ class UserManagementController extends Controller
             'password' => Hash::make($request->password),
             'role'     => $request->role,
             'pangkalan_id' => $isAdmin ? null : ($request->pangkalan_id ?: null),
-            'is_kepala' => $isAdmin ? false : $isKepala,
+            'is_kepala' => false, // Kepala ditentukan dari data pangkalan
         ]);
-
-        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
-        $this->syncPimpinanPosByUser($createdUser, null, $pangkalanTambahan);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil ditambahkan.');
@@ -86,36 +73,19 @@ class UserManagementController extends Controller
             'role'     => 'required|in:admin,user',
             'password' => 'nullable|min:6|confirmed',
             'pangkalan_id' => 'nullable|exists:pangkalan,id',
-            'pangkalan_tambahan' => 'nullable|array',
-            'pangkalan_tambahan.*' => 'exists:pangkalan,id',
-            'is_kepala' => 'nullable|boolean',
         ]);
 
-        $isKepala = $request->boolean('is_kepala');
-        if ($isKepala && !$request->filled('pangkalan_id')) {
-            return back()->withErrors([
-                'pangkalan_id' => 'Pangkalan wajib dipilih jika user ditetapkan sebagai Kepala Pimpinan Pos.',
-            ])->withInput();
-        }
-
         $isAdmin = $request->role === 'admin';
-        $before = [
-            'name' => $user->name,
-            'pangkalan_id' => $user->pangkalan_id,
-            'is_kepala' => (bool) $user->is_kepala,
-        ];
 
         $data = $request->only('name', 'username', 'email', 'role');
         $data['pangkalan_id'] = $isAdmin ? null : ($request->pangkalan_id ?: null);
-        $data['is_kepala'] = $isAdmin ? false : $isKepala;
+        // is_kepala tidak diubah dari sini, ditentukan dari data pangkalan
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
         $user->update($data);
-        $pangkalanTambahan = $request->input('pangkalan_tambahan', []);
-        $this->syncPimpinanPosByUser($user->fresh(), $before, $pangkalanTambahan);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil diperbarui.');
@@ -127,14 +97,10 @@ class UserManagementController extends Controller
             return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
-        $before = [
-            'name' => $user->name,
-            'pangkalan_id' => $user->pangkalan_id,
-            'is_kepala' => (bool) $user->is_kepala,
-        ];
+        // Remove kepala assignment from all pangkalan before deleting user
+        Pangkalan::where('kepala_user_id', $user->id)->update(['kepala_user_id' => null]);
 
         $user->delete();
-        $this->clearPimpinanPosIfOwned($before);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil dihapus.');
@@ -220,7 +186,7 @@ class UserManagementController extends Controller
                 'email' => $email,
                 'role' => $role,
                 'pangkalan_id' => $pangkalanId,
-                'is_kepala' => $isKepala,
+                'is_kepala' => false, // Kepala ditentukan dari data pangkalan
             ];
 
             if ($passwordRaw !== '') {
@@ -230,17 +196,10 @@ class UserManagementController extends Controller
             }
 
             if ($existing) {
-                $before = [
-                    'name' => $existing->name,
-                    'pangkalan_id' => $existing->pangkalan_id,
-                    'is_kepala' => (bool) $existing->is_kepala,
-                ];
                 $existing->update($data);
-                $this->syncPimpinanPosByUser($existing->fresh(), $before);
                 $updated++;
             } else {
-                $created = User::create($data);
-                $this->syncPimpinanPosByUser($created, null);
+                User::create($data);
                 $imported++;
             }
         }

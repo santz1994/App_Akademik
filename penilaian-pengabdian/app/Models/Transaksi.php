@@ -11,6 +11,7 @@ class Transaksi extends Model
     protected $fillable = [
         'kode_transaksi',
         'karyawan_id',
+        'pangkalan_id',
         'tahun_penilaian_id',
         'kompetensi_id',
         'performance_rating_id',
@@ -21,6 +22,11 @@ class Transaksi extends Model
     public function karyawan()
     {
         return $this->belongsTo(Karyawan::class);
+    }
+
+    public function pangkalan()
+    {
+        return $this->belongsTo(Pangkalan::class);
     }
 
     public function tahunPenilaian()

@@ -10,7 +10,19 @@ class LaporanScoreCalculator
 {
     public static function resolveKategoriUntukKaryawan(Collection $kategoriList, mixed $karyawan): Collection
     {
-        if (!$karyawan || empty($karyawan->pangkalan_id)) {
+        if (!$karyawan) {
+            return $kategoriList->values();
+        }
+
+        // Check if karyawan has any pangkalan (via pivot table or single field)
+        $hasPangkalan = false;
+        if (method_exists($karyawan, 'getAllPangkalanIds')) {
+            $hasPangkalan = !empty($karyawan->getAllPangkalanIds());
+        } else {
+            $hasPangkalan = !empty($karyawan->pangkalan_id);
+        }
+
+        if (!$hasPangkalan) {
             return $kategoriList->values();
         }
 
@@ -172,30 +184,55 @@ class LaporanScoreCalculator
 
     private static function resolveMappedKategoriIdsByPangkalan(mixed $karyawan): Collection
     {
-        $pangkalanId = (int) ($karyawan->pangkalan_id ?? 0);
-        if ($pangkalanId <= 0) {
+        // Get all pangkalan IDs from pivot table (multi-pangkalan support)
+        $allPangkalanIds = [];
+        if (method_exists($karyawan, 'getAllPangkalanIds')) {
+            $allPangkalanIds = $karyawan->getAllPangkalanIds();
+        } elseif (!empty($karyawan->pangkalan_id)) {
+            $allPangkalanIds = [(int) $karyawan->pangkalan_id];
+        }
+
+        if (empty($allPangkalanIds)) {
             return collect();
         }
 
-        $pangkalan = $karyawan->pangkalan ?? null;
-        if ($pangkalan && $pangkalan->relationLoaded('kategoriKinerja')) {
-            return $pangkalan->kategoriKinerja
-                ->pluck('id')
-                ->map(fn($id) => (int) $id)
-                ->unique()
-                ->values();
+        // Aggregate kategori IDs from all pangkalans
+        $mappedKategoriIds = collect();
+
+        // Try to use loaded relations first
+        if ($karyawan->relationLoaded('pangkalans')) {
+            foreach ($karyawan->pangkalans as $pangkalan) {
+                if ($pangkalan->relationLoaded('kategoriKinerja')) {
+                    $mappedKategoriIds = $mappedKategoriIds->merge(
+                        $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                    );
+                }
+            }
         }
 
-        if (!Schema::hasTable('pangkalan_kategori_kinerja')) {
-            return collect();
+        // Fallback: also check single pangkalan relation
+        if ($mappedKategoriIds->isEmpty() && $karyawan->relationLoaded('pangkalan')) {
+            $pangkalan = $karyawan->pangkalan;
+            if ($pangkalan && $pangkalan->relationLoaded('kategoriKinerja')) {
+                $mappedKategoriIds = $mappedKategoriIds->merge(
+                    $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                );
+            }
         }
 
-        return DB::table('pangkalan_kategori_kinerja')
-            ->where('pangkalan_id', $pangkalanId)
-            ->pluck('kategori_kinerja_id')
-            ->map(fn($id) => (int) $id)
-            ->unique()
-            ->values();
+        // Final fallback: query database
+        if ($mappedKategoriIds->isEmpty() && !empty($allPangkalanIds)) {
+            if (!Schema::hasTable('pangkalan_kategori_kinerja')) {
+                return collect();
+            }
+
+            $mappedKategoriIds = DB::table('pangkalan_kategori_kinerja')
+                ->whereIn('pangkalan_id', $allPangkalanIds)
+                ->pluck('kategori_kinerja_id')
+                ->map(fn($id) => (int) $id);
+        }
+
+        return $mappedKategoriIds->unique()->values();
     }
 
     /**
@@ -219,7 +256,8 @@ class LaporanScoreCalculator
         Collection $trxByKompetensi,
         array $allPangkalanIds,
         Collection $pangkalanList,
-        array $options = []
+        array $options = [],
+        array $trxByPangkalan = []
     ): array {
         $kinerjaKategori = $kategoriList
             ->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')
@@ -257,12 +295,15 @@ class LaporanScoreCalculator
                 : $kinerjaKategori;
 
             // Calculate average per kategori for this pangkalan
+            // Use per-pangkalan transaksi if available, otherwise fall back to global
+            $pangkalanTrx = $trxByPangkalan[$pIdInt] ?? $trxByKompetensi;
+
             $kategoriDetails = [];
             $kategoriAverages = [];
             foreach ($pangkalanKinerjaKategori as $kat) {
                 $values = [];
                 foreach ($kat->kompetensi as $komp) {
-                    $t = $trxByKompetensi->get($komp->id);
+                    $t = $pangkalanTrx->get($komp->id);
                     if ($t && self::isScored($t->nilai)) {
                         $values[] = (float) $t->nilai;
                     }

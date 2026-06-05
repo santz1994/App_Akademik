@@ -280,6 +280,7 @@ class LaporanController extends Controller
 
         $karyawanQuery = Karyawan::with([
             'pangkalan.kategoriKinerja',
+            'pangkalans',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
@@ -296,7 +297,7 @@ class LaporanController extends Controller
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         } else {
             if ($mode === 'perdireksi' && $filterPangkalan) {
-                $karyawanQuery->where('pangkalan_id', $filterPangkalan);
+                $karyawanQuery->whereHas('pangkalans', fn($q) => $q->where('pangkalan.id', $filterPangkalan));
             }
             if ($mode === 'perorangan' && $filterKaryawan) {
                 $karyawanQuery->where('id', $filterKaryawan);
@@ -452,6 +453,19 @@ class LaporanController extends Controller
             ->whereIn('id', $allPangkalanIds)
             ->get();
 
+        // Build per-pangkalan transaksi map (keyed by pangkalan_id => kompetensi_id)
+        $trxByPangkalan = [];
+        foreach ($allPangkalanIds as $pId) {
+            $pIdInt = (int) $pId;
+            $trxByPangkalan[$pIdInt] = $karyawan->transaksi
+                ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                ->keyBy('kompetensi_id');
+            // Fallback: if no pangkalan-specific transaksi, use global (for legacy data)
+            if ($trxByPangkalan[$pIdInt]->isEmpty()) {
+                $trxByPangkalan[$pIdInt] = $trxByKompetensi;
+            }
+        }
+
         // Calculate per-pangkalan breakdown
         $perPangkalanData = LaporanScoreCalculator::calculatePerPangkalan(
             $kategoriList,
@@ -461,7 +475,8 @@ class LaporanController extends Controller
             [
                 'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
                 'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-            ]
+            ],
+            $trxByPangkalan
         );
 
         $nilaiAkhir = $perPangkalanData['nilaiAkhir'];
@@ -484,7 +499,8 @@ class LaporanController extends Controller
             'reportFormat',
             'perPangkalanData',
             'allPangkalan',
-            'jenisLaporan'
+            'jenisLaporan',
+            'trxByPangkalan'
         ))
         ->setPaper('a4', 'portrait')
         ->stream($fileName);
@@ -556,6 +572,18 @@ class LaporanController extends Controller
             ->whereIn('id', $allPangkalanIds)
             ->get();
 
+        // Build per-pangkalan transaksi map
+        $trxByPangkalan = [];
+        foreach ($allPangkalanIds as $pId) {
+            $pIdInt = (int) $pId;
+            $trxByPangkalan[$pIdInt] = $karyawan->transaksi
+                ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                ->keyBy('kompetensi_id');
+            if ($trxByPangkalan[$pIdInt]->isEmpty()) {
+                $trxByPangkalan[$pIdInt] = $trxByKompetensi;
+            }
+        }
+
         // Calculate per-pangkalan breakdown
         $perPangkalanData = LaporanScoreCalculator::calculatePerPangkalan(
             $kategoriList,
@@ -565,7 +593,8 @@ class LaporanController extends Controller
             [
                 'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
                 'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-            ]
+            ],
+            $trxByPangkalan
         );
 
         $nilaiAkhir = $perPangkalanData['nilaiAkhir'];

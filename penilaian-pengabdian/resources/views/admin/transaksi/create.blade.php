@@ -14,22 +14,46 @@
 
 {{-- Step 1: Pilih Karyawan & Tahun --}}
 <div class="card mb-4">
-    <div class="card-header py-2 fw-semibold"><i class="bi bi-person-check me-2"></i>Pilih Karyawan & Tahun Ajaran</div>
+    <div class="card-header py-2 fw-semibold"><i class="bi bi-person-check me-2"></i>Pilih Karyawan, Pangkalan & Tahun</div>
     <div class="card-body">
         <form method="GET" action="{{ route($routePrefix . '.transaksi.create') }}" class="row g-3 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <label class="form-label fw-semibold">Karyawan <span class="text-danger">*</span></label>
-                <select name="karyawan_id" class="form-select" required>
+                <select name="karyawan_id" class="form-select" required id="karyawanSelect">
                     <option value="">-- Pilih Karyawan --</option>
                     @foreach($karyawanList as $k)
-                    <option value="{{ $k->id }}" {{ (isset($selectedKaryawan) && $selectedKaryawan?->id == $k->id) ? 'selected' : '' }}>
+                    <option value="{{ $k->id }}" data-pangkalan-count="{{ $k->pangkalans->count() }}" {{ (isset($selectedKaryawan) && $selectedKaryawan?->id == $k->id) ? 'selected' : '' }}>
                         {{ $k->kode_karyawan }} — {{ $k->nama_karyawan }}
-                        {{ $k->pangkalan ? '('.$k->pangkalan->nama_pangkalan.')' : '' }}
                     </option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Pangkalan Job <span class="text-danger">*</span></label>
+                @if(isset($karyawanPangkalans) && $karyawanPangkalans->count() > 1)
+                    <select name="pangkalan_id" class="form-select" required>
+                        <option value="">-- Pilih Pangkalan --</option>
+                        @foreach($karyawanPangkalans as $p)
+                        <option value="{{ $p->id }}" {{ (isset($selectedPangkalan) && $selectedPangkalan?->id == $p->id) ? 'selected' : '' }}>
+                            {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
+                        </option>
+                        @endforeach
+                    </select>
+                @elseif(isset($karyawanPangkalans) && $karyawanPangkalans->count() === 1)
+                    <input type="hidden" name="pangkalan_id" value="{{ $karyawanPangkalans->first()->id }}">
+                    <input type="text" class="form-control bg-light" value="{{ $karyawanPangkalans->first()->kode_pangkalan }} — {{ $karyawanPangkalans->first()->nama_pangkalan }}" readonly>
+                @elseif(isset($selectedKaryawan) && $selectedKaryawan)
+                    <select name="pangkalan_id" class="form-select" required>
+                        <option value="">-- Pilih Pangkalan --</option>
+                        @foreach($selectedKaryawan->pangkalans as $p)
+                        <option value="{{ $p->id }}">{{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <input type="text" class="form-control bg-light" value="Pilih karyawan dulu" readonly>
+                @endif
+            </div>
+            <div class="col-md-3">
                 <label class="form-label fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
                 <select name="tahun_penilaian_id" class="form-select" required>
                     <option value="">-- Pilih Tahun --</option>
@@ -40,16 +64,16 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>Buka Scoresheet
+                    <i class="bi bi-search me-1"></i>Buka
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-@if($selectedKaryawan && $selectedTahun)
+@if($selectedKaryawan && $selectedTahun && isset($selectedPangkalan) && $selectedPangkalan)
 {{-- Step 2: Scoresheet --}}
 <div class="card">
     <div class="card-header py-2">
@@ -57,17 +81,13 @@
         <span class="ms-2 text-muted">—</span>
         <span class="ms-2 fw-bold text-primary">{{ $selectedKaryawan->nama_karyawan }}</span>
         <span class="ms-1 badge bg-secondary">{{ $selectedKaryawan->kode_karyawan }}</span>
-        @if($selectedKaryawan->pangkalan)
-            <span class="ms-2 text-muted" style="font-size:.82rem;">{{ $selectedKaryawan->pangkalan->nama_pangkalan }}</span>
-        @endif
+        <span class="ms-2 badge bg-info text-dark">{{ $selectedPangkalan->kode_pangkalan }} — {{ $selectedPangkalan->nama_pangkalan }}</span>
         <span class="float-end text-muted" style="font-size:.82rem;">Tahun: {{ $selectedTahun->periode_penilaian }}</span>
     </div>
     <div class="card-body pb-2">
-        @if($selectedKaryawan->pangkalan_id)
         <div class="alert alert-info py-2">
-            <i class="bi bi-info-circle me-1"></i> Karyawan dengan pangkalan dinilai menggunakan kategori <strong>kinerja sesuai mapping pangkalan</strong> dan <strong>kategori kegiatan wajib</strong>.
+            <i class="bi bi-info-circle me-1"></i> Penilaian kinerja untuk pangkalan <strong>{{ $selectedPangkalan->nama_pangkalan }}</strong> menggunakan kategori <strong>kinerja sesuai mapping pangkalan</strong> dan <strong>kategori kegiatan wajib</strong>.
         </div>
-        @endif
 
         <div class="alert alert-light border py-2">
             <i class="bi bi-asterisk text-danger me-1"></i> Nilai kosong berarti <strong>tidak dinilai</strong>. Nilai <strong>0 - 100</strong> adalah nilai valid.
@@ -108,6 +128,7 @@
         <form method="POST" action="{{ route($routePrefix . '.transaksi.store') }}">
             @csrf
             <input type="hidden" name="karyawan_id" value="{{ $selectedKaryawan->id }}">
+            <input type="hidden" name="pangkalan_id" value="{{ $selectedPangkalan->id }}">
             <input type="hidden" name="tahun_penilaian_id" value="{{ $selectedTahun->id }}">
 
             @foreach($kategoriList as $kategori)
@@ -199,6 +220,14 @@
                 </div>
             </div>
         </form>
+    </div>
+</div>
+@elseif($selectedKaryawan && $selectedTahun && isset($karyawanPangkalans) && $karyawanPangkalans->count() > 1 && (!isset($selectedPangkalan) || !$selectedPangkalan))
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-arrow-up-circle text-primary" style="font-size:3rem;"></i>
+        <h5 class="mt-3">Pilih Pangkalan Job</h5>
+        <p class="text-muted">Karyawan ini bekerja di {{ $karyawanPangkalans->count() }} pangkalan. Silakan pilih pangkalan yang akan dinilai terlebih dahulu.</p>
     </div>
 </div>
 @endif
