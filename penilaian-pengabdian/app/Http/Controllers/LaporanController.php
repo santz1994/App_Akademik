@@ -56,10 +56,30 @@ class LaporanController extends Controller
 
     public function userIndex(Request $request)
     {
+        $user = Auth::user();
+
+        // User biasa langsung tampil perorangan (hanya bisa lihat nilai sendiri)
+        if ($user->karyawan) {
+            // Auto-set karyawan_id ke karyawan milik user ini
+            $request->merge(['karyawan_id' => $user->karyawan->id]);
+
+            $data = $this->buildPeroranganPageData($request, 'user');
+            $data['routePrefix'] = 'user';
+            return view('admin.laporan.perorangan', $data);
+        }
+
+        // Jika user tidak punya karyawan, tampilkan halaman kosong
         $data = $this->buildReportData($request, 'user', false);
         $data['routePrefix'] = 'user';
-
         return view('admin.laporan.index', $data);
+    }
+
+    public function userPerorangan(Request $request)
+    {
+        $data = $this->buildPeroranganPageData($request, 'user');
+        $data['routePrefix'] = 'user';
+
+        return view('admin.laporan.perorangan', $data);
     }
 
     public function printView(Request $request)
@@ -166,6 +186,10 @@ class LaporanController extends Controller
             ? ['keseluruhan', 'perdireksi']
             : ['keseluruhan'];
         $mode = (string) $request->input('mode', 'keseluruhan');
+        // Auto-detect mode from filter parameters
+        if ($mode === 'keseluruhan' && $request->filled('pangkalan_id') && $scope === 'admin') {
+            $mode = 'perdireksi';
+        }
         if (!in_array($mode, $allowedModes, true)) {
             $mode = 'keseluruhan';
         }
@@ -268,7 +292,7 @@ class LaporanController extends Controller
             $jenisLaporan = 'ringkas';
         }
 
-        $filterPangkalan = $mode === 'perdireksi' ? $request->input('pangkalan_id') : null;
+        $filterPangkalan = ($mode === 'perdireksi' || $scope === 'kepala') ? $request->input('pangkalan_id') : null;
         $filterKaryawan = $mode === 'perorangan' ? $request->input('karyawan_id') : null;
         $showPangkalanFilter = $scope === 'admin' && $mode === 'perdireksi';
         $showKaryawanFilter = $scope !== 'user' && $mode === 'perorangan';
@@ -289,7 +313,11 @@ class LaporanController extends Controller
         ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun));
 
         if ($scope === 'kepala') {
-            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
+            // Filter by selected pangkalan or all kepala's pangkalans
+            $kepalaPangkalanIds = $filterPangkalan
+                ? [(int) $filterPangkalan]
+                : $user->getAllPangkalanIds();
+            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $kepalaPangkalanIds));
             if ($mode === 'perorangan' && $filterKaryawan) {
                 $karyawanQuery->where('id', $filterKaryawan);
             }
@@ -340,14 +368,16 @@ class LaporanController extends Controller
 
         $pangkalanList = $scope === 'admin'
             ? Pangkalan::orderBy('nama_pangkalan')->get()
-            : collect();
+            : ($scope === 'kepala'
+                ? Pangkalan::whereIn('id', $user->getAllPangkalanIds())->where('is_active', true)->orderBy('nama_pangkalan')->get()
+                : collect());
 
         $karyawanFilterList = collect();
         if ($showKaryawanFilter) {
             $karyawanFilterList = Karyawan::query()
                 ->bukanKepala()
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
-                ->when($scope === 'kepala', fn($q) => $q->whereIn('pangkalan_id', $user->getAllPangkalanIds()))
+                ->when($scope === 'kepala', fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
                 ->when($scope === 'user', fn($q) => $q->where('id', $user->karyawan?->id ?? 0))
                 ->orderBy('nama_karyawan')
                 ->get();
@@ -407,7 +437,7 @@ class LaporanController extends Controller
         ->where('id', $karyawanId);
 
         if ($scope === 'kepala') {
-            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
+            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
         } elseif ($scope === 'user') {
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         }
@@ -532,7 +562,7 @@ class LaporanController extends Controller
         ->where('id', $karyawanId);
 
         if ($scope === 'kepala') {
-            $karyawanQuery->whereIn('pangkalan_id', $user->getAllPangkalanIds());
+            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
         } elseif ($scope === 'user') {
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         }
@@ -637,7 +667,7 @@ class LaporanController extends Controller
         $karyawanFilterList = Karyawan::query()
             ->bukanKepala()
             ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
-            ->when($scope === 'kepala', fn($q) => $q->whereIn('pangkalan_id', $user->getAllPangkalanIds()))
+            ->when($scope === 'kepala', fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
             ->orderBy('nama_karyawan')
             ->get();
 

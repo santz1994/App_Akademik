@@ -293,10 +293,13 @@
                 <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
             </a>
             <a href="{{ route('kepala.transaksi.index') }}" class="nav-link {{ request()->routeIs('kepala.transaksi.*') ? 'active' : '' }}">
-                <i class="bi bi-receipt"></i> <span>Transaksi</span>
+                <i class="bi bi-receipt"></i> <span>Penilaian Karyawan</span>
             </a>
-            <a href="{{ route('kepala.laporan.index') }}" class="nav-link {{ request()->routeIs('kepala.laporan.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> <span>Laporan</span>
+            <a href="{{ route('kepala.laporan.index') }}" class="nav-link {{ request()->routeIs('kepala.laporan.index') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart-line"></i> <span>Laporan Keseluruhan</span>
+            </a>
+            <a href="{{ route('kepala.laporan.perorangan') }}" class="nav-link {{ request()->routeIs('kepala.laporan.perorangan') ? 'active' : '' }}">
+                <i class="bi bi-person-lines-fill"></i> <span>Laporan Perorangan</span>
             </a>
             <a href="{{ route('help.index') }}" class="nav-link {{ request()->routeIs('help.index') ? 'active' : '' }}">
                 <i class="bi bi-question-circle"></i> <span>Help / QnA</span>

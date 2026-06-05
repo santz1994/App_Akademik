@@ -218,23 +218,22 @@
 
     {{-- Nilai Kinerja --}}
     @if($kinerjaKategori->isNotEmpty())
-    <div class="section-title">Nilai Kinerja</div>
     @if(isset($perPangkalanData) && count($perPangkalanData['perPangkalan']) > 1)
-    {{-- Multi-pangkalan: show per-pangkalan breakdown --}}
+    {{-- Multi-pangkalan: show per-pangkalan breakdown with pangkalan name --}}
     @foreach($perPangkalanData['perPangkalan'] as $ppData)
     @php
         // Use per-pangkalan transaksi if available
         $pangkalanTrx = isset($trxByPangkalan[$ppData['pangkalan_id']]) ? $trxByPangkalan[$ppData['pangkalan_id']] : $trxByKompetensi;
     @endphp
-    <div style="margin-bottom: 6px;">
-        <div style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #e2e8f0; padding: 4px 8px;">
+    <div style="margin-bottom: 10px;">
+        <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; background: #e2e8f0; padding: 6px 10px; border-left: 4px solid #3b82f6;">
             @if($ppData['pangkalan'])
                 {{ $ppData['pangkalan']->kode_pangkalan }} — {{ $ppData['pangkalan']->nama_pangkalan }}
             @else
                 Pangkalan #{{ $ppData['pangkalan_id'] }}
             @endif
-            <span style="float:right;">Rata-rata: {{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</span>
         </div>
+        <div class="section-title" style="margin-top: 4px;">Nilai Kinerja</div>
     <table class="score-table">
         <thead>
             <tr>
@@ -256,19 +255,26 @@
                         <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                     </tr>
                 @endforeach
-                @if($kd['average'] !== null)
                 <tr class="kategori-header">
                     <td colspan="2">Rata-rata {{ $kd['kategori']->kategori }}</td>
-                    <td class="kategori-avg">{{ number_format($kd['average'], 2) }}</td>
+                    <td class="kategori-avg">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
                 </tr>
-                @endif
             @endforeach
+        </tbody>
+    </table>
+    <table class="score-table" style="margin-top: 2px;">
+        <tbody>
+            <tr class="kategori-header">
+                <td colspan="2" style="font-size: 11px;">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
+                <td class="kategori-avg" style="font-size: 12px;">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
+            </tr>
         </tbody>
     </table>
     </div>
     @endforeach
     @else
     {{-- Single pangkalan: standard layout --}}
+    <div class="section-title">Nilai Kinerja</div>
     <table class="score-table">
         <thead>
             <tr>
@@ -309,6 +315,14 @@
     {{-- Nilai Kegiatan --}}
     @if($kegiatanKategori->isNotEmpty())
     <div class="section-title">Nilai Kegiatan</div>
+    @foreach($kegiatanKategori as $kat)
+    <div style="margin-bottom: 8px;">
+        <div style="font-size: 10px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #dcfce7; padding: 4px 8px; border-left: 4px solid #22c55e;">
+            {{ $kat->kode_kategori }} — {{ $kat->kategori }}
+            @if($kat->is_wajib)
+                <span style="color: #dc2626; font-size: 9px;"> (Wajib)</span>
+            @endif
+        </div>
     <table class="score-table">
         <thead>
             <tr>
@@ -318,31 +332,27 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($kegiatanKategori as $kat)
+            @php $kategoriNilai = []; @endphp
+            @foreach($kat->kompetensi as $komp)
                 @php
-                    $kategoriNilai = [];
+                    $t = $trxByKompetensi->get($komp->id);
+                    $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
+                    if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                 @endphp
-                @foreach($kat->kompetensi as $komp)
-                    @php
-                        $t = $trxByKompetensi->get($komp->id);
-                        $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
-                        if ($nilai !== null) { $kategoriNilai[] = $nilai; }
-                    @endphp
-                    <tr>
-                        <td class="kode">{{ $komp->kode_kompetensi }}</td>
-                        <td>{{ $komp->kompetensi }}</td>
-                        <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
-                    </tr>
-                @endforeach
-                @if(count($kategoriNilai) > 0)
-                <tr class="kategori-header">
-                    <td colspan="2">Rata-rata {{ $kat->kategori }}</td>
-                    <td class="kategori-avg">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
+                <tr>
+                    <td class="kode">{{ $komp->kode_kompetensi }}</td>
+                    <td>{{ $komp->kompetensi }}</td>
+                    <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                 </tr>
-                @endif
             @endforeach
+            <tr class="kategori-header">
+                <td colspan="2">Rata-rata {{ $kat->kategori }}</td>
+                <td class="kategori-avg">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
+            </tr>
         </tbody>
     </table>
+    </div>
+    @endforeach
     @endif
 
     {{-- Nilai Akhir --}}

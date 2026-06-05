@@ -205,7 +205,7 @@
         };
 
         userSelect.addEventListener('change', applyUserAccountData);
-        applyUserAccountData();
+        // Don't auto-apply on page load to preserve existing multi-select selections
     });
 </script>
 @endpush

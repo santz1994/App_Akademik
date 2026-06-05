@@ -120,6 +120,37 @@
 ### Q: Bagaimana kepala melakukan penilaian untuk karyawan multi-pangkalan?
 **A:** Kepala bisa melihat dan menilai karyawan yang ada di pangkalan yang dia pimpin. Sistem sudah mendukung: `kepalaIndex` di TransaksiController menggunakan `whereIn('pangkalan_id', $user->getAllPangkalanIds())`. Jadi kepala bisa menilai semua karyawan yang terdaftar di pangkalan yang dipimpinnya. Karena `pangkalan_id` pada karyawan adalah derived field dari pivot table (pangkalan pertama yang dipilih), maka karyawan yang bekerja di multiple pangkalan akan muncul di penilaian kepala yang memimpin salah satu pangkalan tersebut.
 
+## Perubahan Penilaian Per-Pangkalan (2026-06-05)
+- Migration: tambah `pangkalan_id` (nullable FK ke pangkalan) pada tabel transaksi
+- Transaksi model: tambah `pangkalan_id` ke fillable, tambah `pangkalan()` relationship
+- TransaksiController::create() - tambah dropdown pilih pangkalan, filter existingNilai per pangkalan
+- TransaksiController::kepalaCreate() - filter pangkalan berdasarkan kepala yang login
+- TransaksiController::store() - validasi `pangkalan_id` required, simpan transaksi dengan `pangkalan_id`
+- TransaksiController::resolveLockState() - tambah parameter `$pangkalanId` opsional untuk filter lock per pangkalan
+- TransaksiController::resolveKategoriListForPangkalan() - method baru untuk resolve kategori per pangkalan
+- Transaksi create view: tambah dropdown "Pangkalan Job" setelah pilih karyawan
+- LaporanScoreCalculator::calculatePerPangkalan() - tambah parameter `$trxByPangkalan` untuk filter transaksi per pangkalan
+- LaporanController::peroranganPdf() - build `$trxByPangkalan` map, pass ke calculatePerPangkalan
+- LaporanController::buildPeroranganData() - build `$trxByPangkalan` map, pass ke calculatePerPangkalan
+- Laporan rinci PDF: gunakan `$trxByPangkalan[$pangkalan_id]` untuk tampilan per-pangkalan
+- KaryawanController::edit() - fallback ke `pangkalan_id` jika pivot table kosong
+- Sync: jalankan `sync:transaksi-pangkalan` untuk data transaksi lama
+
+## Jawaban Pertanyaan Baru
+
+### Q1: Laporan rinci - bagaimana membedakan 2 pangkalan kinerja?
+**A:** Sudah diperbaiki. Laporan rinci PDF (`perorangan_pdf.blade.php`) sekarang menggunakan `$trxByPangkalan[$pangkalan_id]` untuk menampilkan nilai per-pangkalan. Setiap pangkalan hanya menampilkan transaksi miliknya, sehingga tidak ada duplikasi nilai antar pangkalan.
+
+### Q2: Penilaian 2 pangkalan - pastikan kepala tidak mengisi 2 form yang sama!
+**A:** Sudah diperbaiki. TransaksiController::create() sekarang menampilkan dropdown "Pangkalan Job" yang wajib dipilih sebelum menilai. Setiap penilaian disimpan dengan `pangkalan_id`, sehingga:
+- Karyawan dengan 2 pangkalan = 2 set penilaian terpisah
+- Kepala hanya bisa memilih pangkalan yang dia pimpin
+- Kategori kinerja dimuat berdasarkan mapping pangkalan yang dipilih
+- Nilai disimpan per `karyawan_id + pangkalan_id + tahun_penilaian_id + kompetensi_id`
+
+### Q3: Edit karyawan - mengapa hanya 1 pangkalan ter-highlight?
+**A:** Sudah diperbaiki. KaryawanController::edit() sekarang memiliki fallback: jika pivot table kosong tetapi `pangkalan_id` ada, maka menggunakan `pangkalan_id` sebagai default. Sehingga karyawan yang belum di-sync ke pivot table tetap menampilkan pangkalan yang benar.
+
 ### Q: Bagaimana laporan nilai perorangan karyawan multi-pangkalan?
 **A:** Laporan sudah mendukung multi-pangkalan. `LaporanScoreCalculator::calculatePerPangkalan()` menghitung nilai per pangkalan terpisah, lalu merata-ratakan untuk nilai akhir. Laporan perorangan PDF menampilkan breakdown per-pangkalan: kinerja per pangkalan terpisah, kegiatan wajib global. Jadi karyawan multi-pangkalan akan memiliki nilai kinerja yang berbeda per pangkalan, dan nilai akhir adalah rata-rata dari semua pangkalan + kegiatan wajib.
 

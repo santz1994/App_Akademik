@@ -34,6 +34,7 @@
         @endforeach
     </select>
 
+    @if($routePrefix !== 'user')
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;"><i class="bi bi-person me-1"></i>Karyawan:</label>
     <select name="karyawan_id" class="form-select form-select-sm" style="max-width:280px;">
         <option value="">-- Pilih Karyawan --</option>
@@ -43,6 +44,7 @@
             </option>
         @endforeach
     </select>
+    @endif
 
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Jenis:</label>
     <select name="jenis_laporan" class="form-select form-select-sm" style="max-width:150px;">
@@ -180,8 +182,69 @@
         @endif
 
         @else
-        {{-- RINCI: Flat layout with all indicators grouped by kategori --}}
+        {{-- RINCI: Per-pangkalan breakdown for multi-pangkalan, flat for single --}}
         @if($kinerjaKategori->isNotEmpty())
+        @if($pkPerPangkalanData && count($pkPerPangkalanData['perPangkalan']) > 1)
+        {{-- Multi-pangkalan: show per-pangkalan sections --}}
+        @foreach($pkPerPangkalanData['perPangkalan'] as $ppData)
+        @php
+            $pangkalanTrx = isset($peroranganTrxByPangkalan[$ppData['pangkalan_id']]) ? $peroranganTrxByPangkalan[$ppData['pangkalan_id']] : $pkTrx;
+        @endphp
+        <div class="card mb-3 border-primary">
+            <div class="card-header py-2 bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-primary">
+                    <i class="bi bi-building me-1"></i>
+                    @if($ppData['pangkalan'])
+                        {{ $ppData['pangkalan']->kode_pangkalan }} — {{ $ppData['pangkalan']->nama_pangkalan }}
+                    @else
+                        Pangkalan #{{ $ppData['pangkalan_id'] }}
+                    @endif
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="70" class="text-center">Kode</th>
+                                <th>Indikator Kompetensi</th>
+                                <th width="80" class="text-center">Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($ppData['kategoriDetails'] as $kd)
+                            @foreach($kd['kategori']->kompetensi as $komp)
+                                @php
+                                    $t = $pangkalanTrx->get($komp->id);
+                                    $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
+                                @endphp
+                                <tr>
+                                    <td class="text-center">{{ $komp->kode_kompetensi }}</td>
+                                    <td>{{ $komp->kompetensi }}</td>
+                                    <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
+                                </tr>
+                            @endforeach
+                            <tr class="table-primary">
+                                <td colspan="2" class="fw-bold">Rata-rata {{ $kd['kategori']->kategori }}</td>
+                                <td class="text-center fw-bold">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                    <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
+                        <tbody>
+                            <tr class="table-primary">
+                                <td colspan="2" class="fw-bold">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
+                                <td class="text-center fw-bold">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endforeach
+        @else
+        {{-- Single pangkalan: flat layout --}}
         <h6 class="fw-bold text-primary mb-2"><i class="bi bi-briefcase me-1"></i>Nilai Kinerja</h6>
         <div class="table-responsive mb-3">
             <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
@@ -218,20 +281,29 @@
             </table>
         </div>
         @endif
+        @endif
 
         @if($kegiatanKategori->isNotEmpty())
         <h6 class="fw-bold text-success mb-2"><i class="bi bi-clipboard-check me-1"></i>Nilai Kegiatan</h6>
-        <div class="table-responsive mb-3">
-            <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th width="70" class="text-center">Kode</th>
-                        <th>Indikator Kompetensi</th>
-                        <th width="80" class="text-center">Nilai</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach($kegiatanKategori as $kat)
+        @foreach($kegiatanKategori as $kat)
+        <div class="mb-2">
+            <div class="d-flex align-items-center mb-1" style="font-size:.85rem;">
+                <span class="badge bg-success me-2">{{ $kat->kode_kategori }}</span>
+                <strong>{{ $kat->kategori }}</strong>
+                @if($kat->is_wajib)
+                    <span class="badge bg-danger ms-2">Wajib</span>
+                @endif
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="70" class="text-center">Kode</th>
+                            <th>Indikator Kompetensi</th>
+                            <th width="80" class="text-center">Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     @php $kategoriNilai = []; @endphp
                     @foreach($kat->kompetensi as $komp)
                         @php
@@ -245,16 +317,15 @@
                             <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                         </tr>
                     @endforeach
-                    @if(count($kategoriNilai) > 0)
                     <tr class="table-success">
                         <td colspan="2" class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
-                        <td class="text-center fw-bold">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
+                        <td class="text-center fw-bold">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
                     </tr>
-                    @endif
-                @endforeach
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @endforeach
         @endif
         @endif
 

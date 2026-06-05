@@ -57,20 +57,6 @@
                 @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Pangkalan Job</label>
-                <select name="pangkalan_id" class="form-select @error('pangkalan_id') is-invalid @enderror">
-                    <option value="">— Tidak ditetapkan —</option>
-                    @foreach($pangkalanList as $p)
-                    <option value="{{ $p->id }}" {{ old('pangkalan_id') == $p->id ? 'selected' : '' }}>
-                        {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
-                    </option>
-                    @endforeach
-                </select>
-                @error('pangkalan_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <small class="text-muted">Pangkalan tempat user ini bekerja.</small>
-            </div>
-
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Batal</a>

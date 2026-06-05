@@ -144,6 +144,7 @@ Route::middleware(['auth', 'role.user'])->prefix('user')->name('user.')->group(f
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::get('/laporan', [LaporanController::class, 'userIndex'])->name('laporan.index');
+    Route::get('/laporan/perorangan', [LaporanController::class, 'userPerorangan'])->name('laporan.perorangan');
     Route::get('/laporan/print', [LaporanController::class, 'printView'])->name('laporan.print');
     Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
     Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');

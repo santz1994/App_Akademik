@@ -42,7 +42,7 @@
         @endforeach
     </select>
 
-    @if($routePrefix === 'admin')
+    @if($routePrefix === 'admin' || ($routePrefix === 'kepala' && ($pangkalanList ?? collect())->count() > 1))
     <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Pangkalan:</label>
     <select name="pangkalan_id" id="filterPangkalanSelect" class="form-select form-select-sm" style="max-width:220px;">
         <option value="">-- Semua Pangkalan --</option>
@@ -209,7 +209,16 @@
                             <small class="text-muted">{{ $k->kode_karyawan }}</small>
                         </td>
                         <td style="white-space:nowrap;">
-                            {{ $k->pangkalan?->nama_pangkalan ?? '-' }}
+                            @if($k->pangkalans && $k->pangkalans->count())
+                                @foreach($k->pangkalans as $p)
+                                    <span class="badge bg-light text-dark border">{{ $p->kode_pangkalan }}</span>{{ $loop->last ? '' : ' ' }}
+                                @endforeach
+                            @elseif($k->pangkalan)
+                                <span class="badge bg-light text-dark border">{{ $k->pangkalan->kode_pangkalan }}</span>
+                                <small>{{ $k->pangkalan->nama_pangkalan }}</small>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
                         </td>
                         @if($isRingkas)
                             @foreach($kategoriList as $kat)

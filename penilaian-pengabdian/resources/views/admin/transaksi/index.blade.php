@@ -28,7 +28,7 @@
                placeholder="Nama atau kode karyawan">
     </div>
 
-    @if(!$isKepalaView)
+    @if(!$isKepalaView || ($pangkalanList ?? collect())->count() > 1)
     <div>
         <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Pangkalan:</label>
         <select name="pangkalan_id" class="form-select form-select-sm" style="min-width:220px;">
@@ -40,7 +40,9 @@
             @endforeach
         </select>
     </div>
+    @endif
 
+    @if(!$isKepalaView)
     <div>
         <label class="fw-semibold me-1" style="font-size:.85rem; white-space:nowrap;">Status Karyawan:</label>
         <select name="status_aktif" class="form-select form-select-sm" style="min-width:160px;">

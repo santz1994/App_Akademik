@@ -112,6 +112,14 @@ class TransaksiController extends Controller
         $totalKompetensi = Kompetensi::count();
         $search = trim((string) $request->input('q'));
 
+        // Pangkalan filter for kepala
+        $pangkalanIds = $user->getAllPangkalanIds();
+        $pangkalanList = Pangkalan::whereIn('id', $pangkalanIds)->where('is_active', true)->orderBy('nama_pangkalan')->get();
+        $selectedPangkalanId = $request->input('pangkalan_id');
+        $filterPangkalanIds = $selectedPangkalanId
+            ? [(int) $selectedPangkalanId]
+            : $pangkalanList->pluck('id')->map(fn($id) => (int) $id)->toArray();
+
         $karyawanList = Karyawan::with([
             'pangkalan.kategoriKinerja',
             'pangkalans',
@@ -122,7 +130,7 @@ class TransaksiController extends Controller
         ])
         ->bukanKepala()
         ->where('is_active', true)
-        ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
+        ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $filterPangkalanIds))
         ->when($search !== '', function ($q) use ($search) {
             $q->where(function ($sub) use ($search) {
                 $sub->where('nama_karyawan', 'like', "%{$search}%")
@@ -136,9 +144,9 @@ class TransaksiController extends Controller
 
         $routePrefix = 'kepala';
         $isKepalaView = true;
-        $filterPangkalan = null;
+        $filterPangkalan = $selectedPangkalanId;
         $filterStatusLock = null;
-        $filterStatusAktif = null;
+        $filterStatusAktif = 'aktif';
         $pangkalanList = collect();
         $kategoriListForScore = KategoriKinerja::with('kompetensi:id')->orderBy('jenis')->orderBy('kode_kategori')->get();
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
@@ -254,7 +262,7 @@ class TransaksiController extends Controller
         $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
             ->bukanKepala()
             ->where('is_active', true)
-            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
+            ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
             ->orderBy('nama_karyawan')
             ->get();
         $tahunList     = TahunPenilaian::orderByDesc('periode_penilaian')->get();
@@ -278,7 +286,7 @@ class TransaksiController extends Controller
             $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
                 ->bukanKepala()
                 ->where('is_active', true)
-                ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
+                ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
                 ->find($request->karyawan_id);
 
             $selectedTahun = TahunPenilaian::find($request->tahun_penilaian_id);
@@ -537,7 +545,7 @@ class TransaksiController extends Controller
 
         $karyawan = Karyawan::with('user')
             ->where('id', $karyawanId)
-            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
+            ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
             ->first();
 
         $isAllowed = $karyawan && !($karyawan->user?->is_kepala);
@@ -708,7 +716,7 @@ class TransaksiController extends Controller
 
         $karyawan = Karyawan::with('user')
             ->where('id', $karyawanId)
-            ->whereIn('pangkalan_id', $user->getAllPangkalanIds())
+            ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
             ->first();
 
         $isAllowed = $karyawan && !($karyawan->user?->is_kepala);

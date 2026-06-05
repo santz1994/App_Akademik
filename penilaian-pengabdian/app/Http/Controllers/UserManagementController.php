@@ -13,9 +13,17 @@ class UserManagementController extends Controller
     public function index(Request $request)
     {
         $selectedPangkalan = $request->input('pangkalan_id');
+        $search = trim((string) $request->input('q'));
 
-        $users = User::with(['karyawan', 'pangkalan'])
-            ->when($selectedPangkalan, fn($q) => $q->where('pangkalan_id', $selectedPangkalan))
+        $users = User::with(['karyawan.pangkalans', 'pangkalan'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($selectedPangkalan, fn($q) => $q->whereHas('karyawan.pangkalans', fn($pq) => $pq->where('pangkalan.id', $selectedPangkalan)))
             ->latest();
 
         $users = $this->paginateWithPerPage($users, $request, 10);
@@ -39,10 +47,7 @@ class UserManagementController extends Controller
             'email'    => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
             'role'     => 'required|in:admin,user',
-            'pangkalan_id' => 'nullable|exists:pangkalan,id',
         ]);
-
-        $isAdmin = $request->role === 'admin';
 
         $createdUser = User::create([
             'name'     => $request->name,
@@ -50,7 +55,6 @@ class UserManagementController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
-            'pangkalan_id' => $isAdmin ? null : ($request->pangkalan_id ?: null),
             'is_kepala' => false, // Kepala ditentukan dari data pangkalan
         ]);
 
@@ -72,13 +76,9 @@ class UserManagementController extends Controller
             'email'    => 'required|email|unique:users,email,' . $user->id,
             'role'     => 'required|in:admin,user',
             'password' => 'nullable|min:6|confirmed',
-            'pangkalan_id' => 'nullable|exists:pangkalan,id',
         ]);
 
-        $isAdmin = $request->role === 'admin';
-
         $data = $request->only('name', 'username', 'email', 'role');
-        $data['pangkalan_id'] = $isAdmin ? null : ($request->pangkalan_id ?: null);
         // is_kepala tidak diubah dari sini, ditentukan dari data pangkalan
 
         if ($request->filled('password')) {
