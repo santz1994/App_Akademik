@@ -14,9 +14,9 @@ class PangkalanController extends Controller
     {
         $filterStatusAktif = $request->input('status_aktif', 'aktif');
 
-        $data = Pangkalan::with(['kategoriKinerja:id,kategori', 'kepalaUser:id,name'])
+        $data = Pangkalan::with(['kategoriKinerja:id,kategori,jenis,is_wajib', 'kepalaUser:id,name'])
             ->withCount(['kategoriKinerja'])
-            ->withCount(['karyawan as karyawan_count' => fn($q) => $q->where('is_active', true)])
+            ->withCount(['karyawanPivot as karyawan_count' => fn($q) => $q->where('karyawan.is_active', true)->whereDoesntHave('user', fn($uq) => $uq->where('is_kepala', true))])
             ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('pangkalan.is_active', true))
             ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('pangkalan.is_active', false))
             ->latest();
@@ -28,7 +28,7 @@ class PangkalanController extends Controller
     {
         $kode = $this->generateNextKodePangkalan();
         $kategoriKinerjaList = KategoriKinerja::query()
-            ->where('jenis', 'kinerja')
+            ->orderBy('jenis')
             ->orderBy('kode_kategori')
             ->get();
         $userList = User::where('role', '!=', 'admin')->orderBy('name')->get();
@@ -84,7 +84,7 @@ class PangkalanController extends Controller
     {
         $pangkalan->load('kategoriKinerja:id');
         $kategoriKinerjaList = KategoriKinerja::query()
-            ->where('jenis', 'kinerja')
+            ->orderBy('jenis')
             ->orderBy('kode_kategori')
             ->get();
         $userList = User::where('role', '!=', 'admin')->orderBy('name')->get();
@@ -107,6 +107,7 @@ class PangkalanController extends Controller
         $oldKepalaUserId = $pangkalan->kepala_user_id;
 
         $pangkalan->update($request->only('nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'kepala_user_id'));
+
         $pangkalan->kategoriKinerja()->sync(
             $this->sanitizeKategoriKinerjaIds((array) $request->input('kategori_kinerja_ids', []))
         );
@@ -214,10 +215,11 @@ class PangkalanController extends Controller
 
         return KategoriKinerja::query()
             ->whereIn('id', $kategoriIds)
-            ->where('jenis', 'kinerja')
             ->pluck('id')
             ->map(fn($id) => (int) $id)
             ->values()
             ->all();
     }
 }
+
+

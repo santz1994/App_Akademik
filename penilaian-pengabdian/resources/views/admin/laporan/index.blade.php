@@ -48,7 +48,7 @@
         <option value="">-- Semua Pangkalan --</option>
         @foreach($pangkalanList as $p)
             <option value="{{ $p->id }}" {{ (string)$filterPangkalan === (string)$p->id ? 'selected' : '' }}>
-                {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
+                {{ $p->nama_pangkalan }}
             </option>
         @endforeach
     </select>
@@ -149,6 +149,7 @@
                         @endforeach
                         <th class="align-middle text-center">Nilai Akhir</th>
                         <th class="align-middle text-center">Rating</th>
+                        <th class="align-middle text-center">Keterangan</th>
                         <th class="align-middle text-center" width="60">Aksi</th>
                     </tr>
                     @else
@@ -163,14 +164,14 @@
                         @endforeach
                         <th rowspan="2" class="align-middle text-center">Nilai Akhir</th>
                         <th rowspan="2" class="align-middle text-center">Rating</th>
+                        <th rowspan="2" class="align-middle text-center">Keterangan</th>
                         <th rowspan="2" class="align-middle text-center" width="60">Aksi</th>
                     </tr>
                     <tr class="table-secondary">
                         @foreach($kategoriList as $kat)
                             @foreach($kat->kompetensi as $komp)
                             <th class="text-center" style="white-space:nowrap; font-size:.75rem; font-weight:600;">
-                                {{ $komp->kode_kompetensi }}<br>
-                                <span class="fw-normal text-muted" style="font-size:.7rem;">{{ $komp->kompetensi }}</span>
+                                {{ $komp->kompetensi }}
                             </th>
                             @endforeach
                         @endforeach
@@ -178,109 +179,143 @@
                     @endif
                 </thead>
                 <tbody>
+                    @php $rowCounter = 0; @endphp
                     @forelse($karyawanList as $i => $k)
-                    @php
-                        $rowNo = method_exists($karyawanList, 'firstItem') ? ($karyawanList->firstItem() + $i) : ($i + 1);
-                        $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
-                        $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
-                        $trx = $k->transaksi->keyBy('kompetensi_id');
-                        $trxByKompetensi = $k->transaksi
-                            ->filter(fn($t) => $t->nilai !== null)
-                            ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
-                            ->keyBy('kompetensi_id');
-
-                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
-                            $kategoriUntukKaryawan,
-                            $trxByKompetensi,
-                            $reportFormat['scoring_method'],
-                            [
-                                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
-                                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-                            ]
-                        );
-                        $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
-                        $rating = $ratingMeta['label'];
-                        $ratingColor = $ratingMeta['color'];
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $rowNo }}</td>
-                        <td>
-                            <div class="fw-semibold">{{ $k->nama_karyawan }}</div>
-                            <small class="text-muted">{{ $k->kode_karyawan }}</small>
-                        </td>
-                        <td style="white-space:nowrap;">
-                            @if($k->pangkalans && $k->pangkalans->count())
-                                @foreach($k->pangkalans as $p)
-                                    <span class="badge bg-light text-dark border">{{ $p->kode_pangkalan }}</span>{{ $loop->last ? '' : ' ' }}
-                                @endforeach
-                            @elseif($k->pangkalan)
-                                <span class="badge bg-light text-dark border">{{ $k->pangkalan->kode_pangkalan }}</span>
-                                <small>{{ $k->pangkalan->nama_pangkalan }}</small>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
-                        @if($isRingkas)
-                            @foreach($kategoriList as $kat)
+                        @php
+                            $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
+                            $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
+                            $allTrx = $k->transaksi->filter(fn($t) => $t->nilai !== null)->keyBy('kompetensi_id');
+                            $karyawanPangkalans = $k->pangkalans->count() > 0 ? $k->pangkalans : collect();
+                            if ($karyawanPangkalans->isEmpty() && $k->pangkalan) {
+                                $karyawanPangkalans = collect([$k->pangkalan]);
+                            }
+                            if ($karyawanPangkalans->isEmpty()) {
+                                $karyawanPangkalans = collect([null]);
+                            }
+                        @endphp
+                        @foreach($karyawanPangkalans as $pIdx => $pangkalan)
                             @php
-                                $isApplicableKategori = $kategoriUntukKaryawan->contains(fn($item) => (int) $item->id === (int) $kat->id);
-                                $kategoriValues = $kat->kompetensi
-                                    ->map(function ($komp) use ($trx) {
-                                        $t = $trx->get($komp->id);
-                                        return ($t && $t->nilai !== null) ? (float) $t->nilai : null;
-                                    })
-                                    ->filter(fn($nilai) => $nilai !== null)
-                                    ->values();
-                                $kategoriAvg = $kategoriValues->isNotEmpty()
-                                    ? ($kategoriValues->sum() / $kategoriValues->count())
-                                    : null;
+                                $rowCounter++;
+                                // Filter transaksi for this specific pangkalan
+                                $pangkalanId = $pangkalan?->id;
+                                $trxForPangkalan = $pangkalanId
+                                    ? $k->transaksi->filter(fn($t) => $t->nilai !== null && (int)($t->pangkalan_id ?? 0) === (int)$pangkalanId)->keyBy('kompetensi_id')
+                                    : $allTrx;
+                                // Fallback: if no pangkalan-specific trx, use all
+                                if ($trxForPangkalan->isEmpty() && $pangkalanId) {
+                                    $trxForPangkalan = $allTrx;
+                                }
+                                $trxByKompetensi = $trxForPangkalan->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
+
+                                $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                                    $kategoriUntukKaryawan,
+                                    $trxByKompetensi,
+                                    $reportFormat['scoring_method'],
+                                    [
+                                        'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                                        'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                                    ]
+                                );
+                                $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+                                $rating = $ratingMeta['label'];
+                                $ratingColor = $ratingMeta['color'];
                             @endphp
-                            <td class="text-center">
-                                @if(!$isApplicableKategori)
-                                    <span class="text-muted">-</span>
-                                @elseif($kategoriAvg !== null)
-                                    <span class="fw-semibold">{{ number_format($kategoriAvg, 2) }}</span>
+                            <tr>
+                                <td class="text-center">{{ $rowCounter }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $k->nama_karyawan }}</div>
+                                </td>
+                                <td style="white-space:nowrap;">
+                                    @if($pangkalan)
+                                        {{ $pangkalan->nama_pangkalan }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                @if($isRingkas)
+                                    @foreach($kategoriList as $kat)
+                                    @php
+                                        $isApplicableKategori = $kategoriUntukKaryawan->contains(fn($item) => (int) $item->id === (int) $kat->id);
+                                        $kategoriValues = $kat->kompetensi
+                                            ->map(function ($komp) use ($trxByKompetensi) {
+                                                $t = $trxByKompetensi->get($komp->id);
+                                                return ($t && $t->nilai !== null) ? (float) $t->nilai : null;
+                                            })
+                                            ->filter(fn($nilai) => $nilai !== null)
+                                            ->values();
+                                        $kategoriAvg = $kategoriValues->isNotEmpty()
+                                            ? ($kategoriValues->sum() / $kategoriValues->count())
+                                            : null;
+                                    @endphp
+                                    <td class="text-center">
+                                        @if(!$isApplicableKategori)
+                                            <span class="text-muted">-</span>
+                                        @elseif($kategoriAvg !== null)
+                                            <span class="fw-semibold">{{ number_format($kategoriAvg, 2) }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    @endforeach
                                 @else
-                                    <span class="text-muted">-</span>
+                                @foreach($kategoriList as $kat)
+                                    @foreach($kat->kompetensi as $komp)
+                                    <td class="text-center">
+                                        @php $t = $trxByKompetensi->get($komp->id); @endphp
+                                        @if(!$applicableKompetensiIds->contains((int) $komp->id))
+                                            <span class="text-muted">-</span>
+                                        @elseif($t && $t->nilai !== null)
+                                            <span class="fw-semibold">{{ number_format($t->nilai, 0) }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    @endforeach
+                                @endforeach
                                 @endif
-                            </td>
-                            @endforeach
-                        @else
-                        @foreach($kategoriList as $kat)
-                            @foreach($kat->kompetensi as $komp)
-                            <td class="text-center">
-                                @php $t = $trx->get($komp->id); @endphp
-                                @if(!$applicableKompetensiIds->contains((int) $komp->id))
-                                    <span class="text-muted">-</span>
-                                @elseif($t && $t->nilai !== null)
-                                    <span class="fw-semibold">{{ number_format($t->nilai, 0) }}</span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            @endforeach
+                                <td class="text-center fw-bold fs-6">
+                                    {{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}
+                                </td>
+                                <td class="text-center">
+                                    @if($nilaiAkhir !== null)
+                                        <span class="badge bg-{{ $ratingColor }}">{{ $rating }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td style="font-size:.78rem;">
+                                    @php
+                                        $rpInfo = \App\Support\LaporanScoreCalculator::getRewardPunishmentInfo($nilaiAkhir);
+                                    @endphp
+                                    @if($rpInfo && $rpInfo['items']->isNotEmpty())
+                                        @foreach($rpInfo['items'] as $rpItem)
+                                            @if(($rpItem->tipe ?? '') === 'punishment')
+                                                <span class="text-danger fw-bold">⚠ {{ $rpItem->nama ?? 'Hukuman' }}:</span>
+                                                @if(isset($rpItem->jumlah) && $rpItem->jumlah > 0)
+                                                    {{ $rpItem->jumlah }} {{ $rpItem->satuan ?? '' }}
+                                                @else
+                                                    {{ $rpItem->deskripsi ?? '' }}
+                                                @endif
+                                            @else
+                                                <span class="text-success fw-bold">✓ {{ $rpItem->nama ?? 'Reward' }}</span>
+                                            @endif
+                                            @if(!$loop->last)<br>@endif
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route($routePrefix . '.laporan.perorangan-pdf', ['karyawan_id' => $k->id, 'tahun_penilaian_id' => $selectedTahun]) }}"
+                                       target="_blank" class="btn btn-outline-danger btn-sm" style="padding:.15rem .4rem; font-size:.72rem;" title="PDF Perorangan">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
                         @endforeach
-                        @endif
-                        <td class="text-center fw-bold fs-6">
-                            {{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}
-                        </td>
-                        <td class="text-center">
-                            @if($nilaiAkhir !== null)
-                                <span class="badge bg-{{ $ratingColor }}">{{ $rating }}</span>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <a href="{{ route($routePrefix . '.laporan.perorangan-pdf', ['karyawan_id' => $k->id, 'tahun_penilaian_id' => $selectedTahun]) }}"
-                               target="_blank" class="btn btn-outline-danger btn-sm" style="padding:.15rem .4rem; font-size:.72rem;" title="PDF Perorangan">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                        </td>
-                    </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $isRingkas ? (3 + $kategoriList->count() + 3) : (3 + $kategoriList->sum(fn($k) => $k->kompetensi->count()) + 3) }}"
+                        <td colspan="{{ $isRingkas ? (3 + $kategoriList->count() + 4) : (3 + $kategoriList->sum(fn($k) => $k->kompetensi->count()) + 4) }}"
                             class="text-center text-muted py-4">
                             Tidak ada data untuk tahun ini.
                         </td>

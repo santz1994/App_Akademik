@@ -53,28 +53,43 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-semibold">Kategori Kinerja Terkait</label>
-                <div class="border rounded p-2" style="max-height:210px; overflow:auto;">
-                    @forelse($kategoriKinerjaList as $kategori)
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="kategori_kinerja_ids[]"
-                                   value="{{ $kategori->id }}"
-                                   id="kategori_{{ $kategori->id }}"
-                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="kategori_{{ $kategori->id }}">
-                                <span class="badge bg-secondary me-1">{{ $kategori->kode_kategori }}</span>
-                                {{ $kategori->kategori }}
-                            </label>
-                        </div>
-                    @empty
-                        <small class="text-muted">Belum ada kategori kinerja.</small>
-                    @endforelse
+                <label class="form-label fw-semibold">Kategori Kinerja & Kegiatan Terkait</label>
+                <div class="border rounded p-2" style="max-height:400px; overflow:auto;">
+                    @php
+                        $grouped = $kategoriKinerjaList->groupBy('jenis');
+                    @endphp
+                    @foreach(['kinerja' => 'Kategori Kinerja', 'kegiatan' => 'Kategori Kegiatan'] as $jenis => $label)
+                        @if(isset($grouped[$jenis]) && $grouped[$jenis]->isNotEmpty())
+                            <div class="mb-2">
+                                <div class="fw-bold text-primary small mb-1" style="border-bottom:1px solid #e2e8f0; padding-bottom:2px;">
+                                    <i class="bi bi-{{ $jenis === 'kinerja' ? 'briefcase' : 'clipboard-check' }} me-1"></i>{{ $label }}
+                                </div>
+                                @foreach($grouped[$jenis] as $kategori)
+                                    @php
+                                        $isChecked = in_array($kategori->id, $selectedKategoriIds);
+                                    @endphp
+                                    <div class="form-check ms-2 mb-1">
+                                        <input class="form-check-input kategori-check"
+                                               type="checkbox"
+                                               name="kategori_kinerja_ids[]"
+                                               value="{{ $kategori->id }}"
+                                               id="kategori_{{ $kategori->id }}"
+                                               {{ $isChecked ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="kategori_{{ $kategori->id }}">
+                                            {{ $kategori->kategori }}
+                                            @if($kategori->is_wajib)
+                                                <span class="badge bg-danger ms-1" style="font-size:.65rem;">Wajib</span>
+                                            @endif
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    @endforeach
                 </div>
                 @error('kategori_kinerja_ids')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 @error('kategori_kinerja_ids.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                <small class="text-muted d-block mt-1">Kategori kegiatan wajib akan tetap ditambahkan otomatis saat penilaian.</small>
+                <small class="text-muted d-block mt-1">Pilih kategori kinerja dan kegiatan yang terkait dengan pangkalan ini. Penanggung jawab penilaian mengikuti Kepala Pimpinan Pos yang ditetapkan.</small>
             </div>
 
             <div class="d-flex gap-2">

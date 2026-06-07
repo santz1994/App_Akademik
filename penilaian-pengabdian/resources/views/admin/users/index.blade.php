@@ -67,10 +67,20 @@
                         <td>{{ $u->name }}</td>
                         <td><code>{{ $u->username }}</code></td>
                         <td>{{ $u->email }}</td>
-                        <td><span class="badge badge-{{ $u->role }}">{{ ucfirst($u->role) }}</span></td>
+                        <td>
+                            @if($u->is_kepala)
+                                <span class="badge bg-warning text-dark"><i class="bi bi-star me-1"></i>Kepala</span>
+                            @elseif($u->role === 'tata_usaha')
+                                <span class="badge bg-info text-white">Tata Usaha</span>
+                            @else
+                                <span class="badge badge-{{ $u->role }}">{{ ucfirst($u->role) }}</span>
+                            @endif
+                        </td>
                         <td>
                             @if($u->is_kepala)
                                 <span class="badge bg-warning text-dark">Kepala Pimpinan Pos</span>
+                            @elseif($u->role === 'tata_usaha')
+                                <span class="text-muted" style="font-size:.8rem;">Tata Usaha</span>
                             @else
                                 <span class="text-muted" style="font-size:.8rem;">User Biasa</span>
                             @endif

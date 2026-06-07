@@ -20,6 +20,9 @@ use App\Http\Controllers\SettingLembagaController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\LaporanFormatController;
 use App\Http\Controllers\PenilaianMetodeController;
+use App\Http\Controllers\TataUsahaController;
+use App\Http\Controllers\DatabaseBackupController;
+use App\Http\Controllers\RewardPunishmentController;
 
 // Root redirect
 Route::get('/', function () {
@@ -27,6 +30,9 @@ Route::get('/', function () {
         $user = Auth::user();
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
+        }
+        if ($user->role === 'tata_usaha') {
+            return redirect()->route('tata-usaha.dashboard');
         }
         if ($user->is_kepala) {
             return redirect()->route('kepala.dashboard');
@@ -133,6 +139,18 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
     // Setting Lembaga
     Route::get('/setting-lembaga', [SettingLembagaController::class, 'edit'])->name('setting-lembaga.edit');
     Route::put('/setting-lembaga', [SettingLembagaController::class, 'update'])->name('setting-lembaga.update');
+
+    // Database Backup & Restore
+    Route::get('/database', [DatabaseBackupController::class, 'index'])->name('database.index');
+    Route::post('/database/backup', [DatabaseBackupController::class, 'backup'])->name('database.backup');
+    Route::post('/database/restore', [DatabaseBackupController::class, 'restore'])->name('database.restore');
+    Route::get('/database/download/{filename}', [DatabaseBackupController::class, 'download'])->name('database.download');
+    Route::delete('/database/{filename}', [DatabaseBackupController::class, 'destroy'])->name('database.destroy');
+
+    // Reward & Punishment
+    Route::resource('reward-punishment', RewardPunishmentController::class)
+        ->parameters(['reward-punishment' => 'rewardPunishment'])
+        ->except(['show']);
 });
 
 // ---------------------------------------------------------------
@@ -172,6 +190,28 @@ Route::middleware(['auth', 'role.kepala'])->prefix('kepala')->name('kepala.')->g
     Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
     Route::get('/laporan/csv', [LaporanController::class, 'exportCsv'])->name('laporan.csv');
     Route::get('/laporan/perorangan-pdf', [LaporanController::class, 'peroranganPdf'])->name('laporan.perorangan-pdf');
+});
+
+// ---------------------------------------------------------------
+// TATA USAHA routes
+// ---------------------------------------------------------------
+Route::middleware(['auth', 'role.tata_usaha'])->prefix('tata-usaha')->name('tata-usaha.')->group(function () {
+    Route::get('/', fn() => redirect()->route('tata-usaha.dashboard'));
+    Route::get('/dashboard', [TataUsahaController::class, 'dashboard'])->name('dashboard');
+
+    // Laporan (read-only access)
+    Route::get('/laporan', [LaporanController::class, 'kepalaIndex'])->name('laporan.index');
+    Route::get('/laporan/perorangan', [LaporanController::class, 'kepalaPerorangan'])->name('laporan.perorangan');
+    Route::get('/laporan/print', [LaporanController::class, 'printView'])->name('laporan.print');
+    Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
+    Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
+    Route::get('/laporan/csv', [LaporanController::class, 'exportCsv'])->name('laporan.csv');
+    Route::get('/laporan/perorangan-pdf', [LaporanController::class, 'peroranganPdf'])->name('laporan.perorangan-pdf');
+
+    // Unlock requests (can approve unlock)
+    Route::get('/transaksi', [TransaksiController::class, 'kepalaIndex'])->name('transaksi.index');
+    Route::post('/transaksi/unlock', [TransaksiController::class, 'unlock'])->name('transaksi.unlock');
+    Route::post('/transaksi/batch-unlock', [TransaksiController::class, 'batchUnlock'])->name('transaksi.batch-unlock');
 });
 
 Route::middleware('auth')->get('/help-qna', [HelpController::class, 'index'])->name('help.index');

@@ -98,14 +98,14 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <table class="table table-sm table-borderless mb-0" style="font-size:.85rem;">
-                    <tr><td class="text-muted" width="130">Nama Karyawan</td><td>: <strong>{{ $pk->nama_karyawan }}</strong> ({{ $pk->kode_karyawan }})</td></tr>
+                    <tr><td class="text-muted" width="130">Nama Karyawan</td><td>: <strong>{{ $pk->nama_karyawan }}</strong></td></tr>
                     <tr>
                         <td class="text-muted">Pangkalan Job</td>
                         <td>:
                             @if($pkAllPangkalan->isNotEmpty())
-                                {{ $pkAllPangkalan->map(fn($p) => $p->kode_pangkalan . ' - ' . $p->nama_pangkalan)->implode(', ') }}
+                                {{ $pkAllPangkalan->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
                             @else
-                                {{ $pk->pangkalan ? $pk->pangkalan->kode_pangkalan . ' - ' . $pk->pangkalan->nama_pangkalan : '-' }}
+                                {{ $pk->pangkalan ? $pk->pangkalan->nama_pangkalan : '-' }}
                             @endif
                         </td>
                     </tr>
@@ -134,7 +134,7 @@
                         <td class="text-center">{{ $idx + 1 }}</td>
                         <td>
                             @if($ppData['pangkalan'])
-                                <strong>{{ $ppData['pangkalan']->kode_pangkalan }}</strong> — {{ $ppData['pangkalan']->nama_pangkalan }}
+                                {{ $ppData['pangkalan']->nama_pangkalan }}
                             @else
                                 Pangkalan #{{ $ppData['pangkalan_id'] }}
                             @endif
@@ -195,7 +195,7 @@
                 <span class="fw-bold text-primary">
                     <i class="bi bi-building me-1"></i>
                     @if($ppData['pangkalan'])
-                        {{ $ppData['pangkalan']->kode_pangkalan }} — {{ $ppData['pangkalan']->nama_pangkalan }}
+                        {{ $ppData['pangkalan']->nama_pangkalan }}
                     @else
                         Pangkalan #{{ $ppData['pangkalan_id'] }}
                     @endif
@@ -206,7 +206,6 @@
                     <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
                         <thead class="table-light">
                             <tr>
-                                <th width="70" class="text-center">Kode</th>
                                 <th>Indikator Kompetensi</th>
                                 <th width="80" class="text-center">Nilai</th>
                             </tr>
@@ -219,13 +218,12 @@
                                     $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                                 @endphp
                                 <tr>
-                                    <td class="text-center">{{ $komp->kode_kompetensi }}</td>
                                     <td>{{ $komp->kompetensi }}</td>
                                     <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                                 </tr>
                             @endforeach
                             <tr class="table-primary">
-                                <td colspan="2" class="fw-bold">Rata-rata {{ $kd['kategori']->kategori }}</td>
+                                <td class="fw-bold">Rata-rata {{ $kd['kategori']->kategori }}</td>
                                 <td class="text-center fw-bold">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
                             </tr>
                         @endforeach
@@ -234,7 +232,7 @@
                     <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
                         <tbody>
                             <tr class="table-primary">
-                                <td colspan="2" class="fw-bold">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
+                                <td class="fw-bold">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
                                 <td class="text-center fw-bold">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
                             </tr>
                         </tbody>
@@ -250,7 +248,6 @@
             <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
                 <thead class="table-light">
                     <tr>
-                        <th width="70" class="text-center">Kode</th>
                         <th>Indikator Kompetensi</th>
                         <th width="80" class="text-center">Nilai</th>
                     </tr>
@@ -265,14 +262,13 @@
                             if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                         @endphp
                         <tr>
-                            <td class="text-center">{{ $komp->kode_kompetensi }}</td>
                             <td>{{ $komp->kompetensi }}</td>
                             <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                         </tr>
                     @endforeach
                     @if(count($kategoriNilai) > 0)
                     <tr class="table-primary">
-                        <td colspan="2" class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
+                        <td class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
                         <td class="text-center fw-bold">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
                     </tr>
                     @endif
@@ -288,7 +284,6 @@
         @foreach($kegiatanKategori as $kat)
         <div class="mb-2">
             <div class="d-flex align-items-center mb-1" style="font-size:.85rem;">
-                <span class="badge bg-success me-2">{{ $kat->kode_kategori }}</span>
                 <strong>{{ $kat->kategori }}</strong>
                 @if($kat->is_wajib)
                     <span class="badge bg-danger ms-2">Wajib</span>
@@ -298,7 +293,6 @@
                 <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
                     <thead class="table-light">
                         <tr>
-                            <th width="70" class="text-center">Kode</th>
                             <th>Indikator Kompetensi</th>
                             <th width="80" class="text-center">Nilai</th>
                         </tr>
@@ -312,13 +306,12 @@
                             if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                         @endphp
                         <tr>
-                            <td class="text-center">{{ $komp->kode_kompetensi }}</td>
                             <td>{{ $komp->kompetensi }}</td>
                             <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                         </tr>
                     @endforeach
                     <tr class="table-success">
-                        <td colspan="2" class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
+                        <td class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
                         <td class="text-center fw-bold">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
                     </tr>
                     </tbody>
@@ -360,6 +353,41 @@
                 </div>
             </div>
         </div>
+
+        {{-- Keterangan Reward & Punishment --}}
+        @php
+            $rpInfo = \App\Support\LaporanScoreCalculator::getRewardPunishmentInfo($pkNilaiAkhir);
+        @endphp
+        @if($rpInfo && $rpInfo['items']->isNotEmpty())
+        <div class="mt-3">
+            <div class="alert {{ $rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D' ? 'alert-danger' : 'alert-success' }} mb-0">
+                <h6 class="fw-bold mb-2">
+                    @if($rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D')
+                        <i class="bi bi-exclamation-triangle me-1"></i>KETERANGAN HUKUMAN
+                    @else
+                        <i class="bi bi-check-circle me-1"></i>KETERANGAN REWARD
+                    @endif
+                </h6>
+                @foreach($rpInfo['items'] as $rpItem)
+                <div style="font-size:.875rem;" class="mb-1">
+                    @if(($rpItem->tipe ?? '') === 'punishment')
+                        <strong>{{ $rpItem->nama ?? 'Hukuman' }}:</strong>
+                        Karyawan yang mendapatkan nilai akhir <strong>Grade {{ $rpInfo['grade'] }}</strong>
+                        mendapatkan hukuman berupa
+                        @if(isset($rpItem->jumlah) && $rpItem->jumlah > 0)
+                            <strong>{{ $rpItem->jumlah }} {{ $rpItem->satuan ?? '' }}</strong>.
+                        @else
+                            {{ $rpItem->deskripsi ?? '' }}
+                        @endif
+                    @else
+                        <strong>{{ $rpItem->nama ?? 'Reward' }}:</strong>
+                        {{ $rpItem->deskripsi ?? '' }}
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 

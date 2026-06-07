@@ -320,8 +320,9 @@ class TransaksiController extends Controller
 
                 $isLocked = $lockState['is_locked'];
                 $canEditLockedScores = $this->canEditLockedScores($lockState);
+                // Kepala only sees kinerja categories, not kegiatan
                 $kategoriList = $selectedPangkalan
-                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase)
+                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase, false)
                     : $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
                 $lockedKompetensiIds = $canEditLockedScores
                     ? []
@@ -973,14 +974,14 @@ class TransaksiController extends Controller
     /**
      * Resolve kategori list for a specific pangkalan.
      */
-    private function resolveKategoriListForPangkalan(?Pangkalan $pangkalan, $baseList = null): \Illuminate\Support\Collection
+    private function resolveKategoriListForPangkalan(?Pangkalan $pangkalan, $baseList = null, bool $includeKegiatan = true): \Illuminate\Support\Collection
     {
         $kategoriList = $baseList ?? KategoriKinerja::with([
             'kompetensi' => fn($q) => $q->orderBy('kode_kompetensi')
         ])->orderBy('kode_kategori')->get();
 
         if (!$pangkalan) {
-            return $kategoriList->values();
+            return $includeKegiatan ? $kategoriList->values() : $kategoriList->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')->values();
         }
 
         // Get kategori kinerja mapped to this pangkalan
@@ -997,6 +998,10 @@ class TransaksiController extends Controller
         $selectedKinerja = $mappedKategoriIds->isNotEmpty()
             ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
             : $kategoriKinerja;
+
+        if (!$includeKegiatan) {
+            return $selectedKinerja->values();
+        }
 
         $mandatoryKegiatan = $kategoriList
             ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan' && (bool) ($kategori->is_wajib ?? false))

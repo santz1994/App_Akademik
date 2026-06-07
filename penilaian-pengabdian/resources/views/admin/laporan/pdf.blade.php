@@ -86,6 +86,7 @@
             'detail_kompetensi' => 'Detail Kompetensi',
             'nilai_akhir' => 'Nilai Akhir',
             'rating' => 'Rating',
+            'keterangan' => 'Keterangan',
         ], is_array($reportFormat['labels'] ?? null) ? $reportFormat['labels'] : []);
 
         $showDetailColumns = $jenisLaporan === 'rinci' && (bool) $reportFormat['show_detail_kompetensi'];
@@ -119,6 +120,11 @@
             } elseif ($columnKey === 'rating' && $reportFormat['show_rating'] && $reportFormat['show_nilai_akhir']) {
                 $visibleColumns[] = $columnKey;
             }
+        }
+
+        // Always add Keterangan column when nilai_akhir is shown
+        if ($reportFormat['show_nilai_akhir']) {
+            $visibleColumns[] = 'keterangan';
         }
 
         $detailHasGroupedHeader = in_array('detail_kompetensi', $visibleColumns, true)
@@ -180,6 +186,7 @@
             'pangkalan' => (int) $reportFormat['col_width_pangkalan'],
             'nilai_akhir' => (int) $reportFormat['col_width_nilai'],
             'rating' => (int) $reportFormat['col_width_rating'],
+            'keterangan' => 160,
         ];
     @endphp
     <style>
@@ -372,8 +379,7 @@
                         @foreach($kategoriList as $kategori)
                             @foreach($kategori->kompetensi as $kompetensi)
                                 <th class="detail-head" width="60">
-                                    {{ $kompetensi->kode_kompetensi }}
-                                    <span class="detail-subhead">{{ $kompetensi->kompetensi }}</span>
+                                    {{ $kompetensi->kompetensi }}
                                 </th>
                             @endforeach
                         @endforeach
@@ -383,35 +389,52 @@
             @endif
         </thead>
         <tbody>
+            @php $rowCounter = 0; @endphp
             @foreach($karyawanList as $i => $k)
                 @php
                     $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
                     $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
-                    $trxByKompetensi = $k->transaksi
-                        ->filter(fn($t) => $t->nilai !== null)
-                        ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
-                        ->keyBy('kompetensi_id');
-                    $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
-                        $kategoriUntukKaryawan,
-                        $trxByKompetensi,
-                        $reportFormat['scoring_method'],
-                        [
-                            'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
-                            'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-                        ]
-                    );
-                    $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+                    $allTrx = $k->transaksi->filter(fn($t) => $t->nilai !== null)->keyBy('kompetensi_id');
+                    $karyawanPangkalans = $k->pangkalans->count() > 0 ? $k->pangkalans : collect();
+                    if ($karyawanPangkalans->isEmpty() && $k->pangkalan) {
+                        $karyawanPangkalans = collect([$k->pangkalan]);
+                    }
+                    if ($karyawanPangkalans->isEmpty()) {
+                        $karyawanPangkalans = collect([null]);
+                    }
                 @endphp
+                @foreach($karyawanPangkalans as $pIdx => $pangkalan)
+                    @php
+                        $rowCounter++;
+                        $pangkalanId = $pangkalan?->id;
+                        $trxForPangkalan = $pangkalanId
+                            ? $k->transaksi->filter(fn($t) => $t->nilai !== null && (int)($t->pangkalan_id ?? 0) === (int)$pangkalanId)->keyBy('kompetensi_id')
+                            : $allTrx;
+                        if ($trxForPangkalan->isEmpty() && $pangkalanId) {
+                            $trxForPangkalan = $allTrx;
+                        }
+                        $trxByKompetensi = $trxForPangkalan->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
+                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                            $kategoriUntukKaryawan,
+                            $trxByKompetensi,
+                            $reportFormat['scoring_method'],
+                            [
+                                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                            ]
+                        );
+                        $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+                    @endphp
                 <tr>
                     @foreach($visibleColumns as $columnKey)
                         @if($columnKey === 'no')
-                            <td class="text-center">{{ $i + 1 }}</td>
+                            <td class="text-center">{{ $rowCounter }}</td>
                         @elseif($columnKey === 'kode_karyawan')
                             <td>{{ $k->kode_karyawan }}</td>
                         @elseif($columnKey === 'nama_karyawan')
                             <td>{{ $k->nama_karyawan }}</td>
                         @elseif($columnKey === 'pangkalan')
-                            <td>{{ $k->pangkalan?->nama_pangkalan ?? '-' }}</td>
+                            <td>{{ $pangkalan?->nama_pangkalan ?? '-' }}</td>
                         @elseif($columnKey === 'detail_kompetensi')
                             @if($jenisLaporan === 'ringkas')
                                 @foreach($ringkasKategoriList as $kategori)
@@ -454,9 +477,33 @@
                             <td class="text-center">{{ $nilaiAkhir !== null ? number_format($nilaiAkhir, 2) : '-' }}</td>
                         @elseif($columnKey === 'rating')
                             <td class="text-center">{{ $ratingMeta['label'] }}</td>
+                        @elseif($columnKey === 'keterangan')
+                            <td style="font-size: {{ max($fontSize - 2, 7) }}px;">
+                                @php
+                                    $rpInfo = \App\Support\LaporanScoreCalculator::getRewardPunishmentInfo($nilaiAkhir);
+                                @endphp
+                                @if($rpInfo && $rpInfo['items']->isNotEmpty())
+                                    @foreach($rpInfo['items'] as $rpItem)
+                                        @if(($rpItem['tipe'] ?? '') === 'punishment')
+                                            <span style="color: #dc2626; font-weight: 700;">⚠ {{ $rpItem['nama'] ?? 'Hukuman' }}:</span>
+                                            @if(isset($rpItem['jumlah']) && $rpItem['jumlah'] > 0)
+                                                {{ $rpItem['jumlah'] }} {{ $rpItem['satuan'] ?? '' }}
+                                            @else
+                                                {{ $rpItem['deskripsi'] ?? '' }}
+                                            @endif
+                                        @else
+                                            <span style="color: #16a34a; font-weight: 700;">✓ {{ $rpItem['nama'] ?? 'Reward' }}</span>
+                                        @endif
+                                        @if(!$loop->last)<br>@endif
+                                    @endforeach
+                                @else
+                                    -
+                                @endif
+                            </td>
                         @endif
                     @endforeach
                 </tr>
+                @endforeach
             @endforeach
         </tbody>
     </table>

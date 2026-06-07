@@ -385,4 +385,67 @@ class LaporanScoreCalculator
             'nilaiAkhir' => $nilaiAkhir,
         ];
     }
+
+    /**
+     * Get reward/punishment info for a given final score.
+     *
+     * @param float|null $nilaiAkhir
+     * @return array|null  ['grade' => 'C', 'items' => Collection]
+     */
+    public static function getRewardPunishmentInfo(?float $nilaiAkhir): ?array
+    {
+        if ($nilaiAkhir === null) {
+            return null;
+        }
+
+        // Determine grade
+        if ($nilaiAkhir >= 90) {
+            $grade = 'A';
+        } elseif ($nilaiAkhir >= 80) {
+            $grade = 'B';
+        } elseif ($nilaiAkhir >= 70) {
+            $grade = 'C';
+        } elseif ($nilaiAkhir >= 60) {
+            $grade = 'D';
+        } else {
+            $grade = 'E';
+        }
+
+        // Try to load from database
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('reward_punishment')) {
+                $items = \App\Models\RewardPunishment::active()
+                    ->forGrade($grade)
+                    ->get();
+
+                if ($items->isNotEmpty()) {
+                    return [
+                        'grade' => $grade,
+                        'items' => $items,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Table might not exist yet
+        }
+
+        // Fallback: hardcoded defaults
+        $defaults = [
+            'C' => [
+                ['nama' => 'Hukuman Nilai C', 'jumlah' => 5, 'satuan' => 'Sak Semen', 'deskripsi' => 'Karyawan yang mendapatkan nilai C mendapatkan hukuman 5 Sak Semen.'],
+            ],
+            'D' => [
+                ['nama' => 'Hukuman Nilai D', 'jumlah' => 10, 'satuan' => 'Sak Semen', 'deskripsi' => 'Karyawan yang mendapatkan nilai D mendapatkan hukuman 10 Sak Semen.'],
+            ],
+        ];
+
+        if (isset($defaults[$grade])) {
+            return [
+                'grade' => $grade,
+                'items' => collect($defaults[$grade]),
+            ];
+        }
+
+        return null;
+    }
 }

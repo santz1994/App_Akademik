@@ -20,24 +20,48 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-muted" style="font-size:.8rem;">Kode Karyawan</label>
-                        <div class="fw-semibold">{{ $karyawan->kode_karyawan }}</div>
+                    <div class="col-md-3 text-center mb-3">
+                        @php
+                            $fotoUrl = null;
+                            if (!empty($karyawan->foto_path)) {
+                                $fotoPath = ltrim((string) $karyawan->foto_path, '/');
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($fotoPath)) {
+                                    $fotoUrl = asset('storage/' . $fotoPath);
+                                }
+                            }
+                        @endphp
+                        @if($fotoUrl)
+                            <img src="{{ $fotoUrl }}" alt="Foto {{ $karyawan->nama_karyawan }}"
+                                 style="width:120px;height:150px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0;">
+                        @else
+                            <div style="width:120px;height:150px;border-radius:8px;border:2px solid #e2e8f0;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-person-circle" style="font-size:3rem;color:#94a3b8;"></i>
+                            </div>
+                        @endif
+                        <div class="mt-2 fw-semibold" style="font-size:.85rem;">{{ $karyawan->nama_karyawan }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted" style="font-size:.8rem;">Nama Karyawan</label>
-                        <div class="fw-semibold">{{ $karyawan->nama_karyawan }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted" style="font-size:.8rem;">Pangkalan Job</label>
-                        <div>{{ $karyawan->pangkalan ? $karyawan->pangkalan->kode_pangkalan . ' — ' . $karyawan->pangkalan->nama_pangkalan : '-' }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted" style="font-size:.8rem;">Status</label>
-                        <div>
-                            <span class="badge {{ $karyawan->is_active ? 'bg-success' : 'bg-secondary' }}">
-                                {{ $karyawan->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                            </span>
+                    <div class="col-md-9">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted" style="font-size:.8rem;">Kode Karyawan</label>
+                                <div class="fw-semibold">{{ $karyawan->kode_karyawan }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted" style="font-size:.8rem;">Nama Karyawan</label>
+                                <div class="fw-semibold">{{ $karyawan->nama_karyawan }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted" style="font-size:.8rem;">Pangkalan Job</label>
+                                <div>{{ $karyawan->pangkalan ? $karyawan->pangkalan->nama_pangkalan : '-' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted" style="font-size:.8rem;">Status</label>
+                                <div>
+                                    <span class="badge {{ $karyawan->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $karyawan->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -71,7 +71,14 @@
                                 <span class="badge bg-info text-dark">{{ $p->kategori_kinerja_count }} kategori</span>
                             </div>
                             @if($p->kategoriKinerja->isNotEmpty())
-                                <small class="text-muted">{{ $p->kategoriKinerja->pluck('kategori')->implode(', ') }}</small>
+                                @foreach($p->kategoriKinerja->groupBy('jenis') as $jenis => $kats)
+                                    <div class="small mb-1">
+                                        <span class="badge {{ $jenis === 'kinerja' ? 'bg-primary' : 'bg-warning text-dark' }} me-1" style="font-size:.6rem;">{{ ucfirst($jenis) }}</span>
+                                        @foreach($kats as $kat)
+                                            <span class="text-muted" style="font-size:.75rem;">{{ $kat->kategori }}</span>{{ $loop->last ? '' : ', ' }}
+                                        @endforeach
+                                    </div>
+                                @endforeach
                             @else
                                 <small class="text-muted">Belum ditentukan</small>
                             @endif

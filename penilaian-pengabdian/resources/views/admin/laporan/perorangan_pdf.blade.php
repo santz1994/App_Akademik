@@ -118,7 +118,6 @@
             font-size: 10px;
             text-transform: uppercase;
         }
-        table.score-table td.kode { width: 70px; text-align: center; }
         table.score-table td.nama { }
         table.score-table td.nilai { width: 80px; text-align: center; font-weight: 600; }
         table.score-table td.kategori-avg { text-align: center; font-weight: 700; font-size: 12px; }
@@ -193,15 +192,15 @@
         <table>
             <tr>
                 <td class="info-label">Nama Karyawan</td>
-                <td class="info-value">: <strong>{{ $karyawan->nama_karyawan }}</strong> ({{ $karyawan->kode_karyawan }})</td>
+                <td class="info-value">: <strong>{{ $karyawan->nama_karyawan }}</strong></td>
             </tr>
             <tr>
                 <td class="info-label">Pangkalan Job</td>
                 <td class="info-value">:
                     @if(isset($allPangkalan) && $allPangkalan->isNotEmpty())
-                        {{ $allPangkalan->map(fn($p) => $p->kode_pangkalan . ' - ' . $p->nama_pangkalan)->implode(', ') }}
+                        {{ $allPangkalan->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
                     @else
-                        {{ $karyawan->pangkalan ? $karyawan->pangkalan->kode_pangkalan . ' - ' . $karyawan->pangkalan->nama_pangkalan : '-' }}
+                        {{ $karyawan->pangkalan ? $karyawan->pangkalan->nama_pangkalan : '-' }}
                     @endif
                 </td>
             </tr>
@@ -228,7 +227,7 @@
     <div style="margin-bottom: 10px;">
         <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; background: #e2e8f0; padding: 6px 10px; border-left: 4px solid #3b82f6;">
             @if($ppData['pangkalan'])
-                {{ $ppData['pangkalan']->kode_pangkalan }} — {{ $ppData['pangkalan']->nama_pangkalan }}
+                {{ $ppData['pangkalan']->nama_pangkalan }}
             @else
                 Pangkalan #{{ $ppData['pangkalan_id'] }}
             @endif
@@ -237,7 +236,6 @@
     <table class="score-table">
         <thead>
             <tr>
-                <th class="kode">Kode</th>
                 <th>Indikator Kompetensi</th>
                 <th class="nilai">Nilai</th>
             </tr>
@@ -250,13 +248,12 @@
                         $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                     @endphp
                     <tr>
-                        <td class="kode">{{ $komp->kode_kompetensi }}</td>
                         <td>{{ $komp->kompetensi }}</td>
                         <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                     </tr>
                 @endforeach
                 <tr class="kategori-header">
-                    <td colspan="2">Rata-rata {{ $kd['kategori']->kategori }}</td>
+                    <td>Rata-rata {{ $kd['kategori']->kategori }}</td>
                     <td class="kategori-avg">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
                 </tr>
             @endforeach
@@ -265,7 +262,7 @@
     <table class="score-table" style="margin-top: 2px;">
         <tbody>
             <tr class="kategori-header">
-                <td colspan="2" style="font-size: 11px;">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
+                <td style="font-size: 11px;">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
                 <td class="kategori-avg" style="font-size: 12px;">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
             </tr>
         </tbody>
@@ -278,7 +275,6 @@
     <table class="score-table">
         <thead>
             <tr>
-                <th class="kode">Kode</th>
                 <th>Indikator Kompetensi</th>
                 <th class="nilai">Nilai</th>
             </tr>
@@ -295,14 +291,13 @@
                         if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                     @endphp
                     <tr>
-                        <td class="kode">{{ $komp->kode_kompetensi }}</td>
                         <td>{{ $komp->kompetensi }}</td>
                         <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                     </tr>
                 @endforeach
                 @if(count($kategoriNilai) > 0)
                 <tr class="kategori-header">
-                    <td colspan="2">Rata-rata {{ $kat->kategori }}</td>
+                    <td>Rata-rata {{ $kat->kategori }}</td>
                     <td class="kategori-avg">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
                 </tr>
                 @endif
@@ -318,7 +313,7 @@
     @foreach($kegiatanKategori as $kat)
     <div style="margin-bottom: 8px;">
         <div style="font-size: 10px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #dcfce7; padding: 4px 8px; border-left: 4px solid #22c55e;">
-            {{ $kat->kode_kategori }} — {{ $kat->kategori }}
+            {{ $kat->kategori }}
             @if($kat->is_wajib)
                 <span style="color: #dc2626; font-size: 9px;"> (Wajib)</span>
             @endif
@@ -326,7 +321,6 @@
     <table class="score-table">
         <thead>
             <tr>
-                <th class="kode">Kode</th>
                 <th>Indikator Kompetensi</th>
                 <th class="nilai">Nilai</th>
             </tr>
@@ -340,13 +334,12 @@
                     if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                 @endphp
                 <tr>
-                    <td class="kode">{{ $komp->kode_kompetensi }}</td>
                     <td>{{ $komp->kompetensi }}</td>
                     <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                 </tr>
             @endforeach
             <tr class="kategori-header">
-                <td colspan="2">Rata-rata {{ $kat->kategori }}</td>
+                <td>Rata-rata {{ $kat->kategori }}</td>
                 <td class="kategori-avg">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
             </tr>
         </tbody>
@@ -412,5 +405,38 @@
             </div>
         </div>
     </div>
+
+    {{-- Keterangan Reward & Punishment --}}
+    @php
+        $rpInfo = \App\Support\LaporanScoreCalculator::getRewardPunishmentInfo($nilaiAkhir);
+    @endphp
+    @if($rpInfo && $rpInfo['items']->isNotEmpty())
+    <div style="margin-top: 14px; border: 2px solid {{ $rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D' ? '#dc2626' : '#22c55e' }}; border-radius: 8px; padding: 10px 14px; background: {{ $rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D' ? '#fef2f2' : '#f0fdf4' }};">
+        <div style="font-size: 11px; font-weight: 700; margin-bottom: 6px; color: {{ $rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D' ? '#dc2626' : '#16a34a' }};">
+            @if($rpInfo['grade'] === 'C' || $rpInfo['grade'] === 'D')
+                <i>⚠ KETERANGAN HUKUMAN</i>
+            @else
+                <i>✓ KETERANGAN REWARD</i>
+            @endif
+        </div>
+        @foreach($rpInfo['items'] as $rpItem)
+        <div style="font-size: 10px; margin-bottom: 4px;">
+            @if($rpItem['tipe'] === 'punishment' || (isset($rpItem['tipe']) && $rpItem['tipe'] === 'punishment'))
+                <strong>{{ $rpItem['nama'] ?? 'Hukuman' }}:</strong>
+                Karyawan yang mendapatkan nilai akhir <strong>Grade {{ $rpInfo['grade'] }}</strong>
+                mendapatkan hukuman berupa
+                @if(isset($rpItem['jumlah']) && $rpItem['jumlah'] > 0)
+                    <strong>{{ $rpItem['jumlah'] }} {{ $rpItem['satuan'] ?? '' }}</strong>.
+                @else
+                    {{ $rpItem['deskripsi'] ?? '' }}
+                @endif
+            @else
+                <strong>{{ $rpItem['nama'] ?? 'Reward' }}:</strong>
+                {{ $rpItem['deskripsi'] ?? '' }}
+            @endif
+        </div>
+        @endforeach
+    </div>
+    @endif
 </body>
 </html>

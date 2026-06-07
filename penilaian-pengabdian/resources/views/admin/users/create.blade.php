@@ -53,6 +53,7 @@
                     <option value="">-- Pilih Level --</option>
                     <option value="admin"  {{ old('role')=='admin'  ? 'selected' : '' }}>Admin</option>
                     <option value="user"   {{ old('role')=='user'   ? 'selected' : '' }}>User</option>
+                    <option value="tata_usaha" {{ old('role')=='tata_usaha' ? 'selected' : '' }}>Tata Usaha</option>
                 </select>
                 @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>

@@ -46,7 +46,7 @@ class UserManagementController extends Controller
             'username' => 'required|string|max:50|unique:users',
             'email'    => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'role'     => 'required|in:admin,user',
+            'role'     => 'required|in:admin,user,tata_usaha',
         ]);
 
         $createdUser = User::create([
@@ -74,7 +74,7 @@ class UserManagementController extends Controller
             'name'     => 'required|string|max:100',
             'username' => 'required|string|max:50|unique:users,username,' . $user->id,
             'email'    => 'required|email|unique:users,email,' . $user->id,
-            'role'     => 'required|in:admin,user',
+            'role'     => 'required|in:admin,user,tata_usaha',
             'password' => 'nullable|min:6|confirmed',
         ]);
 

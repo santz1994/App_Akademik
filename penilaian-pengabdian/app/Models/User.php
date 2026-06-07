@@ -88,4 +88,28 @@ class User extends Authenticatable
     {
         return $this->role === 'admin' || $this->is_kepala;
     }
+
+    /**
+     * Check if user is tata usaha role
+     */
+    public function isTataUsaha(): bool
+    {
+        return $this->role === 'tata_usaha';
+    }
+
+    /**
+     * Get the display label for the user's role
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        if ($this->is_kepala) {
+            return 'Kepala Pimpinan Pos';
+        }
+
+        return match ($this->role) {
+            'admin' => 'Admin',
+            'tata_usaha' => 'Tata Usaha',
+            default => 'User',
+        };
+    }
 }

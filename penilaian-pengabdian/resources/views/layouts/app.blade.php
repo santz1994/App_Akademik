@@ -287,6 +287,34 @@
                 <i class="bi bi-chat-dots"></i> <span>FAQ</span>
             </a>
 
+            {{-- Pengaturan --}}
+            <div class="sb-section">Pengaturan</div>
+            <a href="{{ route('admin.reward-punishment.index') }}" class="nav-link {{ request()->routeIs('admin.reward-punishment.*') ? 'active' : '' }}">
+                <i class="bi bi-gift"></i> <span>Reward & Punishment</span>
+            </a>
+            <a href="{{ route('admin.database.index') }}" class="nav-link {{ request()->routeIs('admin.database.*') ? 'active' : '' }}">
+                <i class="bi bi-database-gear"></i> <span>Database Backup</span>
+            </a>
+
+        @elseif(auth()->user()->role === 'tata_usaha')
+            {{-- TATA USAHA MENU --}}
+            <a href="{{ route('tata-usaha.dashboard') }}" class="nav-link {{ request()->routeIs('tata-usaha.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+            </a>
+
+            <div class="sb-section">Laporan</div>
+            <a href="{{ route('tata-usaha.laporan.index') }}" class="nav-link {{ request()->routeIs('tata-usaha.laporan.index') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart-line"></i> <span>Laporan Keseluruhan</span>
+            </a>
+            <a href="{{ route('tata-usaha.laporan.perorangan') }}" class="nav-link {{ request()->routeIs('tata-usaha.laporan.perorangan') ? 'active' : '' }}">
+                <i class="bi bi-person-lines-fill"></i> <span>Laporan Perorangan</span>
+            </a>
+
+            <div class="sb-section">Transaksi</div>
+            <a href="{{ route('tata-usaha.transaksi.index') }}" class="nav-link {{ request()->routeIs('tata-usaha.transaksi.*') ? 'active' : '' }}">
+                <i class="bi bi-unlock"></i> <span>Kelola Lock Penilaian</span>
+            </a>
+
         @elseif(auth()->user()->is_kepala)
             {{-- KEPALA MENU --}}
             <a href="{{ route('kepala.dashboard') }}" class="nav-link {{ request()->routeIs('kepala.dashboard') ? 'active' : '' }}">
@@ -315,9 +343,6 @@
             <a href="{{ route('user.laporan.index') }}" class="nav-link {{ request()->routeIs('user.laporan.*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-line"></i> <span>Laporan</span>
             </a>
-            <a href="{{ route('help.index') }}" class="nav-link {{ request()->routeIs('help.index') ? 'active' : '' }}">
-                <i class="bi bi-question-circle"></i> <span>Help / QnA</span>
-            </a>
         @endif
     </nav>
 
@@ -326,6 +351,8 @@
         <small>
             @if(auth()->user()->is_kepala)
                 <span class="badge bg-warning text-dark">Kepala Pimpinan Pos</span>
+            @elseif(auth()->user()->role === 'tata_usaha')
+                <span class="badge bg-info text-white">Tata Usaha</span>
             @else
                 <span class="badge badge-{{ auth()->user()->role }}">{{ ucfirst(auth()->user()->role) }}</span>
             @endif
@@ -373,6 +400,8 @@
                 <span>{{ auth()->user()->name }}</span>
                     @if(auth()->user()->is_kepala)
                         <span class="badge bg-warning text-dark ms-1">Kepala Pimpinan Pos</span>
+                    @elseif(auth()->user()->role === 'tata_usaha')
+                        <span class="badge bg-info text-white ms-1">Tata Usaha</span>
                     @else
                         <span class="badge badge-{{ auth()->user()->role }} ms-1">{{ ucfirst(auth()->user()->role) }}</span>
                     @endif

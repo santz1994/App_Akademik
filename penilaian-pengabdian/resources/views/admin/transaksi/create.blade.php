@@ -23,7 +23,7 @@
                     <option value="">-- Pilih Karyawan --</option>
                     @foreach($karyawanList as $k)
                     <option value="{{ $k->id }}" data-pangkalan-count="{{ $k->pangkalans->count() }}" {{ (isset($selectedKaryawan) && $selectedKaryawan?->id == $k->id) ? 'selected' : '' }}>
-                        {{ $k->kode_karyawan }} — {{ $k->nama_karyawan }}
+                        {{ $k->nama_karyawan }}
                     </option>
                     @endforeach
                 </select>
@@ -35,18 +35,18 @@
                         <option value="">-- Pilih Pangkalan --</option>
                         @foreach($karyawanPangkalans as $p)
                         <option value="{{ $p->id }}" {{ (isset($selectedPangkalan) && $selectedPangkalan?->id == $p->id) ? 'selected' : '' }}>
-                            {{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}
+                            {{ $p->nama_pangkalan }}
                         </option>
                         @endforeach
                     </select>
                 @elseif(isset($karyawanPangkalans) && $karyawanPangkalans->count() === 1)
                     <input type="hidden" name="pangkalan_id" value="{{ $karyawanPangkalans->first()->id }}">
-                    <input type="text" class="form-control bg-light" value="{{ $karyawanPangkalans->first()->kode_pangkalan }} — {{ $karyawanPangkalans->first()->nama_pangkalan }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $karyawanPangkalans->first()->nama_pangkalan }}" readonly>
                 @elseif(isset($selectedKaryawan) && $selectedKaryawan)
                     <select name="pangkalan_id" class="form-select" required>
                         <option value="">-- Pilih Pangkalan --</option>
                         @foreach($selectedKaryawan->pangkalans as $p)
-                        <option value="{{ $p->id }}">{{ $p->kode_pangkalan }} — {{ $p->nama_pangkalan }}</option>
+                        <option value="{{ $p->id }}">{{ $p->nama_pangkalan }}</option>
                         @endforeach
                     </select>
                 @else
@@ -80,13 +80,17 @@
         <span class="fw-semibold"><i class="bi bi-clipboard-data me-2"></i>Blanko Penilaian</span>
         <span class="ms-2 text-muted">—</span>
         <span class="ms-2 fw-bold text-primary">{{ $selectedKaryawan->nama_karyawan }}</span>
-        <span class="ms-1 badge bg-secondary">{{ $selectedKaryawan->kode_karyawan }}</span>
-        <span class="ms-2 badge bg-info text-dark">{{ $selectedPangkalan->kode_pangkalan }} — {{ $selectedPangkalan->nama_pangkalan }}</span>
+        <span class="ms-2 badge bg-info text-dark">{{ $selectedPangkalan->nama_pangkalan }}</span>
         <span class="float-end text-muted" style="font-size:.82rem;">Tahun: {{ $selectedTahun->periode_penilaian }}</span>
     </div>
     <div class="card-body pb-2">
         <div class="alert alert-info py-2">
-            <i class="bi bi-info-circle me-1"></i> Penilaian kinerja untuk pangkalan <strong>{{ $selectedPangkalan->nama_pangkalan }}</strong> menggunakan kategori <strong>kinerja sesuai mapping pangkalan</strong> dan <strong>kategori kegiatan wajib</strong>.
+            <i class="bi bi-info-circle me-1"></i> Penilaian kinerja untuk pangkalan <strong>{{ $selectedPangkalan->nama_pangkalan }}</strong>.
+            @if($routePrefix === 'kepala')
+                Kepala hanya mengisi penilaian <strong>kinerja</strong>. Penilaian kegiatan diinput oleh Admin/Tata Usaha.
+            @else
+                Menggunakan kategori <strong>kinerja sesuai mapping pangkalan</strong> dan <strong>kategori kegiatan wajib</strong>.
+            @endif
         </div>
 
         <div class="alert alert-light border py-2">
@@ -134,7 +138,6 @@
             @foreach($kategoriList as $kategori)
             <div class="mb-4">
                 <div class="d-flex align-items-center mb-2 gap-2">
-                    <span class="badge bg-dark px-3 py-2">{{ $kategori->kode_kategori }}</span>
                     <h6 class="mb-0 fw-bold">{{ $kategori->kategori }}</h6>
                     <span class="badge {{ $kategori->jenis === 'kegiatan' ? 'bg-warning text-dark' : 'bg-primary' }} ms-1">{{ ucfirst($kategori->jenis) }}</span>
                     @if($kategori->is_wajib)
@@ -145,7 +148,6 @@
                     <table class="table table-bordered table-sm mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th width="60">Kode</th>
                                 <th>Indikator Kompetensi</th>
                                 <th width="160" class="text-center">Nilai (0 – 100)</th>
                             </tr>
@@ -161,7 +163,6 @@
                                 }
                             @endphp
                             <tr>
-                                <td><span class="badge bg-secondary">{{ $komp->kode_kompetensi }}</span></td>
                                 <td>
                                     {{ $komp->kompetensi }}
                                     @if($isKompetensiLocked)

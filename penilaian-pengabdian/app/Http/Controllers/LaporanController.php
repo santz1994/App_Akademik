@@ -511,6 +511,7 @@ class LaporanController extends Controller
 
         $nilaiAkhir = $perPangkalanData['nilaiAkhir'];
         $ratingMeta = LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+        $rewardPunishmentInfo = LaporanScoreCalculator::getRewardPunishmentInfo($nilaiAkhir);
 
         $fileName = 'laporan-pegawai-' . strtolower($karyawan->kode_karyawan) . '.pdf';
 
@@ -530,7 +531,8 @@ class LaporanController extends Controller
             'perPangkalanData',
             'allPangkalan',
             'jenisLaporan',
-            'trxByPangkalan'
+            'trxByPangkalan',
+            'rewardPunishmentInfo'
         ))
         ->setPaper('a4', 'portrait')
         ->stream($fileName);

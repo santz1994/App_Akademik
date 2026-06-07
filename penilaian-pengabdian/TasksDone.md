@@ -163,3 +163,130 @@
 - **Kepala ↔ Pangkalan**: `kepala_pangkalan` pivot table (di-auto-sync dari PangkalanController)
 
 Jika kepala diubah di data pangkalan, maka `is_kepala` pada user akan otomatis berubah. Jika user dihapus, `kepala_user_id` pada pangkalan akan menjadi null (nullOnDelete).
+
+## Penambahan Role Tata Usaha (2026-06-07)
+- Migration: tambah `tata_usaha` ke enum role pada tabel users
+- TataUsahaMiddleware: baru, cek role tata_usaha
+- bootstrap/app.php: register middleware `role.tata_usaha`
+- TataUsahaController: baru, dashboard untuk tata_usaha
+- routes/web.php: tambah prefix `tata-usaha` dengan akses laporan & unlock
+- AuthController: update redirectToDashboard() untuk tata_usaha
+- UserMiddleware: update redirect untuk tata_usaha
+- Sidebar: tambah menu Tata Usaha (Dashboard, Laporan, Kelola Lock)
+- Sidebar badge: tampilkan "Tata Usaha" untuk role tata_usaha
+- UserManagementController: validasi role `in:admin,user,tata_usaha`
+- User create/edit view: tambah opsi "Tata Usaha" di dropdown Level
+- User index view: badge Tata Usaha untuk role tata_usaha
+- Tata Usaha bisa: lihat laporan, cetak, unlock penilaian
+- Tata Usaha tidak bisa: input/edit nilai penilaian
+
+## Penambahan Reward & Punishment (2026-06-07)
+- Migration: buat tabel `reward_punishment` dengan data default (C: 5 Sak Semen, D: 10 Sak Semen)
+- RewardPunishment model: baru, dengan scope active/punishment/reward/forGrade
+- LaporanScoreCalculator: tambah method getRewardPunishmentInfo() untuk info per grade
+- RewardPunishmentController: baru, CRUD reward & punishment
+- routes/web.php: tambah resource route `reward-punishment` di admin
+- Sidebar: tambah menu "Reward & Punishment" di Pengaturan
+- View admin.reward_punishment: index, create, edit
+- Laporan keseluruhan: tambah kolom "Keterangan" menampilkan info reward/punishment
+- Laporan perorangan (PDF rinci & ringkas): tambah box keterangan hukuman di bawah summary
+- Laporan perorangan (inline): tambah alert keterangan hukuman
+
+## Penambahan Database Backup & Restore (2026-06-07)
+- DatabaseBackupController: baru, method index/backup/restore/download/destroy
+- routes/web.php: tambah routes database di admin group
+- Sidebar: tambah menu "Database Backup" di Pengaturan
+- View admin.database.index: halaman backup, restore, daftar file backup
+- Backup: mysqldump atau PHP fallback, simpan di storage/app/backups
+- Restore: upload .sql, eksekusi per statement
+- Download & delete file backup
+
+## Perbaikan Error Handler (2026-06-07)
+- bootstrap/app.php: tambah exception handler renderable
+- errors/419.blade.php: halaman khusus "Sesi Telah Berakhir" dengan tombol Login Kembali
+- errors/403.blade.php: halaman "Akses Ditolak"
+- errors/500.blade.php: halaman "Kesalahan Internal Server"
+- errors/error.blade.php: halaman error generik dengan detail
+- Semua error page: tombol "Kembali ke Beranda" dan "Halaman Sebelumnya"
+
+## Penghapusan Kode dari Laporan (2026-06-07)
+- Hapus kode_kompetensi dari header tabel rinci (PDF & inline)
+- Hapus kode_karyawan dari info section perorangan
+- Hapus kode_pangkalan dari info section perorangan
+- Hapus kode_kategori dari header kegiatan perorangan
+- Hapus kode_karyawan dari cell Nama Karyawan keseluruhan
+- Hapus kode_pangkalan dari cell Pangkalan Job keseluruhan
+- Hapus kode_pangkalan dari filter dropdown (laporan & transaksi)
+- Hapus kode_karyawan dari dropdown penilaian create
+- Hapus kode_pangkalan dari dropdown penilaian create
+- Hapus kode_karyawan dari header penilaian create
+
+## Multi-Pangkalan di Laporan Keseluruhan (2026-06-07)
+- index.blade.php: ubah dari 1 row per karyawan menjadi 1 row per karyawan-pangkalan
+- Setiap pangkalan karyawan ditampilkan baris terpisah dengan nama pangkalan
+- Filter transaksi per pangkalan_id untuk scoring yang akhir
+- Fallback ke semua transaksi jika tidak ada transaksi spesifik pangkalan
+- pdf.blade.php (PDF): update body untuk multi-pangkalan rows
+- Counter baris menggunakan $rowCounter global
+
+## FAQ Menu Visibility (2026-06-07)
+- Sidebar: hapus menu FAQ/Help dari User biasa
+- Menu FAQ hanya tampil untuk Admin, Kepala, dan Tata Usaha
+
+## Dokumentasi (2026-06-07)
+- README.md: rewrite lengkap dengan fitur, role, instalasi, panduan, error & solusi
+- Penjelasan semua fitur utama
+- Tabel role & akses
+- Panduan instalasi step-by-step
+- Panduan penggunaan (input penilaian, multi-pangkalan, laporan, backup)
+- Dokumentasi error umum dengan solusi
+- Struktur database
+
+## Perbaikan Database Backup (2026-06-07)
+- DatabaseBackupController: rewrite lengkap untuk backup SEMUA data
+- phpBackup(): perbaiki escaping karakter khusus (backslash, newline, quotes)
+- phpBackup(): gunakan batch INSERT (500 baris per statement) untuk efisiensi
+- phpBackup(): tambah SET FOREIGN_KEY_CHECKS, AUTOCOMMIT
+- phpBackup(): return bool untuk error handling
+- backupWithMysqldump(): pisah method, gunakan defaults-file untuk password
+- restore(): perbaiki SQL parsing - split by semicolon yang aware dengan quotes
+- restore(): drop semua tabel sebelum restore
+- executeSqlFile(): method baru, handle comment lines dan SET commands
+- splitSqlStatements(): method baru, split SQL dengan benar (tidak pecah di dalam string)
+- isValidBackupFile(): method baru, validasi keamanan nama file
+- findMysqldump(): tambah path Linux dan MySQL 8.4
+- Database backup view: tambah info database (nama, total tabel, total baris)
+- Database backup view: tambah detail tabel per tabel dengan jumlah baris
+- Database backup view: loading spinner saat backup/restore
+- Database backup view: konfirmasi restore dengan info data yang akan hilang
+
+## Perbaikan Foto Profile & Penilaian (2026-06-07)
+- User profile view: tambah foto karyawan di halaman profil (120x150px, object-fit cover)
+- User profile view: tampilkan foto dari karyawan.foto_path, fallback ke icon default
+- User profile view: hapus kode_pangkalan dari tampilan Pangkalan Job
+- User profile view: perbaiki nesting div (col-md-9 > row g-3)
+- User dashboard view: tambah foto karyawan di kartu profil (100x120px)
+- User dashboard view: fallback ke icon default jika foto tidak ada
+- TransaksiController::kepalaCreate() - filter kegiatan dari kategoriList (parameter includeKegiatan=false)
+- resolveKategoriListForPangkalan() - tambah parameter $includeKegiatan (default true)
+- Transaksi create view: hapus kode_kategori badge dari header kategori
+- Transaksi create view: hapus kode_kompetensi column dari tabel indikator
+- Transaksi create view: hapus kode_pangkalan dari dropdown fallback
+- Transaksi create view: update alert info untuk kepala (hanya kinerja, bukan kegiatan)
+- PangkalanController::index() - filter karyawan_count: hanya aktif & bukan kepala
+
+## Fitur Kategori Kinerja & Kegiatan per Pangkalan (2026-06-07)
+- Migration: tambah `penanggung_jawab_user_id` (nullable FK ke users) pada tabel pangkalan_kategori_kinerja
+- Pangkalan model: update `kategoriKinerja()` relationship - tambah `withPivot('penanggung_jawab_user_id')`, urutkan by jenis
+- Pangkalan model: tambah `kategoriKinerjaDipilih()` relationship
+- Pangkalan model: tambah `penanggungJawabKategori()` method - get penanggung jawab per kategori
+- PangkalanController::create() - load SEMUA kategori (kinerja + kegiatan), bukan hanya kinerja
+- PangkalanController::edit() - load SEMUA kategori + penanggungJawabMap dari pivot
+- PangkalanController::store() - validasi `penanggung_jawab.*` array, gunakan syncKategoriWithPenanggungJawab
+- PangkalanController::update() - gunakan syncKategoriWithPenanggungJawab
+- PangkalanController::syncKategoriWithPenanggungJawab() - method baru, sync kategori + penanggung_jawab_user_id
+- PangkalanController::sanitizeKategoriKinerjaIds() - hapus filter `jenis=kinerja`, izinkan semua jenis
+- PangkalanController::index() - eager load pivot penanggung_jawab_user_id
+- Pangkalan create view: tampilkan kategori dikelompokkan per jenis (Kinerja/Kegiatan), setiap kategori ada dropdown penanggung jawab
+- Pangkalan edit view: tampilkan kategori dikelompokkan per jenis dengan penanggung jawab terpilih
+- Pangkalan index view: tampilkan kategori per jenis dengan nama penanggung jawab

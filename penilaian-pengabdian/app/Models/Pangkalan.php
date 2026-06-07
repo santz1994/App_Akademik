@@ -48,7 +48,42 @@ class Pangkalan extends Model
             'pangkalan_id',
             'kategori_kinerja_id'
         )
+        ->withPivot('penanggung_jawab_user_id')
         ->withTimestamps()
+        ->orderBy('jenis')
         ->orderBy('kode_kategori');
+    }
+
+    /**
+     * Kategori kinerja yang dipilih (bukan kegiatan wajib global).
+     */
+    public function kategoriKinerjaDipilih()
+    {
+        return $this->belongsToMany(
+            KategoriKinerja::class,
+            'pangkalan_kategori_kinerja',
+            'pangkalan_id',
+            'kategori_kinerja_id'
+        )
+        ->withPivot('penanggung_jawab_user_id')
+        ->withTimestamps()
+        ->orderBy('jenis')
+        ->orderBy('kode_kategori');
+    }
+
+    /**
+     * User yang menjadi penanggung jawab untuk kategori tertentu di pangkalan ini.
+     */
+    public function penanggungJawabKategori(KategoriKinerja $kategori): ?User
+    {
+        $pivot = $this->kategoriKinerja()
+            ->where('kategori_kinerja_id', $kategori->id)
+            ->first()?->pivot;
+
+        if ($pivot && $pivot->penanggung_jawab_user_id) {
+            return User::find($pivot->penanggung_jawab_user_id);
+        }
+
+        return $this->kepalaUser;
     }
 }

@@ -35,7 +35,7 @@
             <option value="">-- Semua Pangkalan --</option>
             @foreach($pangkalanList as $p)
                 <option value="{{ $p->id }}" {{ (string)($filterPangkalan ?? '') === (string)$p->id ? 'selected' : '' }}>
-                    {{ $p->kode_pangkalan }} - {{ $p->nama_pangkalan }}
+                    {{ $p->nama_pangkalan }}
                 </option>
             @endforeach
         </select>
@@ -174,15 +174,13 @@
                         <td>{{ $karyawanList->firstItem() + $i }}</td>
                         <td>
                             <div class="fw-semibold">{{ $k->nama_karyawan }}</div>
-                            <small class="text-muted">{{ $k->kode_karyawan }}</small>
                         </td>
                         <td>
                             @if($k->pangkalans && $k->pangkalans->count())
                                 @foreach($k->pangkalans as $p)
-                                    <small class="badge bg-light text-dark border">{{ $p->kode_pangkalan }}</small>{{ $loop->last ? '' : ' ' }}
+                                    <span class="badge bg-info text-dark" style="font-size:.7rem;">{{ $p->nama_pangkalan }}</span>{{ $loop->last ? '' : ' ' }}
                                 @endforeach
                             @elseif($k->pangkalan)
-                                <small class="badge bg-light text-dark border">{{ $k->pangkalan->kode_pangkalan }}</small>
                                 {{ $k->pangkalan->nama_pangkalan }}
                             @else <span class="text-muted">-</span> @endif
                         </td>
