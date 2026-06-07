@@ -91,6 +91,14 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Pangkalan Job <span class="text-danger">*</span></label>
+                @if(isset($wajibPangkalan) && $wajibPangkalan->isNotEmpty())
+                <div class="alert alert-info py-2 mb-2" style="font-size:.82rem;">
+                    <i class="bi bi-info-circle me-1"></i><strong>Pangkalan Wajib (otomatis untuk semua karyawan):</strong>
+                    @foreach($wajibPangkalan as $wp)
+                        <span class="badge bg-primary ms-1">{{ $wp->nama_pangkalan }}</span>
+                    @endforeach
+                </div>
+                @endif
                 <select id="pangkalanSelect" name="pangkalan_ids[]" class="form-select @error('pangkalan_ids') is-invalid @enderror" multiple size="4">
                     @foreach($pangkalan as $p)
                     <option value="{{ $p->id }}" {{ in_array($p->id, $pangkalanIds ?? []) ? 'selected' : '' }}>
@@ -99,7 +107,7 @@
                     @endforeach
                 </select>
                 @error('pangkalan_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <small class="text-muted">Pilih satu atau lebih pangkalan job tempat karyawan ini bekerja. Gunakan Ctrl+Click untuk memilih lebih dari satu. Pilihan pertama akan menjadi pangkalan utama.</small>
+                <small class="text-muted">Pilih satu atau lebih pangkalan job tempat karyawan ini bekerja. Gunakan Ctrl+Click untuk memilih lebih dari satu. Pilihan pertama akan menjadi pangkalan utama. Pangkalan wajib sudah otomatis terdaftar.</small>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Tugas Khusus</label>

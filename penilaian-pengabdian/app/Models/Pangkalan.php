@@ -8,10 +8,11 @@ class Pangkalan extends Model
 {
     protected $table = 'pangkalan';
 
-    protected $fillable = ['kode_pangkalan', 'nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'kepala_user_id'];
+    protected $fillable = ['kode_pangkalan', 'nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'is_wajib', 'kepala_user_id'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_wajib' => 'boolean',
     ];
 
     public function karyawan()
@@ -52,6 +53,49 @@ class Pangkalan extends Model
         ->withTimestamps()
         ->orderBy('jenis')
         ->orderBy('kode_kategori');
+    }
+
+    /**
+     * Semua pangkalan wajib (berlaku untuk semua karyawan aktif).
+     */
+    public static function getWajibPangkalans()
+    {
+        return static::where('is_wajib', true)->where('is_active', true)->orderBy('nama_pangkalan')->get();
+    }
+
+    /**
+     * Semua pangkalan non-wajib (dipilih manual oleh karyawan).
+     */
+    public static function getNonWajibPangkalans()
+    {
+        return static::where('is_wajib', false)->where('is_active', true)->orderBy('nama_pangkalan')->get();
+    }
+
+    /**
+     * Apakah pangkalan ini wajib untuk semua karyawan.
+     */
+    public function isWajib(): bool
+    {
+        return (bool) $this->is_wajib;
+    }
+
+    /**
+     * Hitung jumlah karyawan untuk pangkalan ini.
+     * - Wajib: semua karyawan aktif non-kepala
+     * - Non-wajib: dari pivot table
+     */
+    public function getKaryawanCountAttribute(): int
+    {
+        if ($this->is_wajib) {
+            return \App\Models\Karyawan::where('is_active', true)
+                ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+                ->count();
+        }
+
+        return $this->karyawanPivot()
+            ->where('karyawan.is_active', true)
+            ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+            ->count();
     }
 
     /**

@@ -129,10 +129,10 @@
                         <td>
                             @if($k->pangkalans && $k->pangkalans->count())
                                 @foreach($k->pangkalans as $p)
-                                    <small class="badge bg-info text-dark">{{ $p->kode_pangkalan }}</small>{{ $loop->last ? '' : ', ' }}
+                                    <small class="badge {{ $p->is_wajib ? 'bg-danger' : 'bg-info text-dark' }}">{{ $p->kode_pangkalan }}</small>{{ $loop->last ? '' : ', ' }}
                                 @endforeach
                             @elseif($k->pangkalan)
-                                <small class="badge bg-info text-dark">{{ $k->pangkalan->kode_pangkalan }}</small>
+                                <small class="badge {{ $k->pangkalan->is_wajib ? 'bg-danger' : 'bg-info text-dark' }}">{{ $k->pangkalan->kode_pangkalan }}</small>
                                 {{ $k->pangkalan->nama_pangkalan }}
                             @else <span class="text-muted">-</span> @endif
                         </td>

@@ -58,7 +58,12 @@
                     <tr>
                         <td>{{ $data->firstItem() + $i }}</td>
                         <td><span class="badge bg-secondary">{{ $p->kode_pangkalan }}</span></td>
-                        <td class="fw-semibold">{{ $p->nama_pangkalan }}</td>
+                        <td class="fw-semibold">
+                            {{ $p->nama_pangkalan }}
+                            @if($p->is_wajib)
+                                <span class="badge bg-danger ms-1" style="font-size:.65rem;">Wajib</span>
+                            @endif
+                        </td>
                         <td>
                             @if($p->kepalaUser)
                                 {{ $p->kepalaUser->name }}

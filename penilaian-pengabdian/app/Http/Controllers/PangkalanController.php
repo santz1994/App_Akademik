@@ -16,7 +16,6 @@ class PangkalanController extends Controller
 
         $data = Pangkalan::with(['kategoriKinerja:id,kategori,jenis,is_wajib', 'kepalaUser:id,name'])
             ->withCount(['kategoriKinerja'])
-            ->withCount(['karyawanPivot as karyawan_count' => fn($q) => $q->where('karyawan.is_active', true)->whereDoesntHave('user', fn($uq) => $uq->where('is_kepala', true))])
             ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('pangkalan.is_active', true))
             ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('pangkalan.is_active', false))
             ->latest();
@@ -43,6 +42,7 @@ class PangkalanController extends Controller
             'pimpinan_pos'   => 'nullable|string|max:150',
             'keterangan'     => 'nullable|string',
             'is_active'      => 'required|boolean',
+            'is_wajib'       => 'nullable|boolean',
             'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
@@ -56,12 +56,18 @@ class PangkalanController extends Controller
                     'pimpinan_pos'   => $request->pimpinan_pos,
                     'keterangan'     => $request->keterangan,
                     'is_active'      => $request->boolean('is_active', true),
+                    'is_wajib'       => $request->boolean('is_wajib', false),
                     'kepala_user_id' => $request->kepala_user_id ?: null,
                 ]);
 
                 $pangkalan->kategoriKinerja()->sync(
                     $this->sanitizeKategoriKinerjaIds((array) $request->input('kategori_kinerja_ids', []))
                 );
+
+                // Jika wajib, tambahkan ke semua karyawan aktif
+                if ($pangkalan->is_wajib) {
+                    $this->syncWajibPangkalan($pangkalan);
+                }
 
                 // Auto-sync is_kepala on User
                 $this->syncKepalaStatus($pangkalan);
@@ -99,18 +105,37 @@ class PangkalanController extends Controller
             'pimpinan_pos'   => 'nullable|string|max:150',
             'keterangan'     => 'nullable|string',
             'is_active'      => 'required|boolean',
+            'is_wajib'       => 'nullable|boolean',
             'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
         ]);
 
         $oldKepalaUserId = $pangkalan->kepala_user_id;
+        $wasWajib = (bool) $pangkalan->is_wajib;
 
-        $pangkalan->update($request->only('nama_pangkalan', 'pimpinan_pos', 'keterangan', 'is_active', 'kepala_user_id'));
+        $pangkalan->update([
+            'nama_pangkalan' => $request->nama_pangkalan,
+            'pimpinan_pos'   => $request->pimpinan_pos,
+            'keterangan'     => $request->keterangan,
+            'is_active'      => $request->boolean('is_active', true),
+            'is_wajib'       => $request->boolean('is_wajib', false),
+            'kepala_user_id' => $request->kepala_user_id ?: null,
+        ]);
 
         $pangkalan->kategoriKinerja()->sync(
             $this->sanitizeKategoriKinerjaIds((array) $request->input('kategori_kinerja_ids', []))
         );
+
+        // Handle perubahan is_wajib
+        $isNowWajib = (bool) $pangkalan->is_wajib;
+        if ($isNowWajib && !$wasWajib) {
+            // Baru jadi wajib: tambahkan ke semua karyawan aktif
+            $this->syncWajibPangkalan($pangkalan);
+        } elseif (!$isNowWajib && $wasWajib) {
+            // Berubah dari wajib ke tidak wajib: hapus dari semua karyawan
+            $this->removeWajibPangkalan($pangkalan);
+        }
 
         // Auto-sync is_kepala on User (both old and new)
         $this->syncKepalaStatus($pangkalan, $oldKepalaUserId);
@@ -129,6 +154,11 @@ class PangkalanController extends Controller
     public function toggleStatus(Pangkalan $pangkalan)
     {
         $pangkalan->update(['is_active' => !$pangkalan->is_active]);
+
+        // Jika wajib dan baru diaktifkan, sync ke semua karyawan
+        if ($pangkalan->is_wajib && $pangkalan->is_active) {
+            $this->syncWajibPangkalan($pangkalan);
+        }
 
         return back()->with(
             'success',
@@ -183,6 +213,28 @@ class PangkalanController extends Controller
                 $oldUser->kepalaPangkalan()->detach($pangkalan->id);
             }
         }
+    }
+
+    /**
+     * Tambahkan pangkalan wajib ke semua karyawan aktif.
+     */
+    private function syncWajibPangkalan(Pangkalan $pangkalan): void
+    {
+        $karyawanIds = \App\Models\Karyawan::where('is_active', true)->pluck('id');
+        foreach ($karyawanIds as $karyawanId) {
+            $karyawan = \App\Models\Karyawan::find($karyawanId);
+            if ($karyawan && !$karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
+                $karyawan->pangkalans()->attach($pangkalan->id);
+            }
+        }
+    }
+
+    /**
+     * Hapus pangkalan wajib dari semua karyawan (saat berubah jadi non-wajib).
+     */
+    private function removeWajibPangkalan(Pangkalan $pangkalan): void
+    {
+        $pangkalan->karyawanPivot()->detach();
     }
 
     private function generateNextKodePangkalan(): string

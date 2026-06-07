@@ -65,8 +65,9 @@ class KaryawanController extends Controller
         $kode         = $this->generateNextKodeKaryawan();
         $linkedUserIds = Karyawan::whereNotNull('user_id')->pluck('user_id');
         $users        = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
-        $pangkalan    = Pangkalan::where('is_active', true)->orderBy('nama_pangkalan')->get();
-        return view('admin.karyawan.create', compact('tahunAktif', 'kode', 'users', 'pangkalan'));
+        $pangkalan    = Pangkalan::getNonWajibPangkalans();
+        $wajibPangkalan = Pangkalan::getWajibPangkalans();
+        return view('admin.karyawan.create', compact('tahunAktif', 'kode', 'users', 'pangkalan', 'wajibPangkalan'));
     }
 
     public function profilePdf(Karyawan $karyawan)
@@ -176,7 +177,9 @@ class KaryawanController extends Controller
         }
 
         // Sync semua pangkalan ke pivot table
-        $allPangkalanIds = array_unique(array_map('intval', $pangkalanIds));
+        // Auto-tambahkan pangkalan wajib
+        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $allPangkalanIds = array_unique(array_merge(array_map('intval', $pangkalanIds), $wajibIds));
         $karyawan->syncPangkalan($allPangkalanIds);
 
         return redirect()->route('admin.karyawan.index')
@@ -189,14 +192,17 @@ class KaryawanController extends Controller
             ->where('id', '!=', $karyawan->id)
             ->pluck('user_id');
         $users     = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
-        $pangkalan = Pangkalan::where('is_active', true)->orderBy('nama_pangkalan')->get();
-        // Load all pangkalan IDs from pivot table for multi-select
-        $pangkalanIds = $karyawan->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        $pangkalan = Pangkalan::getNonWajibPangkalans();
+        $wajibPangkalan = Pangkalan::getWajibPangkalans();
+        // Load all pangkalan IDs from pivot table for multi-select (hanya non-wajib)
+        $allPangkalanIds = $karyawan->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        $wajibIds = $wajibPangkalan->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $pangkalanIds = array_values(array_diff($allPangkalanIds, $wajibIds));
         // Fallback: if pivot is empty but pangkalan_id exists, use it
-        if (empty($pangkalanIds) && $karyawan->pangkalan_id) {
+        if (empty($pangkalanIds) && $karyawan->pangkalan_id && !in_array((int) $karyawan->pangkalan_id, $wajibIds)) {
             $pangkalanIds = [(int) $karyawan->pangkalan_id];
         }
-        return view('admin.karyawan.edit', compact('karyawan', 'users', 'pangkalan', 'pangkalanIds'));
+        return view('admin.karyawan.edit', compact('karyawan', 'users', 'pangkalan', 'pangkalanIds', 'wajibPangkalan'));
     }
 
     public function update(Request $request, Karyawan $karyawan)
@@ -295,7 +301,10 @@ class KaryawanController extends Controller
         ]);
     
         // Sync semua pangkalan ke pivot table (dan update derived pangkalan_id)
-        $karyawan->syncPangkalan(array_unique($pangkalanIds));
+        // Auto-tambahkan pangkalan wajib
+        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $allPangkalanIds = array_unique(array_merge(array_map('intval', $pangkalanIds), $wajibIds));
+        $karyawan->syncPangkalan($allPangkalanIds);
 
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil diperbarui.');
@@ -422,17 +431,17 @@ class KaryawanController extends Controller
 
             if ($existing) {
                 $existing->update($payload);
-                // Sync pangkalan to pivot table
-                if ($pangkalan) {
-                    $existing->syncPangkalan([$pangkalan->id]);
-                }
+                // Sync pangkalan to pivot table (termasuk wajib)
+                $syncIds = $pangkalan ? [$pangkalan->id] : [];
+                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+                $existing->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $updated++;
             } else {
                 $newKaryawan = Karyawan::create($payload);
-                // Sync pangkalan to pivot table
-                if ($pangkalan) {
-                    $newKaryawan->syncPangkalan([$pangkalan->id]);
-                }
+                // Sync pangkalan to pivot table (termasuk wajib)
+                $syncIds = $pangkalan ? [$pangkalan->id] : [];
+                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+                $newKaryawan->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $imported++;
             }
         }

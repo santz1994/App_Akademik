@@ -46,6 +46,14 @@
                 </select>
                 @error('is_active')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_wajib" value="1" id="isWajib"
+                           {{ old('is_wajib') ? 'checked' : '' }}>
+                    <label class="form-check-label fw-semibold" for="isWajib">Pangkalan Wajib untuk Semua Karyawan</label>
+                </div>
+                <small class="text-muted">Jika diaktifkan, semua karyawan aktif otomatis terdaftar di pangkalan ini. Pangkalan wajib tidak muncul di pilihan manual karyawan.</small>
+            </div>
 
             <div class="mb-4">
                 <label class="form-label fw-semibold">Kategori Kinerja & Kegiatan Terkait</label>
