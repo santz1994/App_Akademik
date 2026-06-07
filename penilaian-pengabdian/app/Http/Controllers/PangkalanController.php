@@ -216,11 +216,13 @@ class PangkalanController extends Controller
     }
 
     /**
-     * Tambahkan pangkalan wajib ke semua karyawan aktif.
+     * Tambahkan pangkalan wajib ke semua karyawan aktif (kecuali kepala).
      */
     private function syncWajibPangkalan(Pangkalan $pangkalan): void
     {
-        $karyawanIds = \App\Models\Karyawan::where('is_active', true)->pluck('id');
+        $karyawanIds = \App\Models\Karyawan::where('is_active', true)
+            ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+            ->pluck('id');
         foreach ($karyawanIds as $karyawanId) {
             $karyawan = \App\Models\Karyawan::find($karyawanId);
             if ($karyawan && !$karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
