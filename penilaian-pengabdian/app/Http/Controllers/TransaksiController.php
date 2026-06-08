@@ -320,9 +320,9 @@ class TransaksiController extends Controller
 
                 $isLocked = $lockState['is_locked'];
                 $canEditLockedScores = $this->canEditLockedScores($lockState);
-                // Kepala only sees kinerja categories, not kegiatan
+                // Kepala sees both kinerja and kegiatan categories for their pangkalan
                 $kategoriList = $selectedPangkalan
-                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase, false)
+                    ? $this->resolveKategoriListForPangkalan($selectedPangkalan, $kategoriBase, true)
                     : $this->resolveKategoriListForKaryawan($selectedKaryawan, $kategoriBase);
                 $lockedKompetensiIds = $canEditLockedScores
                     ? []
