@@ -22,7 +22,7 @@
                 <select name="kategori_kinerja_ids[]" class="form-select @error('kategori_kinerja_ids') is-invalid @enderror @error('kategori_kinerja_ids.*') is-invalid @enderror" multiple size="6">
                     @foreach($kategori as $k)
                     <option value="{{ $k->id }}" {{ in_array((string)$k->id, $selectedKategori, true) ? 'selected' : '' }}>
-                        {{ $k->kode_kategori }} — {{ $k->kategori }} ({{ ucfirst($k->jenis) }}){{ $k->is_wajib ? ' [WAJIB]' : '' }}
+                        {{ $k->kode_kategori }} — {{ $k->kategori }} ({{ ucfirst($k->jenis) }})
                     </option>
                     @endforeach
                 </select>

@@ -102,10 +102,18 @@
                     <tr>
                         <td class="text-muted">Pangkalan Job</td>
                         <td>:
-                            @if($pkAllPangkalan->isNotEmpty())
-                                {{ $pkAllPangkalan->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
+                            @php
+                                $displayPangkalans = $pkAllPangkalan->isNotEmpty()
+                                    ? $pkAllPangkalan->filter(fn($p) => !(bool) $p->is_wajib)
+                                    : collect();
+                                if ($displayPangkalans->isEmpty() && $pk->pangkalan) {
+                                    $displayPangkalans = collect([$pk->pangkalan]);
+                                }
+                            @endphp
+                            @if($displayPangkalans->isNotEmpty())
+                                {{ $displayPangkalans->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
                             @else
-                                {{ $pk->pangkalan ? $pk->pangkalan->nama_pangkalan : '-' }}
+                                -
                             @endif
                         </td>
                     </tr>
@@ -126,10 +134,18 @@
                         <th width="40" class="text-center">No</th>
                         <th>Pangkalan</th>
                         <th width="120" class="text-center">Rata-rata Kinerja</th>
+                        <th width="120" class="text-center">Rata-rata Kegiatan</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach($pkPerPangkalanData['perPangkalan'] as $idx => $ppData)
+                    @php
+                        $kegiatanAvgPk = null;
+                        if (isset($ppData['kegiatanDetails']) && count($ppData['kegiatanDetails']) > 0) {
+                            $kv = collect($ppData['kegiatanDetails'])->pluck('average')->filter(fn($v) => $v !== null)->values();
+                            $kegiatanAvgPk = $kv->isNotEmpty() ? $kv->sum() / $kv->count() : null;
+                        }
+                    @endphp
                     <tr>
                         <td class="text-center">{{ $idx + 1 }}</td>
                         <td>
@@ -142,38 +158,9 @@
                         <td class="text-center fw-bold">
                             {{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}
                         </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-        @endif
-
-        @if($kegiatanKategori->isNotEmpty())
-        <h6 class="fw-bold text-success mb-2"><i class="bi bi-clipboard-check me-1"></i>Nilai Kegiatan</h6>
-        <div class="table-responsive mb-3">
-            <table class="table table-bordered table-sm mb-0" style="font-size:.85rem;">
-                <thead class="table-light">
-                    <tr>
-                        <th width="40" class="text-center">No</th>
-                        <th>Kategori Kegiatan</th>
-                        <th width="120" class="text-center">Rata-rata</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach($kegiatanKategori as $idx => $kat)
-                    @php
-                        $kategoriNilai = [];
-                        foreach ($kat->kompetensi as $komp) {
-                            $t = $pkTrx->get($komp->id);
-                            if ($t && $t->nilai !== null) { $kategoriNilai[] = (float) $t->nilai; }
-                        }
-                        $kategoriAvg = count($kategoriNilai) > 0 ? array_sum($kategoriNilai) / count($kategoriNilai) : null;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $idx + 1 }}</td>
-                        <td><strong>{{ $kat->kategori }}</strong></td>
-                        <td class="text-center fw-bold">{{ $kategoriAvg !== null ? number_format($kategoriAvg, 2) : '-' }}</td>
+                        <td class="text-center fw-bold">
+                            {{ $kegiatanAvgPk !== null ? number_format($kegiatanAvgPk, 2) : '-' }}
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -211,6 +198,15 @@
                             </tr>
                         </thead>
                         <tbody>
+                        @php
+                            // DEBUG: Log kategoriDetails for this pangkalan
+                            \Illuminate\Support\Facades\Log::debug('PERORANGAN DEBUG', [
+                                'pangkalan' => $ppData['pangkalan']?->nama_pangkalan,
+                                'pangkalan_id' => $ppData['pangkalan_id'],
+                                'kategoriDetails_count' => count($ppData['kategoriDetails']),
+                                'kategoriDetails_ids' => collect($ppData['kategoriDetails'])->pluck('kategori.id')->toArray(),
+                            ]);
+                        @endphp
                         @foreach($ppData['kategoriDetails'] as $kd)
                             @foreach($kd['kategori']->kompetensi as $komp)
                                 @php
@@ -279,13 +275,14 @@
         @endif
         @endif
 
-        @if($kegiatanKategori->isNotEmpty())
+        {{-- Kegiatan section: only show for single pangkalan (multi-pangkalan shows kegiatan per-pangkalan above) --}}
+        @if($kegiatanKategori->isNotEmpty() && (!$pkPerPangkalanData || count($pkPerPangkalanData['perPangkalan'] ?? []) <= 1))
         <h6 class="fw-bold text-success mb-2"><i class="bi bi-clipboard-check me-1"></i>Nilai Kegiatan</h6>
         @foreach($kegiatanKategori as $kat)
         <div class="mb-2">
             <div class="d-flex align-items-center mb-1" style="font-size:.85rem;">
                 <strong>{{ $kat->kategori }}</strong>
-                @if($kat->is_wajib)
+                @if(false && $kat->is_wajib)
                     <span class="badge bg-danger ms-2">Wajib</span>
                 @endif
             </div>

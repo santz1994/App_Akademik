@@ -14,7 +14,7 @@ class PangkalanController extends Controller
     {
         $filterStatusAktif = $request->input('status_aktif', 'aktif');
 
-        $data = Pangkalan::with(['kategoriKinerja:id,kategori,jenis,is_wajib', 'kepalaUser:id,name'])
+        $data = Pangkalan::with(['kategoriKinerja:id,kategori,jenis', 'kepalaUser:id,name'])
             ->withCount(['kategoriKinerja'])
             ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('pangkalan.is_active', true))
             ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('pangkalan.is_active', false))

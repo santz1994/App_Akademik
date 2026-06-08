@@ -28,6 +28,7 @@ class LaporanScoreCalculator
 
         $mappedKategoriIds = self::resolveMappedKategoriIdsByPangkalan($karyawan);
 
+        // Kinerja: filter by pangkalan mapping
         $kategoriKinerja = $kategoriList
             ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kinerja')
             ->values();
@@ -36,12 +37,17 @@ class LaporanScoreCalculator
             ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
             : $kategoriKinerja;
 
-        $mandatoryKegiatan = $kategoriList
-            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan' && (bool) ($kategori->is_wajib ?? false))
+        // Kegiatan: only include kegiatan mapped to the karyawan's pangkalan(s)
+        $kategoriKegiatan = $kategoriList
+            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan')
             ->values();
 
+        $selectedKegiatan = $mappedKategoriIds->isNotEmpty()
+            ? $kategoriKegiatan->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
+            : collect();
+
         return $selectedKinerja
-            ->concat($mandatoryKegiatan)
+            ->concat($selectedKegiatan)
             ->unique('id')
             ->values();
     }
@@ -128,22 +134,28 @@ class LaporanScoreCalculator
         }
 
         $weightedSum = 0.0;
-        $usedWeight = 0.0;
 
+        // Always apply full weights, even if one component has no values
+        // Formula: 70% * kinerjaAvg + 30% * kegiatanAvg
         if ($kinerjaScore !== null) {
             $weightedSum += ($bobotKinerja * $kinerjaScore);
-            $usedWeight += $bobotKinerja;
         }
         if ($kegiatanScore !== null) {
             $weightedSum += ($bobotKegiatan * $kegiatanScore);
-            $usedWeight += $bobotKegiatan;
         }
 
-        if ($usedWeight <= 0.0) {
+        // If neither has values, return null
+        if ($kinerjaScore === null && $kegiatanScore === null) {
             return null;
         }
 
-        return $weightedSum / $usedWeight;
+        // Always divide by total weight (100%), not just used weight
+        $totalWeight = $bobotKinerja + $bobotKegiatan;
+        if ($totalWeight <= 0.0) {
+            return null;
+        }
+
+        return $weightedSum / $totalWeight;
     }
 
     private static function calculateWeightedByKategori(Collection $kategoriList, Collection $trxByKompetensi): ?float
@@ -319,15 +331,44 @@ class LaporanScoreCalculator
                 }
             }
 
+            // Also build kegiatan details for this pangkalan (only mapped kegiatan)
+            $pangkalanKegiatanKategori = $mappedKategoriIds->isNotEmpty()
+                ? $kegiatanKategori->filter(fn($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
+                : collect();
+            $kegiatanDetails = [];
+            $kegiatanAverages = [];
+            foreach ($pangkalanKegiatanKategori as $kat) {
+                $values = [];
+                foreach ($kat->kompetensi as $komp) {
+                    $t = $pangkalanTrx->get($komp->id);
+                    if ($t && self::isScored($t->nilai)) {
+                        $values[] = (float) $t->nilai;
+                    }
+                }
+                $avg = count($values) > 0 ? array_sum($values) / count($values) : null;
+                $kegiatanDetails[] = [
+                    'kategori' => $kat,
+                    'average' => $avg,
+                    'kompetensiCount' => count($values),
+                ];
+                if ($avg !== null) {
+                    $kegiatanAverages[] = $avg;
+                }
+            }
+
             $pangkalanKinerjaAvg = count($kategoriAverages) > 0
                 ? array_sum($kategoriAverages) / count($kategoriAverages)
                 : null;
+
+            // Combine kinerja and kegiatan kategori details for this pangkalan
+            $allKategoriDetails = array_merge($kategoriDetails, $kegiatanDetails);
 
             $perPangkalan[] = [
                 'pangkalan' => $pangkalan,
                 'pangkalan_id' => $pIdInt,
                 'kinerjaAvg' => $pangkalanKinerjaAvg,
-                'kategoriDetails' => $kategoriDetails,
+                'kategoriDetails' => $allKategoriDetails,
+                'kegiatanDetails' => $kegiatanDetails,
             ];
         }
 

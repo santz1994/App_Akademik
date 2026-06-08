@@ -77,9 +77,6 @@
                                                {{ in_array($kategori->id, old('kategori_kinerja_ids', [])) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="kategori_{{ $kategori->id }}">
                                             {{ $kategori->kategori }}
-                                            @if($kategori->is_wajib)
-                                                <span class="badge bg-danger ms-1" style="font-size:.65rem;">Wajib</span>
-                                            @endif
                                         </label>
                                     </div>
                                 @endforeach

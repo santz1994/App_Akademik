@@ -395,36 +395,26 @@
                     $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
                     $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
                     $allTrx = $k->transaksi->filter(fn($t) => $t->nilai !== null)->keyBy('kompetensi_id');
+                    $trxByKompetensi = $allTrx->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
                     $karyawanPangkalans = $k->pangkalans->count() > 0 ? $k->pangkalans : collect();
                     if ($karyawanPangkalans->isEmpty() && $k->pangkalan) {
                         $karyawanPangkalans = collect([$k->pangkalan]);
                     }
-                    if ($karyawanPangkalans->isEmpty()) {
-                        $karyawanPangkalans = collect([null]);
-                    }
+                    $pangkalanNames = $karyawanPangkalans->isNotEmpty()
+                        ? $karyawanPangkalans->pluck('nama_pangkalan')->implode(', ')
+                        : '-';
+                    $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                        $kategoriUntukKaryawan,
+                        $trxByKompetensi,
+                        $reportFormat['scoring_method'],
+                        [
+                            'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
+                            'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
+                        ]
+                    );
+                    $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
+                    $rowCounter++;
                 @endphp
-                @foreach($karyawanPangkalans as $pIdx => $pangkalan)
-                    @php
-                        $rowCounter++;
-                        $pangkalanId = $pangkalan?->id;
-                        $trxForPangkalan = $pangkalanId
-                            ? $k->transaksi->filter(fn($t) => $t->nilai !== null && (int)($t->pangkalan_id ?? 0) === (int)$pangkalanId)->keyBy('kompetensi_id')
-                            : $allTrx;
-                        if ($trxForPangkalan->isEmpty() && $pangkalanId) {
-                            $trxForPangkalan = $allTrx;
-                        }
-                        $trxByKompetensi = $trxForPangkalan->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
-                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
-                            $kategoriUntukKaryawan,
-                            $trxByKompetensi,
-                            $reportFormat['scoring_method'],
-                            [
-                                'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
-                                'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
-                            ]
-                        );
-                        $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
-                    @endphp
                 <tr>
                     @foreach($visibleColumns as $columnKey)
                         @if($columnKey === 'no')
@@ -434,7 +424,7 @@
                         @elseif($columnKey === 'nama_karyawan')
                             <td>{{ $k->nama_karyawan }}</td>
                         @elseif($columnKey === 'pangkalan')
-                            <td>{{ $pangkalan?->nama_pangkalan ?? '-' }}</td>
+                            <td>{{ $pangkalanNames }}</td>
                         @elseif($columnKey === 'detail_kompetensi')
                             @if($jenisLaporan === 'ringkas')
                                 @foreach($ringkasKategoriList as $kategori)
@@ -503,7 +493,6 @@
                         @endif
                     @endforeach
                 </tr>
-                @endforeach
             @endforeach
         </tbody>
     </table>

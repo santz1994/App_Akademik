@@ -140,7 +140,7 @@
                 <div class="d-flex align-items-center mb-2 gap-2">
                     <h6 class="mb-0 fw-bold">{{ $kategori->kategori }}</h6>
                     <span class="badge {{ $kategori->jenis === 'kegiatan' ? 'bg-warning text-dark' : 'bg-primary' }} ms-1">{{ ucfirst($kategori->jenis) }}</span>
-                    @if($kategori->is_wajib)
+                    @if(false && $kategori->is_wajib)
                         <span class="badge bg-danger">Wajib</span>
                     @endif
                 </div>

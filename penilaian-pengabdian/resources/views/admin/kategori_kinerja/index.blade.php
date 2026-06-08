@@ -27,9 +27,6 @@
                         <span class="badge {{ $d->jenis === 'kegiatan' ? 'bg-warning text-dark' : 'bg-primary' }}">
                             {{ ucfirst($d->jenis) }}
                         </span>
-                        @if($d->is_wajib)
-                            <span class="badge bg-danger ms-1">Wajib</span>
-                        @endif
                     </td>
                     <td>{{ $d->kompetensi_count }}</td>
                     <td>

@@ -30,13 +30,10 @@ class KategoriKinerjaController extends Controller
         $request->validate([
             'kategori' => 'required|string|max:150',
             'jenis'    => 'required|in:kinerja,kegiatan',
-            'is_wajib' => 'nullable|boolean',
             'bobot'    => 'nullable|numeric|min:0|max:100',
         ]);
 
         $jenis = (string) $request->input('jenis');
-
-        $isWajib = $jenis === 'kegiatan' ? $request->boolean('is_wajib') : false;
 
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
@@ -44,7 +41,7 @@ class KategoriKinerjaController extends Controller
                     'kode_kategori' => $this->generateNextKodeKategori(),
                     'kategori'      => $request->kategori,
                     'jenis'         => $jenis,
-                    'is_wajib'      => $isWajib,
+                    'is_wajib'      => false,
                     'bobot'         => (float) $request->input('bobot', 0),
                 ]);
 
@@ -72,7 +69,6 @@ class KategoriKinerjaController extends Controller
         $request->validate([
             'kategori' => 'required|string|max:150',
             'jenis'    => 'required|in:kinerja,kegiatan',
-            'is_wajib' => 'nullable|boolean',
             'bobot'    => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -81,7 +77,7 @@ class KategoriKinerjaController extends Controller
         $kategoriKinerja->update([
             'kategori' => $request->input('kategori'),
             'jenis' => $jenis,
-            'is_wajib' => $jenis === 'kegiatan' ? $request->boolean('is_wajib') : false,
+            'is_wajib' => false,
             'bobot' => (float) $request->input('bobot', 0),
         ]);
 

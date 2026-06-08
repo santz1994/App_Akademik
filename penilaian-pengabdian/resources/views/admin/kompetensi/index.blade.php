@@ -25,9 +25,6 @@
                         @forelse($d->kategoriKinerja as $kat)
                             <span class="badge bg-light text-dark border mb-1">
                                 {{ $kat->kode_kategori }} - {{ $kat->kategori }}
-                                @if($kat->is_wajib)
-                                    • WAJIB
-                                @endif
                             </span>
                         @empty
                             <span class="text-muted">-</span>

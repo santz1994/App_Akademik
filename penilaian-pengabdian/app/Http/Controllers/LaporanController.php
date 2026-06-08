@@ -302,9 +302,30 @@ class LaporanController extends Controller
             ->orderBy('kode_kategori')
             ->get();
 
+        // For kepala scope, filter kategori to only those mapped to their pangkalan
+        if ($scope === 'kepala') {
+            $kepalaPangkalanIds = $filterPangkalan
+                ? [(int) $filterPangkalan]
+                : $user->getAllPangkalanIds();
+            $mappedKategoriIds = collect();
+            foreach ($kepalaPangkalanIds as $pId) {
+                $pangkalan = \App\Models\Pangkalan::with('kategoriKinerja')->find($pId);
+                if ($pangkalan) {
+                    $mappedKategoriIds = $mappedKategoriIds->merge(
+                        $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                    );
+                }
+            }
+            if ($mappedKategoriIds->isNotEmpty()) {
+                $kategoriList = $kategoriList->filter(
+                    fn($kat) => $mappedKategoriIds->contains((int) $kat->id)
+                )->values();
+            }
+        }
+
         $karyawanQuery = Karyawan::with([
             'pangkalan.kategoriKinerja',
-            'pangkalans',
+            'pangkalans.kategoriKinerja',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
@@ -427,6 +448,7 @@ class LaporanController extends Controller
         $karyawanQuery = Karyawan::with([
             'pangkalan.kategoriKinerja',
             'pangkalanLain.kategoriKinerja',
+            'pangkalans.kategoriKinerja',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
@@ -554,6 +576,7 @@ class LaporanController extends Controller
         $karyawanQuery = Karyawan::with([
             'pangkalan.kategoriKinerja',
             'pangkalanLain.kategoriKinerja',
+            'pangkalans.kategoriKinerja',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),

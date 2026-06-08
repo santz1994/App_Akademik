@@ -216,17 +216,25 @@
 
     {{-- Nilai Kinerja Per Pangkalan --}}
     @if(isset($perPangkalanData) && count($perPangkalanData['perPangkalan']) > 0)
-    <div class="section-title">Nilai Kinerja</div>
+    <div class="section-title">Nilai Kinerja & Kegiatan</div>
     <table class="score-table">
         <thead>
             <tr>
                 <th class="no">No</th>
                 <th>Pangkalan</th>
                 <th class="nilai">Rata-rata Kinerja</th>
+                <th class="nilai">Rata-rata Kegiatan</th>
             </tr>
         </thead>
         <tbody>
             @foreach($perPangkalanData['perPangkalan'] as $idx => $ppData)
+            @php
+                $kegiatanAvgPangkalan = null;
+                if (isset($ppData['kegiatanDetails']) && count($ppData['kegiatanDetails']) > 0) {
+                    $kegiatanVals = collect($ppData['kegiatanDetails'])->pluck('average')->filter(fn($v) => $v !== null)->values();
+                    $kegiatanAvgPangkalan = $kegiatanVals->isNotEmpty() ? $kegiatanVals->sum() / $kegiatanVals->count() : null;
+                }
+            @endphp
             <tr>
                 <td class="no">{{ $idx + 1 }}</td>
                 <td>
@@ -237,45 +245,16 @@
                     @endif
                 </td>
                 <td class="nilai">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
+                <td class="nilai">{{ $kegiatanAvgPangkalan !== null ? number_format($kegiatanAvgPangkalan, 2) : '-' }}</td>
             </tr>
             @endforeach
             @if(count($perPangkalanData['perPangkalan']) > 1 && $perPangkalanData['kinerjaFinal'] !== null)
             <tr class="total-row">
-                <td colspan="2" style="text-align:center;">Rata-rata Keseluruhan Kinerja</td>
+                <td colspan="2" style="text-align:center;">Rata-rata Keseluruhan</td>
                 <td class="nilai">{{ number_format($perPangkalanData['kinerjaFinal'], 2) }}</td>
+                <td class="nilai">{{ $perPangkalanData['kegiatanAvg'] !== null ? number_format($perPangkalanData['kegiatanAvg'], 2) : '-' }}</td>
             </tr>
             @endif
-        </tbody>
-    </table>
-    @endif
-
-    {{-- Nilai Kegiatan Per Kategori --}}
-    @if($kegiatanKategori->isNotEmpty())
-    <div class="section-title">Nilai Kegiatan</div>
-    <table class="score-table">
-        <thead>
-            <tr>
-                <th class="no">No</th>
-                <th>Kategori Kegiatan</th>
-                <th class="nilai">Rata-rata</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($kegiatanKategori as $idx => $kat)
-                @php
-                    $kategoriNilai = [];
-                    foreach ($kat->kompetensi as $komp) {
-                        $t = $trxByKompetensi->get($komp->id);
-                        if ($t && $t->nilai !== null) { $kategoriNilai[] = (float) $t->nilai; }
-                    }
-                    $kategoriAvg = count($kategoriNilai) > 0 ? array_sum($kategoriNilai) / count($kategoriNilai) : null;
-                @endphp
-                <tr>
-                    <td class="no">{{ $idx + 1 }}</td>
-                    <td>{{ $kat->kategori }}</td>
-                    <td class="nilai">{{ $kategoriAvg !== null ? number_format($kategoriAvg, 2) : '-' }}</td>
-                </tr>
-            @endforeach
         </tbody>
     </table>
     @endif

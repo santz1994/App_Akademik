@@ -32,7 +32,7 @@ class TransaksiController extends Controller
 
         $karyawanList = Karyawan::with([
             'pangkalan.kategoriKinerja',
-            'pangkalans',
+            'pangkalans.kategoriKinerja',
             'transaksi' => fn($q) => $q->when($selectedTahun, fn($q) =>
                 $q->where('tahun_penilaian_id', $selectedTahun))->with('kompetensi'),
             'penilaianLocks' => fn($q) => $q->when($selectedTahun, fn($q) =>
@@ -122,7 +122,7 @@ class TransaksiController extends Controller
 
         $karyawanList = Karyawan::with([
             'pangkalan.kategoriKinerja',
-            'pangkalans',
+            'pangkalans.kategoriKinerja',
             'transaksi' => fn($q) => $q
                 ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi'),
@@ -147,7 +147,7 @@ class TransaksiController extends Controller
         $filterPangkalan = $selectedPangkalanId;
         $filterStatusLock = null;
         $filterStatusAktif = 'aktif';
-        $pangkalanList = collect();
+        // Keep pangkalanList for filter dropdown (do not reset to empty)
         $kategoriListForScore = KategoriKinerja::with('kompetensi:id')->orderBy('jenis')->orderBy('kode_kategori')->get();
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
@@ -184,7 +184,7 @@ class TransaksiController extends Controller
 
     public function create(Request $request)
     {
-        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')->bukanKepala()->where('is_active', true)->orderBy('nama_karyawan')->get();
+        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans.kategoriKinerja')->bukanKepala()->where('is_active', true)->orderBy('nama_karyawan')->get();
         $tahunList     = TahunPenilaian::orderByDesc('periode_penilaian')->get();
         $tahunAktif    = TahunPenilaian::where('is_active', true)->first();
         $kategoriBase = KategoriKinerja::with(['kompetensi' => fn($q) => $q->orderBy('kode_kompetensi')])
@@ -203,7 +203,7 @@ class TransaksiController extends Controller
         $hasPendingUnlockRequest = false;
 
         if ($request->filled('karyawan_id') && $request->filled('tahun_penilaian_id')) {
-            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')->bukanKepala()->where('is_active', true)->find($request->karyawan_id);
+            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans.kategoriKinerja')->bukanKepala()->where('is_active', true)->find($request->karyawan_id);
             $selectedTahun    = TahunPenilaian::find($request->tahun_penilaian_id);
 
             if ($selectedKaryawan) {
@@ -259,7 +259,7 @@ class TransaksiController extends Controller
         $user = Auth::user();
         abort_unless($user->is_kepala, 403);
 
-        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
+        $karyawanList  = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans.kategoriKinerja')
             ->bukanKepala()
             ->where('is_active', true)
             ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
@@ -283,7 +283,7 @@ class TransaksiController extends Controller
         $hasPendingUnlockRequest = false;
 
         if ($request->filled('karyawan_id') && $request->filled('tahun_penilaian_id')) {
-            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans')
+            $selectedKaryawan = Karyawan::with('pangkalan.kategoriKinerja', 'pangkalans.kategoriKinerja')
                 ->bukanKepala()
                 ->where('is_active', true)
                 ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()))
@@ -443,33 +443,6 @@ class TransaksiController extends Controller
         if ($kinerjaKompetensiIds->isNotEmpty() && $finalScoredKompetensiIds->intersect($kinerjaKompetensiIds)->isEmpty()) {
             return back()->withInput()->withErrors([
                 'nilai' => 'Wajib memiliki minimal satu penilaian kinerja (nilai 0 - 100) untuk pangkalan ini.',
-            ]);
-        }
-
-        $missingMandatory = [];
-        $mandatoryKategoriList = $kategoriList
-            ->filter(fn($kategori) => strtolower((string) $kategori->jenis) === 'kegiatan' && (bool) $kategori->is_wajib)
-            ->values();
-
-        foreach ($mandatoryKategoriList as $kategori) {
-            $mandatoryKompetensiIds = $kategori->kompetensi
-                ->pluck('id')
-                ->map(fn($id) => (int) $id)
-                ->unique()
-                ->values();
-
-            if ($mandatoryKompetensiIds->isEmpty()) {
-                continue;
-            }
-
-            if ($finalScoredKompetensiIds->intersect($mandatoryKompetensiIds)->isEmpty()) {
-                $missingMandatory[] = $kategori->kategori;
-            }
-        }
-
-        if (!empty($missingMandatory)) {
-            return back()->withInput()->withErrors([
-                'nilai' => 'Kategori kegiatan wajib belum dinilai: ' . implode(', ', $missingMandatory) . '.',
             ]);
         }
 
@@ -984,13 +957,14 @@ class TransaksiController extends Controller
             return $includeKegiatan ? $kategoriList->values() : $kategoriList->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')->values();
         }
 
-        // Get kategori kinerja mapped to this pangkalan
+        // Get ALL kategori mapped to this pangkalan (both kinerja and kegiatan)
         $mappedKategoriIds = $pangkalan->kategoriKinerja
             ->pluck('id')
             ->map(fn($id) => (int) $id)
             ->unique()
             ->values();
 
+        // Filter kinerja by pangkalan mapping
         $kategoriKinerja = $kategoriList
             ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kinerja')
             ->values();
@@ -1003,12 +977,18 @@ class TransaksiController extends Controller
             return $selectedKinerja->values();
         }
 
-        $mandatoryKegiatan = $kategoriList
-            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan' && (bool) ($kategori->is_wajib ?? false))
+        // Kegiatan: only include those mapped to this pangkalan (via pangkalan_kategori_kinerja)
+        // This replaces the old logic of including ALL globally mandatory kegiatan
+        $kategoriKegiatan = $kategoriList
+            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan')
             ->values();
 
+        $selectedKegiatan = $mappedKategoriIds->isNotEmpty()
+            ? $kategoriKegiatan->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
+            : collect();
+
         return $selectedKinerja
-            ->concat($mandatoryKegiatan)
+            ->concat($selectedKegiatan)
             ->unique('id')
             ->values();
     }

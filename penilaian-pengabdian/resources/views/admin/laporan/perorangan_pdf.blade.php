@@ -197,10 +197,18 @@
             <tr>
                 <td class="info-label">Pangkalan Job</td>
                 <td class="info-value">:
-                    @if(isset($allPangkalan) && $allPangkalan->isNotEmpty())
-                        {{ $allPangkalan->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
+                    @php
+                        $displayPangkalans = isset($allPangkalan) && $allPangkalan->isNotEmpty()
+                            ? $allPangkalan->filter(fn($p) => !(bool) $p->is_wajib)
+                            : collect();
+                        if ($displayPangkalans->isEmpty() && $karyawan->pangkalan) {
+                            $displayPangkalans = collect([$karyawan->pangkalan]);
+                        }
+                    @endphp
+                    @if($displayPangkalans->isNotEmpty())
+                        {{ $displayPangkalans->map(fn($p) => $p->nama_pangkalan)->implode(', ') }}
                     @else
-                        {{ $karyawan->pangkalan ? $karyawan->pangkalan->nama_pangkalan : '-' }}
+                        -
                     @endif
                 </td>
             </tr>
@@ -267,6 +275,31 @@
             </tr>
         </tbody>
     </table>
+
+    {{-- Kegiatan for this pangkalan --}}
+    @if(isset($ppData['kegiatanDetails']) && count($ppData['kegiatanDetails']) > 0)
+    <div style="margin-top: 6px;">
+        <div style="font-size: 10px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #dcfce7; padding: 4px 8px; border-left: 4px solid #22c55e;">
+            Nilai Kegiatan
+        </div>
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>Kategori Kegiatan</th>
+                    <th class="nilai">Rata-rata</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($ppData['kegiatanDetails'] as $kd)
+                <tr>
+                    <td>{{ $kd['kategori']->kategori }}</td>
+                    <td class="nilai">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
     </div>
     @endforeach
     @else
@@ -307,14 +340,14 @@
     @endif
     @endif
 
-    {{-- Nilai Kegiatan --}}
-    @if($kegiatanKategori->isNotEmpty())
+    {{-- Nilai Kegiatan: only show for single pangkalan (multi-pangkalan shows kegiatan per-pangkalan above) --}}
+    @if($kegiatanKategori->isNotEmpty() && (!isset($perPangkalanData) || count($perPangkalanData['perPangkalan'] ?? []) <= 1))
     <div class="section-title">Nilai Kegiatan</div>
     @foreach($kegiatanKategori as $kat)
     <div style="margin-bottom: 8px;">
         <div style="font-size: 10px; font-weight: 700; color: #1e293b; margin-bottom: 4px; background: #dcfce7; padding: 4px 8px; border-left: 4px solid #22c55e;">
             {{ $kat->kategori }}
-            @if($kat->is_wajib)
+            @if(false && $kat->is_wajib)
                 <span style="color: #dc2626; font-size: 9px;"> (Wajib)</span>
             @endif
         </div>
