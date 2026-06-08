@@ -14,6 +14,7 @@ class Transaksi extends Model
         'pangkalan_id',
         'tahun_penilaian_id',
         'kompetensi_id',
+        'kategori_kinerja_id',
         'performance_rating_id',
         'nilai',
         'keterangan',

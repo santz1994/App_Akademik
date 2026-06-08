@@ -302,7 +302,8 @@ class LaporanController extends Controller
             ->orderBy('kode_kategori')
             ->get();
 
-        // For kepala scope, filter kategori to only those mapped to their pangkalan
+        // Filter kategori to only those mapped to at least one pangkalan
+        // This prevents old/unmapped kategori from appearing as columns
         if ($scope === 'kepala') {
             $kepalaPangkalanIds = $filterPangkalan
                 ? [(int) $filterPangkalan]
@@ -319,6 +320,18 @@ class LaporanController extends Controller
             if ($mappedKategoriIds->isNotEmpty()) {
                 $kategoriList = $kategoriList->filter(
                     fn($kat) => $mappedKategoriIds->contains((int) $kat->id)
+                )->values();
+            }
+        } else {
+            // For admin: only show kategori that are mapped to at least one pangkalan
+            $allMappedKategoriIds = \Illuminate\Support\Facades\DB::table('pangkalan_kategori_kinerja')
+                ->pluck('kategori_kinerja_id')
+                ->map(fn($id) => (int) $id)
+                ->unique()
+                ->values();
+            if ($allMappedKategoriIds->isNotEmpty()) {
+                $kategoriList = $kategoriList->filter(
+                    fn($kat) => $allMappedKategoriIds->contains((int) $kat->id)
                 )->values();
             }
         }
@@ -487,10 +500,6 @@ class LaporanController extends Controller
             $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
 
-        $trxByKompetensi = $karyawan->transaksi
-            ->filter(fn($t) => $t->nilai !== null)
-            ->keyBy('kompetensi_id');
-
         // Determine jenis_laporan for perorangan (ringkas vs rinci)
         $jenisLaporan = $request->input('jenis_laporan', 'rinci');
         if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
@@ -505,17 +514,19 @@ class LaporanController extends Controller
             ->whereIn('id', $allPangkalanIds)
             ->get();
 
-        // Build per-pangkalan transaksi map (keyed by pangkalan_id => kompetensi_id)
+        // Only include transaksi with valid pangkalan_id matching karyawan's pangkalans
+        // This prevents old/legacy data (with NULL pangkalan_id) from appearing in reports
+        $trxByKompetensi = $karyawan->transaksi
+            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->keyBy('kompetensi_id');
+
+        // Build per-pangkalan transaksi map (keyed by pangkalan_id => kompetensi_id:kategori_kinerja_id)
         $trxByPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
             $trxByPangkalan[$pIdInt] = $karyawan->transaksi
                 ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                ->keyBy('kompetensi_id');
-            // Fallback: if no pangkalan-specific transaksi, use global (for legacy data)
-            if ($trxByPangkalan[$pIdInt]->isEmpty()) {
-                $trxByPangkalan[$pIdInt] = $trxByKompetensi;
-            }
+                ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
         }
 
         // Calculate per-pangkalan breakdown
@@ -615,10 +626,6 @@ class LaporanController extends Controller
             $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
 
-        $trxByKompetensi = $karyawan->transaksi
-            ->filter(fn($t) => $t->nilai !== null)
-            ->keyBy('kompetensi_id');
-
         // Get all pangkalan IDs for this karyawan
         $allPangkalanIds = $karyawan->getAllPangkalanIds();
 
@@ -627,16 +634,20 @@ class LaporanController extends Controller
             ->whereIn('id', $allPangkalanIds)
             ->get();
 
-        // Build per-pangkalan transaksi map
+        // Only include transaksi with valid pangkalan_id matching karyawan's pangkalans
+        // This prevents old/legacy data (with NULL pangkalan_id) from appearing in reports
+        // Key by kompetensi_id:kategori_kinerja_id to handle shared kompetensi across kategori
+        $trxByKompetensi = $karyawan->transaksi
+            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+
+        // Build per-pangkalan transaksi map (keyed by kompetensi_id:kategori_kinerja_id)
         $trxByPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
             $trxByPangkalan[$pIdInt] = $karyawan->transaksi
                 ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                ->keyBy('kompetensi_id');
-            if ($trxByPangkalan[$pIdInt]->isEmpty()) {
-                $trxByPangkalan[$pIdInt] = $trxByKompetensi;
-            }
+                ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
         }
 
         // Calculate per-pangkalan breakdown
@@ -659,6 +670,7 @@ class LaporanController extends Controller
             'peroranganKaryawan' => $karyawan,
             'peroranganKategoriList' => $kategoriList,
             'peroranganTrxByKompetensi' => $trxByKompetensi,
+            'peroranganTrxByPangkalan' => $trxByPangkalan,
             'peroranganNilaiAkhir' => $nilaiAkhir,
             'peroranganRatingMeta' => $ratingMeta,
             'peroranganSetting' => $setting,

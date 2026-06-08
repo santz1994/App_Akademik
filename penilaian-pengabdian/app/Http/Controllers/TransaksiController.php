@@ -449,6 +449,14 @@ class TransaksiController extends Controller
         $counter    = Transaksi::max('id') ?? 0;
         $savedAny = false;
 
+        // Build kompetensi -> kategori mapping for proper scoping
+        $kompetensiKategoriMap = [];
+        foreach ($kategoriList as $kategori) {
+            foreach ($kategori->kompetensi as $komp) {
+                $kompetensiKategoriMap[(int) $komp->id] = (int) $kategori->id;
+            }
+        }
+
         // Pre-save lock check
         $currentLockState = $this->resolveLockState((int) $karyawanId, (int) $tahunId, $pangkalanId);
         if ($currentLockState['is_locked']) {
@@ -465,6 +473,7 @@ class TransaksiController extends Controller
                 continue;
             }
 
+            $kategoriKinerjaId = $kompetensiKategoriMap[$kompetensiId] ?? null;
             $numericNilai = is_numeric($nilai) ? (float) $nilai : null;
 
             if ($numericNilai === null) {
@@ -472,6 +481,7 @@ class TransaksiController extends Controller
                     ->where('tahun_penilaian_id', $tahunId)
                     ->where('pangkalan_id', $pangkalanId)
                     ->where('kompetensi_id', $kompetensiId)
+                    ->where('kategori_kinerja_id', $kategoriKinerjaId)
                     ->delete();
                 continue;
             }
@@ -483,6 +493,7 @@ class TransaksiController extends Controller
                     'pangkalan_id'       => $pangkalanId,
                     'tahun_penilaian_id' => $tahunId,
                     'kompetensi_id'      => $kompetensiId,
+                    'kategori_kinerja_id' => $kategoriKinerjaId,
                 ],
                 [
                     'kode_transaksi' => 'TRX-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
@@ -971,7 +982,7 @@ class TransaksiController extends Controller
 
         $selectedKinerja = $mappedKategoriIds->isNotEmpty()
             ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
-            : $kategoriKinerja;
+            : collect();
 
         if (!$includeKegiatan) {
             return $selectedKinerja->values();

@@ -229,8 +229,8 @@
     {{-- Multi-pangkalan: show per-pangkalan breakdown with pangkalan name --}}
     @foreach($perPangkalanData['perPangkalan'] as $ppData)
     @php
-        // Use per-pangkalan transaksi if available
-        $pangkalanTrx = isset($trxByPangkalan[$ppData['pangkalan_id']]) ? $trxByPangkalan[$ppData['pangkalan_id']] : $trxByKompetensi;
+        // Use per-pangkalan transaksi only (no fallback to global data to prevent cross-pangkalan data leak)
+        $pangkalanTrx = $trxByPangkalan[$ppData['pangkalan_id']] ?? collect();
     @endphp
     <div style="margin-bottom: 10px;">
         <div style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; background: #e2e8f0; padding: 6px 10px; border-left: 4px solid #3b82f6;">
@@ -252,7 +252,7 @@
             @foreach($ppData['kategoriDetails'] as $kd)
                 @foreach($kd['kategori']->kompetensi as $komp)
                     @php
-                        $t = $pangkalanTrx->get($komp->id);
+                        $t = $pangkalanTrx->get((int) $komp->id . ':' . (int) $kd['kategori']->id);
                         $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                     @endphp
                     <tr>
@@ -362,7 +362,7 @@
             @php $kategoriNilai = []; @endphp
             @foreach($kat->kompetensi as $komp)
                 @php
-                    $t = $trxByKompetensi->get($komp->id);
+                    $t = $trxByKompetensi->get((int) $komp->id . ':' . (int) $kat->id);
                     $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                     if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                 @endphp

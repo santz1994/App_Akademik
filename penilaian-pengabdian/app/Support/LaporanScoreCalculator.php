@@ -35,7 +35,7 @@ class LaporanScoreCalculator
 
         $selectedKinerja = $mappedKategoriIds->isNotEmpty()
             ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
-            : $kategoriKinerja;
+            : collect();
 
         // Kegiatan: only include kegiatan mapped to the karyawan's pangkalan(s)
         $kategoriKegiatan = $kategoriList
@@ -165,8 +165,11 @@ class LaporanScoreCalculator
         foreach ($kategoriList as $kategori) {
             $values = [];
             foreach ($kategori->kompetensi as $kompetensi) {
-                $transaksi = $trxByKompetensi->get($kompetensi->id);
-                if ($transaksi && self::isScored($transaksi->nilai)) {
+                // Try composite key first (kompetensi_id:kategori_kinerja_id), fallback to kompetensi_id
+                $compositeKey = (int) $kompetensi->id . ':' . (int) $kategori->id;
+                $transaksi = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($kompetensi->id);
+                if ($transaksi && self::isScored($transaksi->nilai)
+                    && ((int) $transaksi->kategori_kinerja_id === (int) $kategori->id || $trxByKompetensi->has($compositeKey))) {
                     $values[] = (float) $transaksi->nilai;
                 }
             }
@@ -304,19 +307,21 @@ class LaporanScoreCalculator
             // Filter kinerja kategori that are mapped to this pangkalan
             $pangkalanKinerjaKategori = $mappedKategoriIds->isNotEmpty()
                 ? $kinerjaKategori->filter(fn($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
-                : $kinerjaKategori;
+                : collect();
 
             // Calculate average per kategori for this pangkalan
-            // Use per-pangkalan transaksi if available, otherwise fall back to global
-            $pangkalanTrx = $trxByPangkalan[$pIdInt] ?? $trxByKompetensi;
+            // Use per-pangkalan transaksi only (no fallback to global to prevent cross-pangkalan data leak)
+            $pangkalanTrx = $trxByPangkalan[$pIdInt] ?? collect();
 
             $kategoriDetails = [];
             $kategoriAverages = [];
             foreach ($pangkalanKinerjaKategori as $kat) {
                 $values = [];
                 foreach ($kat->kompetensi as $komp) {
-                    $t = $pangkalanTrx->get($komp->id);
-                    if ($t && self::isScored($t->nilai)) {
+                    $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                    $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
+                    if ($t && self::isScored($t->nilai)
+                        && ((int) $t->kategori_kinerja_id === (int) $kat->id || $pangkalanTrx->has($compositeKey))) {
                         $values[] = (float) $t->nilai;
                     }
                 }
@@ -340,8 +345,10 @@ class LaporanScoreCalculator
             foreach ($pangkalanKegiatanKategori as $kat) {
                 $values = [];
                 foreach ($kat->kompetensi as $komp) {
-                    $t = $pangkalanTrx->get($komp->id);
-                    if ($t && self::isScored($t->nilai)) {
+                    $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                    $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
+                    if ($t && self::isScored($t->nilai)
+                        && ((int) $t->kategori_kinerja_id === (int) $kat->id || $pangkalanTrx->has($compositeKey))) {
                         $values[] = (float) $t->nilai;
                     }
                 }

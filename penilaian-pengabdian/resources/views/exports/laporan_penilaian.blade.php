@@ -162,13 +162,16 @@
             @php
                 $kategoriUntukKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan($kategoriList, $k);
                 $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
-                $trxByKompetensi = $k->transaksi
-                    ->filter(fn($t) => $t->nilai !== null)
+                // Only include transaksi with valid pangkalan_id (matching karyawan's pangkalans)
+                $kPangkalanIds = $k->getAllPangkalanIds();
+                $allTrx = $k->transaksi->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $kPangkalanIds, true));
+                // Key by kompetensi_id:kategori_kinerja_id to handle shared kompetensi
+                $trxByKompetensi = $allTrx
                     ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
-                    ->keyBy('kompetensi_id');
+                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
                 $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
                     $kategoriUntukKaryawan,
-                    $trxByKompetensi,
+                    $allTrx->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))->keyBy('kompetensi_id'),
                     $reportFormat['scoring_method'],
                     [
                         'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
@@ -193,9 +196,12 @@
                                 @php
                                     $isApplicableKategori = $kategoriUntukKaryawan->contains(fn($item) => (int) $item->id === (int) $kategori->id);
                                     $kategoriValues = $kategori->kompetensi
-                                        ->map(function ($komp) use ($trxByKompetensi) {
-                                            $trx = $trxByKompetensi->get($komp->id);
-                                            return ($trx && $trx->nilai !== null) ? (float) $trx->nilai : null;
+                                        ->map(function ($komp) use ($trxByKompetensi, $kategori) {
+                                            $trx = $trxByKompetensi->get((int) $komp->id . ':' . (int) $kategori->id);
+                                            if ($trx && $trx->nilai !== null) {
+                                                return (float) $trx->nilai;
+                                            }
+                                            return null;
                                         })
                                         ->filter(fn($nilai) => $nilai !== null)
                                         ->values();
@@ -215,7 +221,10 @@
                             @endforeach
                         @else
                             @foreach($detailKompetensiList as $kompetensi)
-                                @php $trx = $trxByKompetensi->get($kompetensi->id); @endphp
+                                @php
+                                    $katId = $kompetensi->kategoriKinerja->first()?->id ?? 0;
+                                    $trx = $trxByKompetensi->get((int) $kompetensi->id . ':' . (int) $katId);
+                                @endphp
                                 <td style="text-align:{{ $textAlign }}; border:{{ $borderWidth }}px solid #999; padding:{{ $cellPadding }}px;">
                                     @if(!$applicableKompetensiIds->contains((int) $kompetensi->id))
                                         -

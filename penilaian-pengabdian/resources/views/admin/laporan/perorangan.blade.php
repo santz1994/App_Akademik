@@ -175,7 +175,8 @@
         {{-- Multi-pangkalan: show per-pangkalan sections --}}
         @foreach($pkPerPangkalanData['perPangkalan'] as $ppData)
         @php
-            $pangkalanTrx = isset($peroranganTrxByPangkalan[$ppData['pangkalan_id']]) ? $peroranganTrxByPangkalan[$ppData['pangkalan_id']] : $pkTrx;
+            // Use per-pangkalan transaksi only (no fallback to global data to prevent cross-pangkalan data leak)
+            $pangkalanTrx = $peroranganTrxByPangkalan[$ppData['pangkalan_id']] ?? collect();
         @endphp
         <div class="card mb-3 border-primary">
             <div class="card-header py-2 bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
@@ -210,7 +211,7 @@
                         @foreach($ppData['kategoriDetails'] as $kd)
                             @foreach($kd['kategori']->kompetensi as $komp)
                                 @php
-                                    $t = $pangkalanTrx->get($komp->id);
+                                    $t = $pangkalanTrx->get((int) $komp->id . ':' . (int) $kd['kategori']->id);
                                     $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                                 @endphp
                                 <tr>
@@ -253,7 +254,7 @@
                     @php $kategoriNilai = []; @endphp
                     @foreach($kat->kompetensi as $komp)
                         @php
-                            $t = $pkTrx->get($komp->id);
+                            $t = $pkTrx->get((int) $komp->id . ':' . (int) $kat->id);
                             $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                             if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                         @endphp
@@ -299,7 +300,7 @@
                     @foreach($kat->kompetensi as $komp)
                         @php
                             $t = $pkTrx->get($komp->id);
-                            $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
+                            $nilai = ($t && $t->nilai !== null && (int) $t->kategori_kinerja_id === (int) $kat->id) ? (float) $t->nilai : null;
                             if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                         @endphp
                         <tr>
