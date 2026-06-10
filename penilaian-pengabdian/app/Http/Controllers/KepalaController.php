@@ -7,6 +7,7 @@ use App\Models\TahunPenilaian;
 use App\Models\Transaksi;
 use App\Models\Pangkalan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class KepalaController extends Controller
@@ -43,10 +44,27 @@ class KepalaController extends Controller
             ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
             ->count();
 
-        $sudahDinilai = Transaksi::whereIn('karyawan_id', $karyawanIds)
-            ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
-            ->distinct('karyawan_id')
-            ->count('karyawan_id');
+        // FIX: Count karyawan where ALL kompetensi per pangkalan are scored
+        $sudahDinilai = 0;
+        foreach ($karyawanIds as $kId) {
+            $kPangkalanIds = DB::table('karyawan_pangkalan')->where('karyawan_id', $kId)->pluck('pangkalan_id')->toArray();
+            $allScored = true;
+            foreach ($kPangkalanIds as $pkId) {
+                $pkKatIds = DB::table('pangkalan_kategori_kinerja')->where('pangkalan_id', $pkId)->pluck('kategori_kinerja_id')->toArray();
+                $pkKompCount = DB::table('kategori_kinerja_kompetensi')->whereIn('kategori_kinerja_id', $pkKatIds)->count();
+                if ($pkKompCount === 0) continue;
+                $pkScoredCount = Transaksi::where('karyawan_id', $kId)
+                    ->where('pangkalan_id', $pkId)
+                    ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
+                    ->whereNotNull('nilai')
+                    ->count();
+                if ($pkScoredCount < $pkKompCount) {
+                    $allScored = false;
+                    break;
+                }
+            }
+            if ($allScored && count($kPangkalanIds) > 0) $sudahDinilai++;
+        }
 
         // List karyawan untuk dashboard
         $karyawanList = Karyawan::with(['pangkalans', 'transaksi' => fn($q) => $q->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))])

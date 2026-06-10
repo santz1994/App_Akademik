@@ -80,8 +80,23 @@
                 <tbody>
                     @forelse($karyawanList as $i => $k)
                     @php
-                        $trxCount = $k->transaksi->where('nilai', '!=', null)->count();
-                        $isSudahDinilai = $trxCount > 0;
+                        // Count scored per pangkalan
+                        $totalKomp = 0;
+                        $scoredCount = 0;
+                        if ($k->pangkalans && $k->pangkalans->count() > 0) {
+                            foreach ($k->pangkalans as $pk) {
+                                $pkKatIds = $pk->kategoriKinerja->pluck('id')->toArray();
+                                $pkKompCount = \App\Models\KategoriKinerja::with('kompetensi')
+                                    ->whereIn('id', $pkKatIds)
+                                    ->get()
+                                    ->sum(fn($kat) => $kat->kompetensi->count());
+                                $totalKomp += $pkKompCount;
+                                $pkScored = $k->transaksi->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === (int) $pk->id);
+                                $scoredCount += $pkScored->count();
+                            }
+                        }
+                        // "Sudah" if at least some scores entered
+                        $isSudahDinilai = $scoredCount > 0;
                     @endphp
                     <tr>
                         <td>{{ $i + 1 }}</td>

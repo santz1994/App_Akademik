@@ -138,16 +138,41 @@
                     @php
                         $trx      = $k->transaksi;
                         $kategoriForKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan(($kategoriListForScore ?? collect()), $k);
-                        $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriForKaryawan);
-                        $scoredTrx = $trx
-                            ->filter(fn($t) => $t->nilai !== null)
-                            ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
-                        $terisi   = $scoredTrx->count();
-                        $totalKompetensiAktif = $applicableKompetensiIds->count();
+
+                        // FIX: Count total kompetensi per pangkalan (including duplicates across pangkalans)
+                        // Non-wajib pangkalan: scored at pangkalan level
+                        // Wajib pangkalan: specific kompetensi indicators
+                        $totalKompetensiAktif = 0;
+                        $terisi = 0;
+                        if ($k->pangkalans && $k->pangkalans->count() > 0) {
+                            foreach ($k->pangkalans as $pk) {
+                                $pkKatIds = $pk->kategoriKinerja->pluck('id')->toArray();
+                                $pkKompCount = \App\Models\KategoriKinerja::with('kompetensi')
+                                    ->whereIn('id', $pkKatIds)
+                                    ->get()
+                                    ->sum(fn($kat) => $kat->kompetensi->count());
+                                $totalKompetensiAktif += $pkKompCount;
+
+                                // Count scored transaksi for this pangkalan
+                                $pkScored = $trx->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === (int) $pk->id);
+                                $terisi += $pkScored->count();
+                            }
+                        } else {
+                            $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriForKaryawan);
+                            $totalKompetensiAktif = $applicableKompetensiIds->count();
+                            $terisi = $trx->filter(fn($t) => $t->nilai !== null)
+                                ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
+                                ->count();
+                        }
                         $progress = $totalKompetensiAktif > 0 ? round($terisi / $totalKompetensiAktif * 100) : 0;
                         $lockState = $k->penilaianLocks->first() ?? null;
                         $isLocked  = $lockState ? (bool) $lockState->is_locked : false;
 
+                        // Build scored transaksi collection for score calculation
+                        $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriForKaryawan);
+                        $scoredTrx = $trx
+                            ->filter(fn($t) => $t->nilai !== null)
+                            ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
                         $trxByKompetensi = $scoredTrx->keyBy('kompetensi_id');
                         $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
                             $kategoriForKaryawan,
@@ -208,32 +233,69 @@
                             </a>
 
                             @if($isKepalaView && $terisi > 0)
+                                @php
+                                    // Check lock system state
+                                    $settingLock = \App\Models\SettingLembaga::where('is_active', true)->latest()->first();
+                                    $lockSystemActive = $settingLock && (bool) $settingLock->lock_enabled;
+                                    $allScored = $terisi >= $totalKompetensiAktif && $totalKompetensiAktif > 0;
+                                @endphp
+
+                                {{-- Submit Final: Show when NOT fully locked --}}
                                 @if(!$isLocked)
                                 <form method="POST" action="{{ route('kepala.transaksi.submit-final') }}" class="d-inline"
                                       onsubmit="return confirm('Submit final dan kunci nilai untuk {{ addslashes($k->nama_karyawan) }}?')">
                                     @csrf
                                     <input type="hidden" name="karyawan_id" value="{{ $k->id }}">
                                     <input type="hidden" name="tahun_penilaian_id" value="{{ $selectedTahun }}">
-                                    <button class="btn btn-success btn-action" title="Submit Final">
+                                    <button class="btn btn-success btn-action" title="Submit Final & Kunci Semua Nilai">
                                         <i class="bi bi-check2-circle"></i>
                                     </button>
                                 </form>
-                                @else
-                                <form method="POST" action="{{ route('kepala.transaksi.request-unlock') }}" class="d-inline"
-                                      onsubmit="
-                                        const alasan = prompt('Alasan pengajuan unlock nilai:');
-                                        if (!alasan) return false;
-                                        this.querySelector('input[name=alasan]').value = alasan;
-                                        return true;
-                                      ">
-                                    @csrf
-                                    <input type="hidden" name="karyawan_id" value="{{ $k->id }}">
-                                    <input type="hidden" name="tahun_penilaian_id" value="{{ $selectedTahun }}">
-                                    <input type="hidden" name="alasan" value="">
-                                    <button class="btn btn-secondary btn-action" title="Ajukan Unlock">
-                                        <i class="bi bi-unlock"></i>
-                                    </button>
-                                </form>
+                                @endif
+
+                                {{-- Request Unlock: Show when lock system active AND has scores --}}
+                                @if($lockSystemActive && $terisi > 0)
+                                <button type="button" class="btn btn-info btn-action"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#unlockModal{{ $k->id }}"
+                                        title="Ajukan Unlock">
+                                    <i class="bi bi-unlock"></i>
+                                </button>
+
+                                <div class="modal fade" id="unlockModal{{ $k->id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{{ route('kepala.transaksi.request-unlock') }}">
+                                                @csrf
+                                                <input type="hidden" name="karyawan_id" value="{{ $k->id }}">
+                                                <input type="hidden" name="tahun_penilaian_id" value="{{ $selectedTahun }}">
+                                                <div class="modal-header">
+                                                    <h6 class="modal-title fw-bold">
+                                                        <i class="bi bi-unlock me-1"></i>Ajukan Unlock Nilai
+                                                    </h6>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="mb-2">Karyawan: <strong>{{ $k->nama_karyawan }}</strong></p>
+                                                    <p class="mb-2">Tahun: <strong>{{ $selectedTahun }}</strong></p>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Alasan Unlock <span class="text-danger">*</span></label>
+                                                        <textarea name="alasan" class="form-control" rows="3"
+                                                                  placeholder="Jelaskan alasan pengajuan unlock nilai..."
+                                                                  required maxlength="500"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-sm btn-info"
+                                                            onclick="return confirm('Kirim permintaan unlock untuk {{ addslashes($k->nama_karyawan) }}?')">
+                                                        <i class="bi bi-send me-1"></i>Kirim Request
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                                 @endif
                             @endif
 
@@ -277,8 +339,16 @@
                             @endif
 
                             @if($isKepalaView)
-                                <small class="d-block mt-1 {{ $isLocked ? 'text-danger' : 'text-success' }}" style="font-size:.68rem;">
-                                    {{ $isLocked ? 'Locked' : 'Editable' }}
+                                <small class="d-block mt-1" style="font-size:.68rem;">
+                                    @if($isLocked)
+                                        <span class="text-danger fw-bold"><i class="bi bi-lock-fill"></i> Terkunci</span>
+                                        <span class="text-muted"> — Ajukan unlock untuk edit</span>
+                                    @else
+                                        <span class="text-success fw-bold"><i class="bi bi-unlock-fill"></i> Editable</span>
+                                        @if($terisi > 0)
+                                            <span class="text-muted"> — Submit final untuk kunci</span>
+                                        @endif
+                                    @endif
                                 </small>
                             @else
                                 <small class="d-block mt-1 {{ $isLocked ? 'text-danger' : 'text-success' }}" style="font-size:.68rem;">

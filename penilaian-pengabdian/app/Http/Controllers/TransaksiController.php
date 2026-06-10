@@ -215,6 +215,8 @@ class TransaksiController extends Controller
                     $selectedPangkalan = $karyawanPangkalans->firstWhere('id', (int) $request->pangkalan_id);
                 } elseif ($karyawanPangkalans->count() === 1) {
                     $selectedPangkalan = $karyawanPangkalans->first();
+                } elseif ($karyawanPangkalans->count() > 1) {
+                    $selectedPangkalan = $karyawanPangkalans->first();
                 }
 
                 $existingNilai = [];
@@ -303,6 +305,9 @@ class TransaksiController extends Controller
                     $selectedPangkalan = $karyawanPangkalans->firstWhere('id', (int) $request->pangkalan_id);
                 } elseif ($karyawanPangkalans->count() === 1) {
                     $selectedPangkalan = $karyawanPangkalans->first();
+                } elseif ($karyawanPangkalans->count() > 1) {
+                    // Auto-select first pangkalan if multiple exist (no manual selection)
+                    $selectedPangkalan = $karyawanPangkalans->first();
                 }
 
                 $existingNilai = [];
@@ -338,6 +343,7 @@ class TransaksiController extends Controller
         }
 
         $routePrefix = 'kepala';
+        $terisi = count($existingNilai);
 
         return view('admin.transaksi.create', compact(
             'karyawanList',
@@ -353,7 +359,8 @@ class TransaksiController extends Controller
             'routePrefix',
             'isLocked',
             'canEditLockedScores',
-            'hasPendingUnlockRequest'
+            'hasPendingUnlockRequest',
+            'terisi'
         ));
     }
 
@@ -447,7 +454,10 @@ class TransaksiController extends Controller
             ]);
         }
 
-        $counter    = Transaksi::max('id') ?? 0;
+        // FIX: Use actual max kode_transaksi number instead of max('id') to avoid collisions
+        $lastKode = Transaksi::max('kode_transaksi') ?? 'TRX-0000';
+        preg_match('/TRX-(\d+)/', $lastKode, $matches);
+        $counter = isset($matches[1]) ? (int) $matches[1] : 0;
         $savedAny = false;
 
         // Build kompetensi -> kategori mapping for proper scoping
@@ -869,7 +879,10 @@ class TransaksiController extends Controller
             }
         }
 
-        $counter = Transaksi::max('id') ?? 0;
+        // FIX: Use actual max kode_transaksi number instead of max('id') to avoid collisions
+        $lastKode = Transaksi::max('kode_transaksi') ?? 'TRX-0000';
+        preg_match('/TRX-(\d+)/', $lastKode, $matches);
+        $counter = isset($matches[1]) ? (int) $matches[1] : 0;
         $imported = 0;
         $skipped = 0;
 
@@ -1020,16 +1033,6 @@ class TransaksiController extends Controller
 
     private function resolveLockState(int $karyawanId, int $tahunId, ?int $pangkalanId = null): array
     {
-        // Check global lock toggle — when disabled, always return unlocked
-        $setting = SettingLembaga::where('is_active', true)->latest()->first();
-        if ($setting && !$setting->lock_enabled) {
-            return [
-                'lock' => null,
-                'has_scores' => false,
-                'is_locked' => false,
-            ];
-        }
-
         $lockQuery = PenilaianLock::where('karyawan_id', $karyawanId)
             ->where('tahun_penilaian_id', $tahunId);
 
@@ -1043,7 +1046,12 @@ class TransaksiController extends Controller
 
         $lock = $lockQuery->first();
         $hasScores = $scoresQuery->exists();
-        $isLocked = $lock ? (bool) $lock->is_locked : false;
+
+        // Check global lock toggle — when disabled, all scores are editable
+        $setting = SettingLembaga::where('is_active', true)->latest()->first();
+        $lockEnabled = !$setting || (bool) $setting->lock_enabled;
+
+        $isLocked = $lock ? ((bool) $lock->is_locked && $lockEnabled) : false;
 
         return [
             'lock' => $lock,

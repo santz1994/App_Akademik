@@ -197,6 +197,11 @@
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmSubmitModal" {{ ($isLocked || !$hasEditableKompetensi) ? 'disabled' : '' }}>
                     <i class="bi bi-save me-1"></i>Simpan Penilaian
                 </button>
+                @if($routePrefix === 'kepala' && $terisi > 0)
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmFinalModal" {{ $isLocked ? 'disabled' : '' }}>
+                    <i class="bi bi-check2-circle me-1"></i>Submit Final & Kunci
+                </button>
+                @endif
                 <a href="{{ route($routePrefix . '.transaksi.index', ['tahun_penilaian_id' => $selectedTahun->id]) }}"
                    class="btn btn-secondary">Kembali</a>
             </div>
@@ -220,6 +225,36 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Submit Final Modal --}}
+            @if($routePrefix === 'kepala')
+            <div class="modal fade" id="confirmFinalModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route('kepala.transaksi.submit-final') }}">
+                            @csrf
+                            <input type="hidden" name="karyawan_id" value="{{ $selectedKaryawan->id }}">
+                            <input type="hidden" name="tahun_penilaian_id" value="{{ $selectedTahun->id }}">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title"><i class="bi bi-lock me-1"></i>Submit Final & Kunci Nilai</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Anda akan mengunci nilai untuk:</p>
+                                <p class="fw-bold">{{ $selectedKaryawan->nama_karyawan }}</p>
+                                <p class="text-muted small">Setelah dikunci, nilai tidak bisa diubah tanpa persetujuan admin (unlock).</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-lock me-1"></i>Ya, Kunci Sekarang
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
         </form>
     </div>
 </div>
