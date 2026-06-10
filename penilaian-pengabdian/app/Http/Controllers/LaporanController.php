@@ -309,13 +309,14 @@ class LaporanController extends Controller
                 ? [(int) $filterPangkalan]
                 : $user->getAllPangkalanIds();
             $mappedKategoriIds = collect();
-            foreach ($kepalaPangkalanIds as $pId) {
-                $pangkalan = \App\Models\Pangkalan::with('kategoriKinerja')->find($pId);
-                if ($pangkalan) {
-                    $mappedKategoriIds = $mappedKategoriIds->merge(
-                        $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
-                    );
-                }
+            // FIX: Single query instead of N+1 per-pangkalan queries
+            $kepalaPangkalans = Pangkalan::with('kategoriKinerja')
+                ->whereIn('id', $kepalaPangkalanIds)
+                ->get();
+            foreach ($kepalaPangkalans as $pangkalan) {
+                $mappedKategoriIds = $mappedKategoriIds->merge(
+                    $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                );
             }
             if ($mappedKategoriIds->isNotEmpty()) {
                 $kategoriList = $kategoriList->filter(

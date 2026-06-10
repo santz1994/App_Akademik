@@ -19,10 +19,28 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Render custom error pages
+        // Handle authentication errors — redirect to login instead of 500
         $exceptions->renderable(function (\Throwable $e, $request) {
+            // Unauthenticated / session expired → redirect to login
+            if ($e instanceof \Illuminate\Auth\AuthenticationException
+                || $e instanceof \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json(['message' => 'Unauthenticated.'], 401);
+                }
+                return redirect()->route('login')
+                    ->with('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
+            }
+
+            // CSRF token mismatch (419) → redirect back with error
+            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json(['message' => 'CSRF token mismatch.'], 419);
+                }
+                return back()->with('error', 'Token keamanan telah kedaluwarsa. Silakan coba lagi.');
+            }
+
             if ($request->is('api/*')) {
-                return null; // Let API handle its own errors
+                return null;
             }
 
             $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;

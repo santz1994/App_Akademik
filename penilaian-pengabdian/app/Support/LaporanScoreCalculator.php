@@ -282,6 +282,30 @@ class LaporanScoreCalculator
             ->values();
 
         // Build per-pangkalan kinerja breakdown
+        // FIX: Pre-load all pangkalan_kategori_kinerja mappings in one query to avoid N+1
+        $allPangkalanKategoriMap = [];
+        $needFallback = false;
+        foreach ($allPangkalanIds as $pId) {
+            $pangkalan = $pangkalanList->first(fn($p) => (int) $p->id === (int) $pId);
+            if (!$pangkalan || !$pangkalan->relationLoaded('kategoriKinerja')) {
+                $needFallback = true;
+                break;
+            }
+        }
+        if ($needFallback && Schema::hasTable('pangkalan_kategori_kinerja')) {
+            $allMappings = DB::table('pangkalan_kategori_kinerja')
+                ->whereIn('pangkalan_id', $allPangkalanIds)
+                ->get()
+                ->groupBy('pangkalan_id');
+            foreach ($allMappings as $pId => $rows) {
+                $allPangkalanKategoriMap[(int) $pId] = $rows
+                    ->pluck('kategori_kinerja_id')
+                    ->map(fn($id) => (int) $id)
+                    ->unique()
+                    ->values();
+            }
+        }
+
         $perPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
@@ -295,13 +319,9 @@ class LaporanScoreCalculator
                     ->map(fn($id) => (int) $id)
                     ->unique()
                     ->values();
-            } elseif (Schema::hasTable('pangkalan_kategori_kinerja')) {
-                $mappedKategoriIds = DB::table('pangkalan_kategori_kinerja')
-                    ->where('pangkalan_id', $pIdInt)
-                    ->pluck('kategori_kinerja_id')
-                    ->map(fn($id) => (int) $id)
-                    ->unique()
-                    ->values();
+            } elseif (isset($allPangkalanKategoriMap[$pIdInt])) {
+                // Use pre-loaded mappings instead of N+1 query
+                $mappedKategoriIds = $allPangkalanKategoriMap[$pIdInt];
             }
 
             // Filter kinerja kategori that are mapped to this pangkalan
@@ -383,7 +403,8 @@ class LaporanScoreCalculator
         $kegiatanValues = [];
         foreach ($kegiatanKategori as $kat) {
             foreach ($kat->kompetensi as $komp) {
-                $t = $trxByKompetensi->get($komp->id);
+                $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                 if ($t && self::isScored($t->nilai)) {
                     $kegiatanValues[] = (float) $t->nilai;
                 }

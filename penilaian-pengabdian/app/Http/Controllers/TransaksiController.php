@@ -15,6 +15,7 @@ use App\Models\PenilaianUnlockRequest;
 use App\Support\LaporanScoreCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TransaksiController extends Controller
@@ -463,45 +464,53 @@ class TransaksiController extends Controller
             return back()->withInput()->with('error', 'Nilai sudah terkunci oleh proses lain. Silakan refresh halaman.');
         }
 
-        foreach ($nilaiInput as $kompetensiId => $nilai) {
-            $kompetensiId = (int) $kompetensiId;
-            if (!$allowedKompetensiIds->contains($kompetensiId)) {
-                continue;
+        // FIX: Wrap in transaction to reduce connection hold time and prevent aborted clients
+        $savedAny = \Illuminate\Support\Facades\DB::transaction(function () use (
+            $nilaiInput, $allowedKompetensiIds, $canEditLockedScores, $existingLockedKompetensiIds,
+            $kompetensiKategoriMap, $karyawanId, $tahunId, $pangkalanId, $counter
+        ) {
+            $saved = false;
+            foreach ($nilaiInput as $kompetensiId => $nilai) {
+                $kompetensiId = (int) $kompetensiId;
+                if (!$allowedKompetensiIds->contains($kompetensiId)) {
+                    continue;
+                }
+
+                if (!$canEditLockedScores && $existingLockedKompetensiIds->contains($kompetensiId)) {
+                    continue;
+                }
+
+                $kategoriKinerjaId = $kompetensiKategoriMap[$kompetensiId] ?? null;
+                $numericNilai = is_numeric($nilai) ? (float) $nilai : null;
+
+                if ($numericNilai === null) {
+                    Transaksi::where('karyawan_id', $karyawanId)
+                        ->where('tahun_penilaian_id', $tahunId)
+                        ->where('pangkalan_id', $pangkalanId)
+                        ->where('kompetensi_id', $kompetensiId)
+                        ->where('kategori_kinerja_id', $kategoriKinerjaId)
+                        ->delete();
+                    continue;
+                }
+
+                $counter++;
+                Transaksi::updateOrCreate(
+                    [
+                        'karyawan_id'        => $karyawanId,
+                        'pangkalan_id'       => $pangkalanId,
+                        'tahun_penilaian_id' => $tahunId,
+                        'kompetensi_id'      => $kompetensiId,
+                        'kategori_kinerja_id' => $kategoriKinerjaId,
+                    ],
+                    [
+                        'kode_transaksi' => 'TRX-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+                        'nilai'          => $numericNilai,
+                    ]
+                );
+                $saved = true;
             }
-
-            if (!$canEditLockedScores && $existingLockedKompetensiIds->contains($kompetensiId)) {
-                continue;
-            }
-
-            $kategoriKinerjaId = $kompetensiKategoriMap[$kompetensiId] ?? null;
-            $numericNilai = is_numeric($nilai) ? (float) $nilai : null;
-
-            if ($numericNilai === null) {
-                Transaksi::where('karyawan_id', $karyawanId)
-                    ->where('tahun_penilaian_id', $tahunId)
-                    ->where('pangkalan_id', $pangkalanId)
-                    ->where('kompetensi_id', $kompetensiId)
-                    ->where('kategori_kinerja_id', $kategoriKinerjaId)
-                    ->delete();
-                continue;
-            }
-
-            $counter++;
-            Transaksi::updateOrCreate(
-                [
-                    'karyawan_id'        => $karyawanId,
-                    'pangkalan_id'       => $pangkalanId,
-                    'tahun_penilaian_id' => $tahunId,
-                    'kompetensi_id'      => $kompetensiId,
-                    'kategori_kinerja_id' => $kategoriKinerjaId,
-                ],
-                [
-                    'kode_transaksi' => 'TRX-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
-                    'nilai'          => $numericNilai,
-                ]
-            );
-            $savedAny = true;
-        }
+            return $saved;
+        });
 
         if (!$savedAny) {
             return back()->withInput()->withErrors([
@@ -790,6 +799,30 @@ class TransaksiController extends Controller
         return back()->with('success', 'Permintaan unlock berhasil diproses.');
     }
 
+    /**
+     * Toggle the global lock/unlock feature on or off.
+     * When disabled, all lock checks are bypassed — scores are always editable.
+     */
+    public function toggleLock(Request $request)
+    {
+        abort_unless(Auth::user()?->role === 'admin', 403);
+
+        $setting = SettingLembaga::where('is_active', true)->latest()->first()
+            ?? SettingLembaga::latest()->first();
+
+        if (!$setting) {
+            return back()->with('error', 'Setting lembaga tidak ditemukan.');
+        }
+
+        $currentValue = (bool) $setting->lock_enabled;
+        $newValue = !$currentValue;
+
+        $setting->update(['lock_enabled' => $newValue]);
+
+        $label = $newValue ? 'Diaktifkan' : 'Dinonaktifkan';
+        return back()->with('success', "Sistem kunci nilai berhasil {$label}.");
+    }
+
     public function import(Request $request)
     {
         $request->validate([
@@ -803,81 +836,135 @@ class TransaksiController extends Controller
             return back()->with('error', 'File import kosong atau format tidak dikenali.');
         }
 
+        // FIX: Pre-load all referenced models in batch to avoid N+1 queries
+        $allKodeKaryawan = [];
+        $allTahunRaw = [];
+        $allKodeKompetensi = [];
+        foreach ($rows as $idx => $row) {
+            if (!is_array($row)) continue;
+            if ($idx === 0 && $this->looksLikeHeaderRow($row)) continue;
+            $allKodeKaryawan[] = trim((string)($row[0] ?? ''));
+            $allTahunRaw[] = trim((string)($row[1] ?? ''));
+            $allKodeKompetensi[] = trim((string)($row[2] ?? ''));
+        }
+
+        // Batch load karyawan, tahun, kompetensi
+        $allKaryawan = Karyawan::whereIn('kode_karyawan', array_filter($allKodeKaryawan))
+            ->get()->keyBy('kode_karyawan');
+        $allTahun = TahunPenilaian::all()->keyBy('periode_penilaian');
+        $allTahunById = TahunPenilaian::all()->keyBy('id');
+        $allKompetensi = Kompetensi::whereIn('kode_kompetensi', array_filter($allKodeKompetensi))
+            ->get()->keyBy('kode_kompetensi');
+
+        // Batch load pangkalan_kategori mappings for all karyawan
+        $karyawanPangkalanIds = $allKaryawan->pluck('id')->unique()->values();
+        $karyawanPangkalanMap = [];
+        if ($karyawanPangkalanIds->isNotEmpty()) {
+            $kPivotRows = DB::table('karyawan_pangkalan')
+                ->whereIn('karyawan_id', $karyawanPangkalanIds)
+                ->get()
+                ->groupBy('karyawan_id');
+            foreach ($kPivotRows as $kId => $rows) {
+                $karyawanPangkalanMap[(int) $kId] = $rows->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+            }
+        }
+
         $counter = Transaksi::max('id') ?? 0;
         $imported = 0;
         $skipped = 0;
 
-        foreach ($rows as $idx => $row) {
-            if (!is_array($row)) {
-                $skipped++;
-                continue;
+        // Wrap entire import in a single transaction
+        DB::transaction(function () use (
+            $rows, &$counter, &$imported, &$skipped,
+            $allKaryawan, $allTahun, $allTahunById, $allKompetensi, $karyawanPangkalanMap
+        ) {
+            foreach ($rows as $idx => $row) {
+                if (!is_array($row)) {
+                    $skipped++;
+                    continue;
+                }
+
+                if ($idx === 0 && $this->looksLikeHeaderRow($row)) {
+                    continue;
+                }
+
+                $kodeKaryawan = trim((string)($row[0] ?? ''));
+                $tahunRaw = trim((string)($row[1] ?? ''));
+                $kodeKompetensi = trim((string)($row[2] ?? ''));
+                $nilaiRaw = $row[3] ?? null;
+                $keterangan = isset($row[4]) ? trim((string)$row[4]) : null;
+
+                if ($kodeKaryawan === '' || $tahunRaw === '' || $kodeKompetensi === '' || $nilaiRaw === null || $nilaiRaw === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                // Use pre-loaded karyawan
+                $karyawan = $allKaryawan->get($kodeKaryawan);
+                if (!$karyawan) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Resolve kategori from pre-loaded mappings
+                $pangkalanIds = $karyawanPangkalanMap[(int) $karyawan->id] ?? [];
+                $kategoriList = collect();
+                if (!empty($pangkalanIds)) {
+                    $mappedKatIds = DB::table('pangkalan_kategori_kinerja')
+                        ->whereIn('pangkalan_id', $pangkalanIds)
+                        ->pluck('kategori_kinerja_id')
+                        ->unique()
+                        ->values();
+                    $kategoriList = \App\Models\KategoriKinerja::with('kompetensi:id,kategori_kinerja_id')
+                        ->whereIn('id', $mappedKatIds)
+                        ->get();
+                }
+                $allowedKompetensiIds = $this->resolveAllowedKompetensiIds($kategoriList);
+
+                // Use pre-loaded tahun
+                $tahun = is_numeric($tahunRaw)
+                    ? ($allTahunById->get((int)$tahunRaw) ?? TahunPenilaian::find((int)$tahunRaw))
+                    : $allTahun->get($tahunRaw);
+                if (!$tahun) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Use pre-loaded kompetensi
+                $kompetensi = $allKompetensi->get($kodeKompetensi);
+                if (!$kompetensi) {
+                    $skipped++;
+                    continue;
+                }
+
+                if (!$allowedKompetensiIds->contains((int) $kompetensi->id)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $nilai = is_numeric($nilaiRaw) ? (float)$nilaiRaw : null;
+                if ($nilai === null || $nilai < 0 || $nilai > 100) {
+                    $skipped++;
+                    continue;
+                }
+
+                $counter++;
+                Transaksi::updateOrCreate(
+                    [
+                        'karyawan_id' => $karyawan->id,
+                        'tahun_penilaian_id' => $tahun->id,
+                        'kompetensi_id' => $kompetensi->id,
+                    ],
+                    [
+                        'kode_transaksi' => 'TRX-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
+                        'nilai' => $nilai,
+                        'keterangan' => $keterangan,
+                    ]
+                );
+
+                $imported++;
             }
-
-            if ($idx === 0 && $this->looksLikeHeaderRow($row)) {
-                continue;
-            }
-
-            $kodeKaryawan = trim((string)($row[0] ?? ''));
-            $tahunRaw = trim((string)($row[1] ?? ''));
-            $kodeKompetensi = trim((string)($row[2] ?? ''));
-            $nilaiRaw = $row[3] ?? null;
-            $keterangan = isset($row[4]) ? trim((string)$row[4]) : null;
-
-            if ($kodeKaryawan === '' || $tahunRaw === '' || $kodeKompetensi === '' || $nilaiRaw === null || $nilaiRaw === '') {
-                $skipped++;
-                continue;
-            }
-
-            $karyawan = Karyawan::where('kode_karyawan', $kodeKaryawan)->first();
-            if (!$karyawan) {
-                $skipped++;
-                continue;
-            }
-
-            $kategoriList = $this->resolveKategoriListForKaryawan($karyawan);
-            $allowedKompetensiIds = $this->resolveAllowedKompetensiIds($kategoriList);
-
-            $tahun = is_numeric($tahunRaw)
-                ? TahunPenilaian::find((int)$tahunRaw)
-                : TahunPenilaian::where('periode_penilaian', $tahunRaw)->first();
-            if (!$tahun) {
-                $skipped++;
-                continue;
-            }
-
-            $kompetensi = Kompetensi::where('kode_kompetensi', $kodeKompetensi)->first();
-            if (!$kompetensi) {
-                $skipped++;
-                continue;
-            }
-
-            if (!$allowedKompetensiIds->contains((int) $kompetensi->id)) {
-                $skipped++;
-                continue;
-            }
-
-            $nilai = is_numeric($nilaiRaw) ? (float)$nilaiRaw : null;
-            if ($nilai === null || $nilai < 0 || $nilai > 100) {
-                $skipped++;
-                continue;
-            }
-
-            $counter++;
-            Transaksi::updateOrCreate(
-                [
-                    'karyawan_id' => $karyawan->id,
-                    'tahun_penilaian_id' => $tahun->id,
-                    'kompetensi_id' => $kompetensi->id,
-                ],
-                [
-                    'kode_transaksi' => 'TRX-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
-                    'nilai' => $nilai,
-                    'keterangan' => $keterangan,
-                ]
-            );
-
-            $imported++;
-        }
+        });
 
         return back()->with('success', "Import selesai. Berhasil: {$imported}, dilewati: {$skipped}.");
     }
@@ -933,6 +1020,16 @@ class TransaksiController extends Controller
 
     private function resolveLockState(int $karyawanId, int $tahunId, ?int $pangkalanId = null): array
     {
+        // Check global lock toggle — when disabled, always return unlocked
+        $setting = SettingLembaga::where('is_active', true)->latest()->first();
+        if ($setting && !$setting->lock_enabled) {
+            return [
+                'lock' => null,
+                'has_scores' => false,
+                'is_locked' => false,
+            ];
+        }
+
         $lockQuery = PenilaianLock::where('karyawan_id', $karyawanId)
             ->where('tahun_penilaian_id', $tahunId);
 

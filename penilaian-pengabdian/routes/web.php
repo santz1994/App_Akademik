@@ -122,6 +122,8 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
         ->name('transaksi.unlock-requests');
     Route::put('transaksi/unlock-requests/{unlockRequest}', [TransaksiController::class, 'reviewUnlockRequest'])
         ->name('transaksi.review-unlock-request');
+    Route::post('transaksi/toggle-lock', [TransaksiController::class, 'toggleLock'])
+        ->name('transaksi.toggle-lock');
 
     // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');

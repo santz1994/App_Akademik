@@ -10,7 +10,12 @@ class SettingLembagaController extends Controller
 {
     public function edit()
     {
-        $setting = $this->resolveSetting();
+        try {
+            $setting = $this->resolveSetting();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SettingLembaga resolveSetting failed: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memuat pengaturan lembaga. Silakan coba lagi.');
+        }
 
         $tahunList = TahunPenilaian::orderByDesc('periode_penilaian')->get();
 
@@ -45,6 +50,7 @@ class SettingLembagaController extends Controller
             'show_tahun_ajaran' => 'nullable|boolean',
             'show_nama_pimpinan' => 'nullable|boolean',
             'show_tanda_tangan' => 'nullable|boolean',
+            'lock_enabled' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -78,6 +84,7 @@ class SettingLembagaController extends Controller
         $data['show_tahun_ajaran'] = $request->boolean('show_tahun_ajaran');
         $data['show_nama_pimpinan'] = $request->boolean('show_nama_pimpinan');
         $data['show_tanda_tangan'] = $request->boolean('show_tanda_tangan');
+        $data['lock_enabled'] = $request->boolean('lock_enabled', true);
         $data['is_active'] = $request->boolean('is_active', true);
 
         if ($request->hasFile('logo')) {
@@ -113,6 +120,7 @@ class SettingLembagaController extends Controller
 
         return SettingLembaga::create([
             'is_active' => true,
+            'lock_enabled' => true,
             'show_logo' => true,
             'show_tahun_ajaran' => true,
             'show_nama_pimpinan' => true,

@@ -1,88 +1,107 @@
--- phpMyAdmin SQL Dump
--- version 5.2.2
--- https://www.phpmyadmin.net/
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19  Distrib 10.11.16-MariaDB, for Linux (x86_64)
 --
--- Host: localhost:3306
--- Generation Time: Jun 07, 2026 at 07:46 PM
--- Server version: 10.11.16-MariaDB-cll-lve-log
--- PHP Version: 8.4.21
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+-- Host: 127.0.0.1    Database: ypphmugo_apk
+-- ------------------------------------------------------
+-- Server version	10.11.16-MariaDB-cll-lve-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `ypphmugo_apk`
---
-
--- --------------------------------------------------------
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
 -- Table structure for table `cache`
 --
 
+DROP TABLE IF EXISTS `cache`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
-  `expiration` int(11) NOT NULL
+  `expiration` int(11) NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `cache_expiration_index` (`expiration`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `cache`
+--
+
+LOCK TABLES `cache` WRITE;
+/*!40000 ALTER TABLE `cache` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cache` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `cache_locks`
 --
 
+DROP TABLE IF EXISTS `cache_locks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
-  `expiration` int(11) NOT NULL
+  `expiration` int(11) NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `cache_locks_expiration_index` (`expiration`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `cache_locks`
+--
+
+LOCK TABLES `cache_locks` WRITE;
+/*!40000 ALTER TABLE `cache_locks` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cache_locks` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `failed_jobs`
 --
 
+DROP TABLE IF EXISTS `failed_jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `failed_jobs` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
   `connection` text NOT NULL,
   `queue` text NOT NULL,
   `payload` longtext NOT NULL,
   `exception` longtext NOT NULL,
-  `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `jobs`
+-- Dumping data for table `failed_jobs`
 --
 
-CREATE TABLE `jobs` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `queue` varchar(255) NOT NULL,
-  `payload` longtext NOT NULL,
-  `attempts` tinyint(3) UNSIGNED NOT NULL,
-  `reserved_at` int(10) UNSIGNED DEFAULT NULL,
-  `available_at` int(10) UNSIGNED NOT NULL,
-  `created_at` int(10) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+LOCK TABLES `failed_jobs` WRITE;
+/*!40000 ALTER TABLE `failed_jobs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `failed_jobs` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `job_batches`
 --
 
+DROP TABLE IF EXISTS `job_batches`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -93,18 +112,59 @@ CREATE TABLE `job_batches` (
   `options` mediumtext DEFAULT NULL,
   `cancelled_at` int(11) DEFAULT NULL,
   `created_at` int(11) NOT NULL,
-  `finished_at` int(11) DEFAULT NULL
+  `finished_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `job_batches`
+--
+
+LOCK TABLES `job_batches` WRITE;
+/*!40000 ALTER TABLE `job_batches` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_batches` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `jobs`
+--
+
+DROP TABLE IF EXISTS `jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) unsigned NOT NULL,
+  `reserved_at` int(10) unsigned DEFAULT NULL,
+  `available_at` int(10) unsigned NOT NULL,
+  `created_at` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `jobs`
+--
+
+LOCK TABLES `jobs` WRITE;
+/*!40000 ALTER TABLE `jobs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `jobs` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `karyawan`
 --
 
+DROP TABLE IF EXISTS `karyawan`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `karyawan` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
   `kode_karyawan` varchar(20) NOT NULL,
   `nama_karyawan` varchar(255) NOT NULL,
   `nomor_induk` varchar(50) DEFAULT NULL,
@@ -118,692 +178,942 @@ CREATE TABLE `karyawan` (
   `tugas_khusus` varchar(255) DEFAULT NULL,
   `nomor_surat_tugas` varchar(100) DEFAULT NULL,
   `tanggal_surat_tugas` date DEFAULT NULL,
-  `tahun_penilaian_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `pangkalan_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned DEFAULT NULL,
+  `pangkalan_id` bigint(20) unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `karyawan_kode_karyawan_unique` (`kode_karyawan`),
+  UNIQUE KEY `karyawan_nomor_induk_unique` (`nomor_induk`),
+  KEY `karyawan_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  KEY `karyawan_user_id_foreign` (`user_id`),
+  KEY `karyawan_pangkalan_id_foreign` (`pangkalan_id`),
+  CONSTRAINT `karyawan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `karyawan_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `karyawan_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `karyawan`
 --
 
-INSERT INTO `karyawan` (`id`, `user_id`, `kode_karyawan`, `nama_karyawan`, `nomor_induk`, `jenis_kelamin`, `is_active`, `alamat`, `email`, `no_hp`, `kontak_darurat`, `foto_path`, `tugas_khusus`, `nomor_surat_tugas`, `tanggal_surat_tugas`, `tahun_penilaian_id`, `pangkalan_id`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'KRY-0001', 'AMIRUL MU\'MININ', NULL, 'L', 0, NULL, NULL, NULL, NULL, 'karyawan-foto/1777337948.png', 'Koperasi', NULL, '2026-04-28', 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:09:06'),
-(2, NULL, 'KRY-0002', 'ANDISKA ARIA WIJAYA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MI, Kemasjidan', NULL, NULL, 1, 3, '2026-02-27 00:30:48', '2026-05-28 11:09:01'),
-(3, NULL, 'KRY-0003', 'APRIANTI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MI, MDTA', NULL, NULL, 1, 3, '2026-02-27 00:30:48', '2026-05-28 11:09:10'),
-(4, NULL, 'KRY-0004', 'ARABIAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Koperasi', NULL, NULL, 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:09:13'),
-(5, NULL, 'KRY-0005', 'DARMA LUTFIA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU RA, MDTA', NULL, NULL, 1, 4, '2026-02-27 00:30:48', '2026-05-31 09:20:32'),
-(6, NULL, 'KRY-0006', 'DAVID GUSTIA PUTRA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Depot, Taman', NULL, NULL, 1, 11, '2026-02-27 00:30:48', '2026-05-28 11:08:49'),
-(7, NULL, 'KRY-0007', 'DIANA LESTARI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'MDTA', NULL, NULL, 1, 6, '2026-02-27 00:30:48', '2026-05-28 11:08:47'),
-(8, NULL, 'KRY-0008', 'ERIN AZKA FUAD SAPUTRA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MI', NULL, NULL, 1, 3, '2026-02-27 00:30:48', '2026-05-28 11:08:45'),
-(9, NULL, 'KRY-0009', 'FIDIANA HADIATUL HIKMAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Koperasi', NULL, NULL, 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:08:43'),
-(10, NULL, 'KRY-0010', 'HAPPY FARIDAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU RA', NULL, NULL, 1, 4, '2026-02-27 00:30:48', '2026-05-28 11:08:41'),
-(11, NULL, 'KRY-0011', 'HARI UTAMI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Pustaka', NULL, NULL, 1, 12, '2026-02-27 00:30:48', '2026-05-28 11:08:39'),
-(12, NULL, 'KRY-0012', 'INTAN MAULIDDIAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'BEND. MTs', NULL, NULL, 1, 2, '2026-02-27 00:30:48', '2026-05-28 11:08:36'),
-(13, NULL, 'KRY-0013', 'KHIKMATUL MARIA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU PAUD, MDTA', NULL, NULL, 1, 5, '2026-02-27 00:30:48', '2026-05-28 11:08:34'),
-(14, NULL, 'KRY-0014', 'LAILI BINTI HABIBAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Pustaka', NULL, NULL, 1, 12, '2026-02-27 00:30:48', '2026-05-28 11:08:32'),
-(15, NULL, 'KRY-0015', 'LAILIN NASOIHAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Bend. MI', NULL, NULL, 1, 3, '2026-02-27 00:30:48', '2026-05-28 11:08:23'),
-(16, NULL, 'KRY-0016', 'LILIK ALISTIN', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Koperasi', NULL, NULL, 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:08:21'),
-(17, NULL, 'KRY-0017', 'LILY HERAWATI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'PAUD', NULL, NULL, 1, 5, '2026-02-27 00:30:48', '2026-05-28 11:08:19'),
-(18, NULL, 'KRY-0018', 'M. FITROH AHSANI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Depot, Taman', NULL, NULL, 1, 11, '2026-02-27 00:30:48', '2026-05-28 11:08:17'),
-(19, NULL, 'KRY-0019', 'M. MUSTAQIM MAHMUDIN', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Depot, Taman', NULL, NULL, 1, 11, '2026-02-27 00:30:48', '2026-05-28 11:08:15'),
-(20, NULL, 'KRY-0020', 'MOH. AKMAL SUKMA WARDANI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MA, Kemasjidan', NULL, NULL, 1, 1, '2026-02-27 00:30:48', '2026-05-28 11:08:13'),
-(21, NULL, 'KRY-0021', 'MUHAMAD IBNU ATHO\'ILAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MA', NULL, NULL, 1, 1, '2026-02-27 00:30:48', '2026-05-28 11:08:12'),
-(22, NULL, 'KRY-0022', 'NOFI ALFIANI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MA', NULL, NULL, 1, 1, '2026-02-27 00:30:48', '2026-05-28 11:08:09'),
-(23, NULL, 'KRY-0023', 'NUR LINDA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Pustaka', NULL, NULL, 1, 12, '2026-02-27 00:30:48', '2026-05-28 11:08:07'),
-(24, NULL, 'KRY-0024', 'NURIL HUDA FERDIANSYAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Koperasi', NULL, NULL, 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:08:03'),
-(25, NULL, 'KRY-0025', 'PUTRI AGUSTINA', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'PAUD', NULL, NULL, 1, 5, '2026-02-27 00:30:48', '2026-05-28 11:07:56'),
-(26, NULL, 'KRY-0026', 'RIFKA RIFIA FITRIANI', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MTs', NULL, NULL, 1, 2, '2026-02-27 00:30:48', '2026-05-28 11:07:55'),
-(27, NULL, 'KRY-0027', 'SITI MUNIROTUS SHOLIHAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'Koperasi', NULL, NULL, 1, 9, '2026-02-27 00:30:48', '2026-05-28 11:07:52'),
-(28, NULL, 'KRY-0028', 'ULVA INAYATUL IFTAKHIYAH', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, 'TU MA', NULL, NULL, 1, 1, '2026-02-27 00:30:48', '2026-05-28 11:07:26'),
-(30, 4, 'KRY-0030', 'Fathul Mu\'in, S.Pd.', '1404200607730001', 'L', 1, NULL, 'fathulmuin@gmail.com', '085355392211', NULL, 'karyawan-foto/1780750103.png', 'Kepala Madrasah Aliyah', '001/ST/2026', '2025-07-01', 1, 1, '2026-04-13 00:36:52', '2026-06-06 05:48:23'),
-(32, 5, 'KRY-0031', 'AGUS IHSAN', '1404182908060001', 'L', 1, 'Prt. Jarjani Benteng Barat Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/4Mtk97GtxFPkyfT0v1Ufjk7t6w9bLcj1Ph3iOBEr.png', 'TU MTS', '001/ST/2026', '2025-07-01', 2, 2, '2026-05-08 23:13:26', '2026-05-08 23:16:04'),
-(34, 6, 'KRY-0032', 'Riza Wafirotun Nisa`', '1404185202060001', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/eT3KTkHvFYxAUKrbv81nZtJs8qcwWlc7JoqNfg4M.jpg', 'TU MA', '01/ST2026', '2025-07-01', 2, 1, '2026-05-09 00:10:57', '2026-05-09 00:10:57'),
-(35, 7, 'KRY-0033', 'Ahmad Khoirul Amin', '0079687472', 'L', 1, 'Sungai Undan, 17 Januari 2007', NULL, NULL, NULL, 'karyawan-foto/WhOt9NEYpq3KC0YX7QyuyVb5aFT8TwSfyiD75XK6.jpg', 'GURU PAUD', '001/ST/2026', '2025-07-01', 2, 5, '2026-05-27 02:03:15', '2026-05-27 02:03:15'),
-(36, 8, 'KRY-0034', 'Ahmad Shofyan Nur Shobah', '0065510414', 'L', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/iIeeKJw0cduMlCMBYrTDRHBymrrjqy17jRFggSWF.jpg', 'TU MA', '001/ST/2026', '2025-07-01', 2, 1, '2026-05-27 02:08:16', '2026-05-27 02:08:16'),
-(37, 9, 'KRY-0035', 'Fadhil Nandila', '0061185593', 'L', 1, 'Jl. Prt 2 No. 32 RT 001 RW 006 Desa Sungai Undan', NULL, NULL, NULL, 'karyawan-foto/YJ8uVDXRlZ3FTzc77c031HIGaOUuF2KeV2XY8Oet.jpg', 'TU MI', '001/ST/2026', '2025-07-01', 2, 3, '2026-05-27 02:13:29', '2026-05-27 02:13:29'),
-(38, 10, 'KRY-0036', 'Himmatul Ulya Hs', '0075921330', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/JSgGQwbi0FrKshxBLmPliD9mzdhH32rLFhtx4YXo.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-27 02:17:03', '2026-05-27 02:17:03'),
-(39, 11, 'KRY-0037', 'Indah Mustika Sari', '0075118736', 'P', 1, 'Parit Cagat Seberang Tembilahan', NULL, NULL, NULL, 'karyawan-foto/fQQRiYfcxiVaMR33NQfX0lcw4zLlK1H5QyHTyu3Z.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-27 02:59:20', '2026-05-27 02:59:20'),
-(40, 12, 'KRY-0038', 'Khozainul Muna', '0069237808', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/Siw0eBO6EQt5uFriJIJ7KaLBCjYSkkWhZeibDWFD.jpg', 'GURU PAUD', '001/ST/2026', '2025-07-01', 2, 5, '2026-05-27 03:05:05', '2026-05-27 03:05:05'),
-(41, 13, 'KRY-0039', 'Maya Sulis Stiawati', '0066519160', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/njgPwqKF284umIdhh0M97wuxe0aSTVbGlTFHe0fG.jpg', 'TU MA', '001/ST/2026', '2025-07-01', 2, 1, '2026-05-27 03:08:30', '2026-05-27 03:08:30'),
-(42, 14, 'KRY-0040', 'Moh. Celvin Nugroho', '0075411966', 'L', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/JhZcNOjTyuZXUN9d0Z4NWRoc82oqq5oHs9C8dEgY.jpg', 'Penjaga Perpustakaan', '001/ST/2026', '2025-07-01', 2, 12, '2026-05-27 03:13:23', '2026-05-27 03:13:23'),
-(43, 15, 'KRY-0041', 'Nabila Salwa Zanjabila', '0057644664', 'L', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/C92snvV4IO55SwvanaBjFnfgHzRHAzUBuTzC8YQN.jpg', NULL, '001/ST/2026', '2025-07-01', 2, 11, '2026-05-27 03:16:46', '2026-05-27 03:16:46'),
-(45, 17, 'KRY-0043', 'Syukur Sofian Tahir', '3075054819', 'L', 1, 'Parit Kaddas II RT 004 RW 002 Desa Benteng Barat', NULL, NULL, NULL, 'karyawan-foto/oo3p5gy3CMOqjdhzGFFPZT66WfsMTHV8uTLCCa9f.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 10, '2026-05-27 05:21:34', '2026-06-05 08:09:56'),
-(46, 18, 'KRY-0044', 'Umi Masruroh', '0079301861', 'L', 1, 'JL. KH. Amir RT 002 RW 009 Desa Pulau Kijang', NULL, NULL, NULL, 'karyawan-foto/gdhWtkAePMTz7obJXuIU7nPxcBfPOB8qSRxDbfpI.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-27 05:23:32', '2026-05-27 05:23:32'),
-(47, 19, 'KRY-0045', 'Viko Romadhon', '0072020419', 'L', 1, 'Parit Sibun RT 001 RW 002 Desa Jaya Bhakti Kec. Enok', NULL, NULL, NULL, 'karyawan-foto/1af3sfcjcmbm3UC09OSD2Lw0UUMiHRyL02PRM5qx.jpg', NULL, '001/ST/2026', '2025-07-01', 2, 11, '2026-05-27 05:27:30', '2026-05-27 05:27:30'),
-(48, 20, 'KRY-0046', 'Wahyu Pratama', '0074762800', 'L', 1, 'Prt. Masjid Seberang Sanglar Reteh', NULL, NULL, NULL, 'karyawan-foto/x99zSeCiZ2Un8waQ4O7oqwAOyD8ue5amaqLfdcZj.jpg', 'TU MI PRT MASJID', '001/ST/2026', '2025-07-01', 2, 3, '2026-05-27 05:30:04', '2026-05-27 05:30:04'),
-(49, 21, 'KRY-0047', 'Yusuf Mahendra', '0073123317', 'L', 1, 'Prt. Gumpung Seberang Tembilahan Selatan', NULL, NULL, NULL, 'karyawan-foto/QN3EFrZhIhDiM34kOlnFzKGuFOWBX7cxj2XjXzod.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-27 05:32:27', '2026-05-27 05:32:27'),
-(50, 22, 'KRY-0048', 'Zainul Rifa`i', '0069876000', 'L', 1, 'Sei Bangkar RT 002 RW 001 Desa Kembang Mekar Sari', NULL, NULL, NULL, 'karyawan-foto/jCTLsmHcPlghYbVUzzkbZpwLmY8hIJ5GlGvO9pOJ.jpg', 'GURU PAUD', '001/ST/2026', '2025-07-01', 2, 5, '2026-05-27 05:34:07', '2026-05-27 05:34:07'),
-(52, 23, 'KRY-0049', 'Nadiatun Na`imah', '0042707322', 'P', 1, 'Parit Karya Tani Desa Pebenaan Kec. Keritang', NULL, NULL, NULL, 'karyawan-foto/7XZG4qq9PPZwfuJnpFI3sDaDhzi59BqKhYV3P3rk.jpg', 'TU Madrasah Ibtidaiyah', '001/ST/2026', '2025-07-01', 2, 6, '2026-05-28 10:43:49', '2026-06-06 06:25:32'),
-(53, 24, 'KRY-0050', 'Irma Safitri', '0077428250', 'P', 1, 'Prt Karya Tani RT 001 RW 001 Desa Pebenaan', NULL, NULL, NULL, 'karyawan-foto/lPogXCoNzmRBHJOO1v8dYOBCurgLXHpcc30nlHoQ.jpg', 'TU Madrasah Ibtidaiyah', '001/ST/2026', '2025-07-01', 2, 6, '2026-05-28 10:46:12', '2026-06-06 06:39:56'),
-(54, 25, 'KRY-0051', 'Ananda Indah Pangestuti', '3067698287', 'P', 1, 'Parit Marzuki RT 001 RW 003 Desa Jaya Bhakti', NULL, NULL, NULL, 'karyawan-foto/SGHL2f7jAMom3cJsb2x5A9obtq27ArbYDzdAaqLe.jpg', 'GURU PAUD', '001/ST/2026', '2025-07-01', 2, 5, '2026-05-28 10:50:47', '2026-05-28 10:50:47'),
-(55, 26, 'KRY-0052', 'Ayu Royyana', '0074365002', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/SH9CoDtC40TtLvF6rujbAcjvhXA70xrJc8bWT6xt.jpg', 'TU MTs', '001/ST/2026', '2025-07-01', 2, 2, '2026-05-28 10:53:18', '2026-05-28 10:53:18'),
-(56, 27, 'KRY-0053', 'Nashfa Erlina Sahli', '0078716398', 'P', 1, 'Jl. Lintas RT 009 Desa Lintas Utara Kec. Keritang', NULL, NULL, NULL, 'karyawan-foto/uzmLMzeXjAbaA2nCtgy3rS2LhYNg40oHNPCLFzrw.jpg', 'Guru RA', '001/ST/2026', '2025-07-01', 2, 4, '2026-05-28 10:56:07', '2026-05-28 10:56:07'),
-(57, 28, 'KRY-0054', 'Neli Syahputri', '3081696510', 'P', 1, 'Seberang Pulau Kijang RT 002 RW 001', NULL, NULL, NULL, 'karyawan-foto/6h8jo7JN0kNmQbo8HjQHT0IbaoHekGMneZBGyUcX.jpg', 'kasir koprasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-28 10:59:24', '2026-05-28 10:59:24'),
-(58, 29, 'KRY-0055', 'Putri Zahrotul Kholisah', '0071498067', 'P', 1, 'Jl. Darma Bakti GG. Rino No. 02 Lubuhbaru Barat Kec. Payung Sekaki Pekanbaru', NULL, NULL, NULL, 'karyawan-foto/8U5Tnzv6k7Xhu1Gtx9sLHiF1lgXSrpnhaebzj0Zj.jpg', 'Guru RA', '001/ST/2026', '2025-07-01', 2, 4, '2026-05-28 11:01:39', '2026-05-28 11:01:39'),
-(59, 30, 'KRY-0056', 'Risna Maila Zulfa', '0067983542', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/mYnwqP7L2fRa0Kt9qNfE8wT4EoYadxgcqR7rVapL.jpg', 'TU MTS', '001/ST/2026', '2025-07-01', 2, 2, '2026-05-28 11:03:22', '2026-05-28 11:03:22'),
-(60, 31, 'KRY-0057', 'Siti Nur Hasanah', '0075511226', 'P', 1, 'Mugomulyo Sungai Batang', NULL, NULL, NULL, 'karyawan-foto/uU5Z5OXiSnT22gMjogUtAhbCyVHPZI9EqFvIUGpK.jpg', 'Guru RA', '001/ST/2026', '2025-07-01', 2, 6, '2026-05-28 11:05:55', '2026-06-06 06:24:26'),
-(65, 32, 'KRY-0058', 'Drs. H. Anas, M.Pd', '1404180112660004', 'L', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/ufO7Q6df9rJlPCv4NQ9wL0pjp3Uo4vo3dcu2RoVE.jpg', 'Kepala Madrasah', '001/ST/2026', '2025-07-01', 2, 10, '2026-05-28 11:26:49', '2026-06-05 09:01:24'),
-(66, 33, 'KRY-0059', 'Nina Marlina, S.Pd, M.E', '1404184703680002', 'P', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/2Uk6UpuIjJr8W1Yig9brife9wUA86W1LZUGkrUq6.jpg', 'Kepala Koperasi', '001/ST/2026', '2025-07-01', 2, 9, '2026-05-28 11:34:14', '2026-05-28 11:34:14'),
-(67, 34, 'KRY-0060', 'Rahmat Budi Permana, S.Pd., M.E', '3206242803860002', 'L', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/zWuq03CzU0REjEcBi5ZPSUFpJVh9OBmPXvXcohB0.jpg', 'Kepala Depot Air', '001/ST/2026', '2025-07-01', 2, 11, '2026-05-28 11:37:31', '2026-05-28 11:37:31'),
-(71, 36, 'KRY-0061', 'MUH. HARUN, S.H.I., M.Sos', '1404180607850002', 'L', 1, 'Jalan Pelajar, RT 009, RW 002, Desa Mugo Mulyo', NULL, NULL, NULL, 'karyawan-foto/1780749240.png', 'Kepala Perpustakaan', '001/ST/2026', '2025-07-01', 2, 12, '2026-05-29 06:38:26', '2026-06-06 05:55:00'),
-(72, 37, 'KRY-0062', 'BANDIYAH', '1404204207730001', 'P', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/gDslALYYsStQCRXdCqi8uSu25aJSuDchIXKBbwN2.jpg', 'kepala RA', '001/ST/2026', '2025-07-01', 2, 4, '2026-06-02 06:16:41', '2026-06-02 06:16:41'),
-(73, 38, 'KRY-0063', 'SITI JUARIAH', '1404186001760001', 'P', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/4Q44EsgZj4RcDBHMfLWe1eP8UoUm31LUck63E4X2.jpg', 'Kepala paud', '001/ST/2026', '2025-07-01', 2, 5, '2026-06-02 06:26:35', '2026-06-02 06:26:35'),
-(74, 39, 'KRY-0064', 'MISRUN', '1404181206640001', 'L', 1, 'Mugomulyo', NULL, NULL, NULL, 'karyawan-foto/8nZAMNjzgY24PdnkhvjZUpRBkGvQN8X75agj0Cyj.jpg', 'Pengurus Pondok Pesantren Putra', '001/ST/2026', '2025-07-01', 2, 7, '2026-06-02 06:32:08', '2026-06-06 05:54:32'),
-(77, 40, 'KRY-0065', 'Sujitho, S.Pd. SD', '1404182007670001', 'L', 1, NULL, NULL, NULL, NULL, 'karyawan-foto/F6hJkZjeAicBU1ef0LrlTDuzgT2LNkudwX1S0k8w.jpg', 'Kepala Madrasah Ibtidaiyah', '001/ST/2026', '2025-07-01', 2, 3, '2026-06-06 05:32:22', '2026-06-06 05:32:22'),
-(78, 41, 'KRY-0066', 'Nur Makmuroh', '1404185506720001', 'P', 1, 'JL. PELAJAR RT.06 RW.02', 'nurmakmuroh@gmail.com', '085184092030', NULL, 'karyawan-foto/FVAajz0qZmj67QbmyhkuPfxyb6dKyhebq6q3ysak.jpg', 'Kepala MDTA', '001/ST/2026', '2025-07-01', 2, 6, '2026-06-06 06:15:07', '2026-06-06 06:15:07');
-
--- --------------------------------------------------------
+LOCK TABLES `karyawan` WRITE;
+/*!40000 ALTER TABLE `karyawan` DISABLE KEYS */;
+INSERT INTO `karyawan` VALUES
+(1,NULL,'KRY-0001','AMIRUL MU\'MININ',NULL,'L',0,NULL,NULL,NULL,NULL,'karyawan-foto/1777337948.png','Koperasi',NULL,'2026-04-28',1,9,'2026-02-27 00:30:48','2026-05-28 11:09:06'),
+(2,NULL,'KRY-0002','ANDISKA ARIA WIJAYA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MI, Kemasjidan',NULL,NULL,1,3,'2026-02-27 00:30:48','2026-06-09 07:15:08'),
+(3,NULL,'KRY-0003','APRIANTI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MI, MDTA',NULL,NULL,1,3,'2026-02-27 00:30:48','2026-05-28 11:09:10'),
+(4,NULL,'KRY-0004','ARABIAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Koperasi',NULL,NULL,1,9,'2026-02-27 00:30:48','2026-05-28 11:09:13'),
+(5,NULL,'KRY-0005','DARMA LUTFIA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU RA, MDTA',NULL,NULL,1,4,'2026-02-27 00:30:48','2026-05-31 09:20:32'),
+(6,NULL,'KRY-0006','DAVID GUSTIA PUTRA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Depot, Taman',NULL,NULL,1,11,'2026-02-27 00:30:48','2026-05-28 11:08:49'),
+(7,NULL,'KRY-0007','DIANA LESTARI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'MDTA',NULL,NULL,1,6,'2026-02-27 00:30:48','2026-05-28 11:08:47'),
+(8,NULL,'KRY-0008','ERIN AZKA FUAD SAPUTRA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MI',NULL,NULL,1,3,'2026-02-27 00:30:48','2026-05-28 11:08:45'),
+(9,NULL,'KRY-0009','FIDIANA HADIATUL HIKMAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Koperasi',NULL,NULL,1,9,'2026-02-27 00:30:48','2026-05-28 11:08:43'),
+(10,NULL,'KRY-0010','HAPPY FARIDAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU RA',NULL,NULL,1,4,'2026-02-27 00:30:48','2026-05-28 11:08:41'),
+(11,NULL,'KRY-0011','HARI UTAMI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Pustaka',NULL,NULL,1,12,'2026-02-27 00:30:48','2026-05-28 11:08:39'),
+(12,NULL,'KRY-0012','INTAN MAULIDDIAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'BEND. MTs',NULL,NULL,1,2,'2026-02-27 00:30:48','2026-05-28 11:08:36'),
+(13,NULL,'KRY-0013','KHIKMATUL MARIA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU PAUD, MDTA',NULL,NULL,1,5,'2026-02-27 00:30:48','2026-05-28 11:08:34'),
+(14,NULL,'KRY-0014','LAILI BINTI HABIBAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Pustaka',NULL,NULL,1,12,'2026-02-27 00:30:48','2026-05-28 11:08:32'),
+(15,NULL,'KRY-0015','LAILIN NASOIHAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Bend. MI',NULL,NULL,1,3,'2026-02-27 00:30:48','2026-05-28 11:08:23'),
+(16,NULL,'KRY-0016','LILIK ALISTIN',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Koperasi',NULL,NULL,1,9,'2026-02-27 00:30:48','2026-05-28 11:08:21'),
+(17,NULL,'KRY-0017','LILY HERAWATI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'PAUD',NULL,NULL,1,5,'2026-02-27 00:30:48','2026-05-28 11:08:19'),
+(18,NULL,'KRY-0018','M. FITROH AHSANI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Depot, Taman',NULL,NULL,1,11,'2026-02-27 00:30:48','2026-05-28 11:08:17'),
+(19,NULL,'KRY-0019','M. MUSTAQIM MAHMUDIN',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Depot, Taman',NULL,NULL,1,11,'2026-02-27 00:30:48','2026-05-28 11:08:15'),
+(20,NULL,'KRY-0020','MOH. AKMAL SUKMA WARDANI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MA, Kemasjidan',NULL,NULL,1,1,'2026-02-27 00:30:48','2026-05-28 11:08:13'),
+(21,NULL,'KRY-0021','MUHAMAD IBNU ATHO\'ILAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MA',NULL,NULL,1,1,'2026-02-27 00:30:48','2026-05-28 11:08:12'),
+(22,NULL,'KRY-0022','NOFI ALFIANI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MA',NULL,NULL,1,1,'2026-02-27 00:30:48','2026-05-28 11:08:09'),
+(23,NULL,'KRY-0023','NUR LINDA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Pustaka',NULL,NULL,1,12,'2026-02-27 00:30:48','2026-05-28 11:08:07'),
+(24,NULL,'KRY-0024','NURIL HUDA FERDIANSYAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Koperasi',NULL,NULL,1,9,'2026-02-27 00:30:48','2026-05-28 11:08:03'),
+(25,NULL,'KRY-0025','PUTRI AGUSTINA',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'PAUD',NULL,NULL,1,5,'2026-02-27 00:30:48','2026-05-28 11:07:56'),
+(26,NULL,'KRY-0026','RIFKA RIFIA FITRIANI',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MTs',NULL,NULL,1,2,'2026-02-27 00:30:48','2026-05-28 11:07:55'),
+(27,NULL,'KRY-0027','SITI MUNIROTUS SHOLIHAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'Koperasi',NULL,NULL,1,9,'2026-02-27 00:30:48','2026-05-28 11:07:52'),
+(28,NULL,'KRY-0028','ULVA INAYATUL IFTAKHIYAH',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL,'TU MA',NULL,NULL,1,1,'2026-02-27 00:30:48','2026-05-28 11:07:26'),
+(30,4,'KRY-0030','Fathul Mu\'in, S.Pd.','1404200607730001','L',1,NULL,'fathulmuin@gmail.com','085355392211',NULL,'karyawan-foto/1780750103.png','Kepala Madrasah Aliyah','001/ST/2026','2025-07-01',1,1,'2026-04-13 00:36:52','2026-06-06 05:48:23'),
+(32,5,'KRY-0031','AGUS IHSAN','1404182908060001','L',1,'Prt. Jarjani Benteng Barat Sungai Batang',NULL,NULL,NULL,'karyawan-foto/4Mtk97GtxFPkyfT0v1Ufjk7t6w9bLcj1Ph3iOBEr.png','TU MTS','001/ST/2026','2025-07-01',2,2,'2026-05-08 23:13:26','2026-05-08 23:16:04'),
+(34,6,'KRY-0032','Riza Wafirotun Nisa`','1404185202060001','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/eT3KTkHvFYxAUKrbv81nZtJs8qcwWlc7JoqNfg4M.jpg','TU MA','01/ST2026','2025-07-01',2,1,'2026-05-09 00:10:57','2026-05-09 00:10:57'),
+(35,7,'KRY-0033','Ahmad Khoirul Amin','0079687472','L',1,'Sungai Undan, 17 Januari 2007',NULL,NULL,NULL,'karyawan-foto/WhOt9NEYpq3KC0YX7QyuyVb5aFT8TwSfyiD75XK6.jpg','GURU PAUD','001/ST/2026','2025-07-01',2,10,'2026-05-27 02:03:15','2026-06-09 07:25:36'),
+(36,8,'KRY-0034','Ahmad Shofyan Nur Shobah','0065510414','L',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/iIeeKJw0cduMlCMBYrTDRHBymrrjqy17jRFggSWF.jpg','TU MA','001/ST/2026','2025-07-01',2,1,'2026-05-27 02:08:16','2026-05-27 02:08:16'),
+(37,9,'KRY-0035','Fadhil Nandila','0061185593','L',1,'Jl. Prt 2 No. 32 RT 001 RW 006 Desa Sungai Undan',NULL,NULL,NULL,'karyawan-foto/YJ8uVDXRlZ3FTzc77c031HIGaOUuF2KeV2XY8Oet.jpg','TU MI','001/ST/2026','2025-07-01',2,3,'2026-05-27 02:13:29','2026-05-27 02:13:29'),
+(38,10,'KRY-0036','Himmatul Ulya Hs','0075921330','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/JSgGQwbi0FrKshxBLmPliD9mzdhH32rLFhtx4YXo.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,9,'2026-05-27 02:17:03','2026-05-27 02:17:03'),
+(39,11,'KRY-0037','Indah Mustika Sari','0075118736','P',1,'Parit Cagat Seberang Tembilahan',NULL,NULL,NULL,'karyawan-foto/fQQRiYfcxiVaMR33NQfX0lcw4zLlK1H5QyHTyu3Z.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,9,'2026-05-27 02:59:20','2026-05-27 02:59:20'),
+(40,12,'KRY-0038','Khozainul Muna','0069237808','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/Siw0eBO6EQt5uFriJIJ7KaLBCjYSkkWhZeibDWFD.jpg','GURU PAUD','001/ST/2026','2025-07-01',2,6,'2026-05-27 03:05:05','2026-06-08 08:34:43'),
+(41,13,'KRY-0039','Maya Sulis Stiawati','0066519160','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/njgPwqKF284umIdhh0M97wuxe0aSTVbGlTFHe0fG.jpg','TU MA','001/ST/2026','2025-07-01',2,1,'2026-05-27 03:08:30','2026-05-27 03:08:30'),
+(42,14,'KRY-0040','Moh. Celvin Nugroho','0075411966','L',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/JhZcNOjTyuZXUN9d0Z4NWRoc82oqq5oHs9C8dEgY.jpg','Penjaga Perpustakaan','001/ST/2026','2025-07-01',2,7,'2026-05-27 03:13:23','2026-06-09 07:11:05'),
+(43,15,'KRY-0041','Nabila Salwa Zanjabila','0057644664','L',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/C92snvV4IO55SwvanaBjFnfgHzRHAzUBuTzC8YQN.jpg','Depot Air','001/ST/2026','2025-07-01',2,11,'2026-05-27 03:16:46','2026-06-09 07:08:55'),
+(45,17,'KRY-0043','Syukur Sofian Tahir','3075054819','L',1,'Parit Kaddas II RT 004 RW 002 Desa Benteng Barat',NULL,NULL,NULL,'karyawan-foto/oo3p5gy3CMOqjdhzGFFPZT66WfsMTHV8uTLCCa9f.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,10,'2026-05-27 05:21:34','2026-06-05 08:09:56'),
+(46,18,'KRY-0044','Umi Masruroh','0079301861','L',1,'JL. KH. Amir RT 002 RW 009 Desa Pulau Kijang',NULL,NULL,NULL,'karyawan-foto/gdhWtkAePMTz7obJXuIU7nPxcBfPOB8qSRxDbfpI.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,9,'2026-05-27 05:23:32','2026-05-27 05:23:32'),
+(47,19,'KRY-0045','Viko Romadhon','0072020419','L',1,'Parit Sibun RT 001 RW 002 Desa Jaya Bhakti Kec. Enok',NULL,NULL,NULL,'karyawan-foto/1af3sfcjcmbm3UC09OSD2Lw0UUMiHRyL02PRM5qx.jpg','Depot Air','001/ST/2026','2025-07-01',2,11,'2026-05-27 05:27:30','2026-06-09 07:08:08'),
+(48,20,'KRY-0046','Wahyu Pratama','0074762800','L',1,'Prt. Masjid Seberang Sanglar Reteh',NULL,NULL,NULL,'karyawan-foto/x99zSeCiZ2Un8waQ4O7oqwAOyD8ue5amaqLfdcZj.jpg','TU MI PRT MASJID','001/ST/2026','2025-07-01',2,3,'2026-05-27 05:30:04','2026-05-27 05:30:04'),
+(49,21,'KRY-0047','Yusuf Mahendra','0073123317','L',1,'Prt. Gumpung Seberang Tembilahan Selatan',NULL,NULL,NULL,'karyawan-foto/QN3EFrZhIhDiM34kOlnFzKGuFOWBX7cxj2XjXzod.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,9,'2026-05-27 05:32:27','2026-05-27 05:32:27'),
+(50,22,'KRY-0048','Zainul Rifa`i','0069876000','L',1,'Sei Bangkar RT 002 RW 001 Desa Kembang Mekar Sari',NULL,NULL,NULL,'karyawan-foto/jCTLsmHcPlghYbVUzzkbZpwLmY8hIJ5GlGvO9pOJ.jpg','GURU PAUD','001/ST/2026','2025-07-01',2,5,'2026-05-27 05:34:07','2026-05-27 05:34:07'),
+(52,23,'KRY-0049','Nadiatun Na`imah','0042707322','P',1,'Parit Karya Tani Desa Pebenaan Kec. Keritang',NULL,NULL,NULL,'karyawan-foto/7XZG4qq9PPZwfuJnpFI3sDaDhzi59BqKhYV3P3rk.jpg','TU Madrasah Ibtidaiyah','001/ST/2026','2025-07-01',2,6,'2026-05-28 10:43:49','2026-06-06 06:25:32'),
+(53,24,'KRY-0050','Irma Safitri','0077428250','P',1,'Prt Karya Tani RT 001 RW 001 Desa Pebenaan',NULL,NULL,NULL,'karyawan-foto/lPogXCoNzmRBHJOO1v8dYOBCurgLXHpcc30nlHoQ.jpg','TU Madrasah Ibtidaiyah','001/ST/2026','2025-07-01',2,6,'2026-05-28 10:46:12','2026-06-06 06:39:56'),
+(54,25,'KRY-0051','Ananda Indah Pangestuti','3067698287','P',1,'Parit Marzuki RT 001 RW 003 Desa Jaya Bhakti',NULL,NULL,NULL,'karyawan-foto/SGHL2f7jAMom3cJsb2x5A9obtq27ArbYDzdAaqLe.jpg','GURU PAUD','001/ST/2026','2025-07-01',2,5,'2026-05-28 10:50:47','2026-05-28 10:50:47'),
+(55,26,'KRY-0052','Ayu Royyana','0074365002','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/SH9CoDtC40TtLvF6rujbAcjvhXA70xrJc8bWT6xt.jpg','TU MTs','001/ST/2026','2025-07-01',2,2,'2026-05-28 10:53:18','2026-05-28 10:53:18'),
+(56,27,'KRY-0053','Nashfa Erlina Sahli','0078716398','P',1,'Jl. Lintas RT 009 Desa Lintas Utara Kec. Keritang',NULL,NULL,NULL,'karyawan-foto/uzmLMzeXjAbaA2nCtgy3rS2LhYNg40oHNPCLFzrw.jpg','Guru RA','001/ST/2026','2025-07-01',2,8,'2026-05-28 10:56:07','2026-06-09 07:18:55'),
+(57,28,'KRY-0054','Neli Syahputri','3081696510','P',1,'Seberang Pulau Kijang RT 002 RW 001',NULL,NULL,NULL,'karyawan-foto/6h8jo7JN0kNmQbo8HjQHT0IbaoHekGMneZBGyUcX.jpg','kasir koprasi','001/ST/2026','2025-07-01',2,9,'2026-05-28 10:59:24','2026-05-28 10:59:24'),
+(58,29,'KRY-0055','Putri Zahrotul Kholisah','0071498067','P',1,'Jl. Darma Bakti GG. Rino No. 02 Lubuhbaru Barat Kec. Payung Sekaki Pekanbaru',NULL,NULL,NULL,'karyawan-foto/8U5Tnzv6k7Xhu1Gtx9sLHiF1lgXSrpnhaebzj0Zj.jpg','Guru RA','001/ST/2026','2025-07-01',2,8,'2026-05-28 11:01:39','2026-06-09 07:17:09'),
+(59,30,'KRY-0056','Risna Maila Zulfa','0067983542','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/mYnwqP7L2fRa0Kt9qNfE8wT4EoYadxgcqR7rVapL.jpg','TU MTS','001/ST/2026','2025-07-01',2,2,'2026-05-28 11:03:22','2026-05-28 11:03:22'),
+(60,31,'KRY-0057','Siti Nur Hasanah','0075511226','P',1,'Mugomulyo Sungai Batang',NULL,NULL,NULL,'karyawan-foto/uU5Z5OXiSnT22gMjogUtAhbCyVHPZI9EqFvIUGpK.jpg','Guru RA','001/ST/2026','2025-07-01',2,6,'2026-05-28 11:05:55','2026-06-06 06:24:26'),
+(65,32,'KRY-0058','Drs. H. Anas, M.Pd','1404180112660004','L',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/ufO7Q6df9rJlPCv4NQ9wL0pjp3Uo4vo3dcu2RoVE.jpg','Kepala Madrasah','001/ST/2026','2025-07-01',2,10,'2026-05-28 11:26:49','2026-06-05 09:01:24'),
+(66,33,'KRY-0059','Nina Marlina, S.Pd, M.E','1404184703680002','P',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/2Uk6UpuIjJr8W1Yig9brife9wUA86W1LZUGkrUq6.jpg','Kepala Koperasi','001/ST/2026','2025-07-01',2,9,'2026-05-28 11:34:14','2026-05-28 11:34:14'),
+(67,34,'KRY-0060','Rahmat Budi Permana, S.Pd., M.E','3206242803860002','L',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/zWuq03CzU0REjEcBi5ZPSUFpJVh9OBmPXvXcohB0.jpg','Kepala Depot Air','001/ST/2026','2025-07-01',2,11,'2026-05-28 11:37:31','2026-05-28 11:37:31'),
+(71,36,'KRY-0061','MUH. HARUN, S.H.I., M.Sos','1404180607850002','L',1,'Jalan Pelajar, RT 009, RW 002, Desa Mugo Mulyo',NULL,NULL,NULL,'karyawan-foto/1780749240.png','Kepala Perpustakaan','001/ST/2026','2025-07-01',2,12,'2026-05-29 06:38:26','2026-06-06 05:55:00'),
+(72,37,'KRY-0062','BANDIYAH','1404204207730001','P',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/gDslALYYsStQCRXdCqi8uSu25aJSuDchIXKBbwN2.jpg','kepala RA','001/ST/2026','2025-07-01',2,4,'2026-06-02 06:16:41','2026-06-02 06:16:41'),
+(73,38,'KRY-0063','SITI JUARIAH','1404186001760001','P',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/4Q44EsgZj4RcDBHMfLWe1eP8UoUm31LUck63E4X2.jpg','Kepala paud','001/ST/2026','2025-07-01',2,5,'2026-06-02 06:26:35','2026-06-02 06:26:35'),
+(74,39,'KRY-0064','MISRUN','1404181206640001','L',1,'Mugomulyo',NULL,NULL,NULL,'karyawan-foto/8nZAMNjzgY24PdnkhvjZUpRBkGvQN8X75agj0Cyj.jpg','Pengurus Pondok Pesantren Putra','001/ST/2026','2025-07-01',2,7,'2026-06-02 06:32:08','2026-06-06 05:54:32'),
+(77,40,'KRY-0065','Sujitho, S.Pd. SD','1404182007670001','L',1,NULL,NULL,NULL,NULL,'karyawan-foto/F6hJkZjeAicBU1ef0LrlTDuzgT2LNkudwX1S0k8w.jpg','Kepala Madrasah Ibtidaiyah','001/ST/2026','2025-07-01',2,3,'2026-06-06 05:32:22','2026-06-06 05:32:22'),
+(78,41,'KRY-0066','Nur Makmuroh','1404185506720001','P',1,'JL. PELAJAR RT.06 RW.02','nurmakmuroh@gmail.com','085184092030',NULL,'karyawan-foto/FVAajz0qZmj67QbmyhkuPfxyb6dKyhebq6q3ysak.jpg','Kepala MDTA','001/ST/2026','2025-07-01',2,6,'2026-06-06 06:15:07','2026-06-06 06:15:07'),
+(79,42,'KRY-0067','Drs. H. Ah. Masyhuri SA, M.Pd.I',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2,17,'2026-06-07 09:57:56','2026-06-07 09:57:56');
+/*!40000 ALTER TABLE `karyawan` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `karyawan_pangkalan`
 --
 
+DROP TABLE IF EXISTS `karyawan_pangkalan`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `karyawan_pangkalan` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `karyawan_id` bigint(20) UNSIGNED NOT NULL,
-  `pangkalan_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `karyawan_id` bigint(20) unsigned NOT NULL,
+  `pangkalan_id` bigint(20) unsigned NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `karyawan_pangkalan_karyawan_id_pangkalan_id_unique` (`karyawan_id`,`pangkalan_id`),
+  KEY `karyawan_pangkalan_pangkalan_id_foreign` (`pangkalan_id`),
+  CONSTRAINT `karyawan_pangkalan_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `karyawan_pangkalan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=336 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `karyawan_pangkalan`
 --
 
-INSERT INTO `karyawan_pangkalan` (`id`, `karyawan_id`, `pangkalan_id`, `created_at`, `updated_at`) VALUES
-(1, 20, 1, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(2, 21, 1, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(3, 22, 1, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(4, 28, 1, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(5, 12, 2, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(6, 26, 2, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(7, 2, 3, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(8, 3, 3, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(9, 8, 3, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(10, 15, 3, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(11, 5, 4, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(12, 10, 4, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(13, 13, 5, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(14, 17, 5, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(15, 25, 5, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(16, 7, 6, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(17, 1, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(18, 4, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(19, 9, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(20, 16, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(21, 24, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(22, 27, 9, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(23, 6, 11, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(24, 18, 11, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(25, 19, 11, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(26, 11, 12, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(27, 14, 12, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(28, 23, 12, '2026-04-09 18:04:17', '2026-04-09 18:04:17'),
-(29, 1, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(30, 2, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(31, 3, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(32, 4, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(33, 5, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(34, 6, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(35, 7, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(36, 8, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(37, 9, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(38, 10, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(39, 11, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(40, 12, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(41, 13, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(42, 14, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(43, 15, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(44, 16, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(45, 17, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(46, 18, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(47, 19, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(48, 20, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(49, 21, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(50, 22, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(51, 23, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(52, 24, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(53, 25, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(54, 26, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(55, 27, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(56, 28, 13, '2026-04-09 18:04:35', '2026-04-09 18:04:35'),
-(85, 1, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(86, 2, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(87, 3, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(88, 4, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(89, 5, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(90, 6, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(91, 7, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(92, 8, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(93, 9, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(94, 10, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(95, 11, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(96, 12, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(97, 13, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(98, 14, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(99, 15, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(100, 16, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(101, 17, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(102, 18, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(103, 19, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(104, 20, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(105, 21, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(106, 22, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(107, 23, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(108, 24, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(109, 25, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(110, 26, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(111, 27, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(112, 28, 10, '2026-04-09 18:05:19', '2026-04-09 18:05:19'),
-(113, 30, 1, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(114, 32, 2, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(115, 34, 1, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(116, 35, 5, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(117, 36, 1, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(118, 37, 3, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(119, 38, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(120, 39, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(121, 40, 5, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(122, 41, 1, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(123, 42, 12, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(124, 43, 11, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(125, 45, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(126, 46, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(127, 47, 11, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(128, 48, 3, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(129, 49, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(130, 50, 5, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(131, 52, 3, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(132, 53, 3, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(133, 54, 5, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(134, 55, 2, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(135, 56, 4, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(136, 57, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(137, 58, 4, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(138, 59, 2, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(139, 60, 4, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(140, 65, 2, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(141, 66, 9, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(142, 67, 11, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(143, 71, 12, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(144, 72, 4, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(145, 73, 5, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(146, 74, 7, '2026-06-04 17:46:24', '2026-06-04 17:46:24'),
-(147, 60, 13, '2026-06-04 17:50:41', '2026-06-04 17:50:41'),
-(149, 65, 10, '2026-06-05 00:51:48', '2026-06-05 00:51:48'),
-(151, 45, 10, '2026-06-05 08:09:56', '2026-06-05 08:09:56'),
-(152, 45, 7, '2026-06-05 08:09:56', '2026-06-05 08:09:56'),
-(153, 45, 13, '2026-06-05 08:09:56', '2026-06-05 08:09:56'),
-(154, 66, 8, '2026-06-05 08:57:43', '2026-06-05 08:57:43'),
-(155, 65, 14, '2026-06-05 09:01:24', '2026-06-05 09:01:24'),
-(158, 77, 3, '2026-06-06 05:32:22', '2026-06-06 05:32:22'),
-(159, 74, 13, '2026-06-06 05:56:10', '2026-06-06 05:56:10'),
-(160, 78, 6, '2026-06-06 06:15:08', '2026-06-06 06:15:08'),
-(161, 60, 6, '2026-06-06 06:24:26', '2026-06-06 06:24:26'),
-(162, 60, 8, '2026-06-06 06:24:27', '2026-06-06 06:24:27'),
-(163, 52, 6, '2026-06-06 06:25:32', '2026-06-06 06:25:32'),
-(164, 52, 8, '2026-06-06 06:25:32', '2026-06-06 06:25:32'),
-(165, 52, 13, '2026-06-06 06:25:32', '2026-06-06 06:25:32'),
-(166, 53, 6, '2026-06-06 06:39:56', '2026-06-06 06:39:56'),
-(167, 53, 8, '2026-06-06 06:39:56', '2026-06-06 06:39:56'),
-(168, 53, 13, '2026-06-06 06:39:56', '2026-06-06 06:39:56'),
-(169, 59, 8, '2026-06-06 07:37:32', '2026-06-06 07:37:32'),
-(170, 59, 13, '2026-06-06 07:37:32', '2026-06-06 07:37:32'),
-(171, 71, 16, '2026-06-06 07:53:01', '2026-06-06 07:53:01'),
-(172, 60, 16, '2026-06-06 08:00:18', '2026-06-06 08:00:18');
-
--- --------------------------------------------------------
+LOCK TABLES `karyawan_pangkalan` WRITE;
+/*!40000 ALTER TABLE `karyawan_pangkalan` DISABLE KEYS */;
+INSERT INTO `karyawan_pangkalan` VALUES
+(1,20,1,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(2,21,1,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(3,22,1,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(4,28,1,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(5,12,2,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(6,26,2,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(7,2,3,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(8,3,3,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(9,8,3,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(10,15,3,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(11,5,4,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(12,10,4,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(13,13,5,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(14,17,5,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(15,25,5,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(16,7,6,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(17,1,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(18,4,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(19,9,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(20,16,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(21,24,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(22,27,9,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(23,6,11,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(24,18,11,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(25,19,11,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(26,11,12,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(27,14,12,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(28,23,12,'2026-04-09 18:04:17','2026-04-09 18:04:17'),
+(113,30,1,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(114,32,2,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(115,34,1,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(116,35,5,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(117,36,1,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(118,37,3,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(119,38,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(120,39,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(121,40,5,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(122,41,1,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(123,42,12,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(124,43,11,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(125,45,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(126,46,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(127,47,11,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(128,48,3,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(129,49,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(130,50,5,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(131,52,3,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(132,53,3,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(133,54,5,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(134,55,2,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(135,56,4,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(136,57,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(137,58,4,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(138,59,2,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(139,60,4,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(140,65,2,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(141,66,9,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(142,67,11,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(143,71,12,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(144,72,4,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(145,73,5,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(146,74,7,'2026-06-04 17:46:24','2026-06-04 17:46:24'),
+(152,45,7,'2026-06-05 08:09:56','2026-06-05 08:09:56'),
+(154,66,8,'2026-06-05 08:57:43','2026-06-05 08:57:43'),
+(155,65,14,'2026-06-05 09:01:24','2026-06-05 09:01:24'),
+(158,77,3,'2026-06-06 05:32:22','2026-06-06 05:32:22'),
+(160,78,6,'2026-06-06 06:15:08','2026-06-06 06:15:08'),
+(161,60,6,'2026-06-06 06:24:26','2026-06-06 06:24:26'),
+(162,60,8,'2026-06-06 06:24:27','2026-06-06 06:24:27'),
+(163,52,6,'2026-06-06 06:25:32','2026-06-06 06:25:32'),
+(164,52,8,'2026-06-06 06:25:32','2026-06-06 06:25:32'),
+(166,53,6,'2026-06-06 06:39:56','2026-06-06 06:39:56'),
+(167,53,8,'2026-06-06 06:39:56','2026-06-06 06:39:56'),
+(169,59,8,'2026-06-06 07:37:32','2026-06-06 07:37:32'),
+(174,32,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(175,34,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(176,35,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(177,36,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(178,37,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(179,38,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(180,39,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(181,40,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(182,41,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(183,42,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(184,43,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(185,45,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(186,46,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(187,47,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(188,48,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(189,49,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(190,50,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(191,52,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(192,53,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(193,54,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(194,55,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(195,56,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(196,57,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(197,58,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(198,59,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(199,60,16,'2026-06-07 09:34:45','2026-06-07 09:34:45'),
+(208,65,10,'2026-06-07 09:49:28','2026-06-07 09:49:28'),
+(210,32,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(211,34,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(212,35,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(213,36,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(214,37,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(215,38,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(216,39,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(217,40,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(218,41,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(219,42,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(220,43,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(221,45,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(222,46,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(223,47,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(224,48,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(225,49,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(226,50,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(227,52,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(228,53,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(229,54,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(230,55,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(231,56,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(232,57,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(233,58,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(234,59,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(235,60,17,'2026-06-07 09:53:20','2026-06-07 09:53:20'),
+(276,32,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(277,34,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(278,35,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(279,36,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(280,37,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(281,38,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(282,39,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(283,40,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(284,41,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(285,42,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(286,43,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(287,45,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(288,46,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(289,47,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(290,48,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(291,49,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(292,50,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(293,52,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(294,53,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(295,54,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(296,55,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(297,56,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(298,57,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(299,58,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(300,59,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(301,60,13,'2026-06-07 10:03:57','2026-06-07 10:03:57'),
+(311,71,16,'2026-06-07 10:08:09','2026-06-07 10:08:09'),
+(312,40,6,'2026-06-08 08:34:43','2026-06-08 08:34:43'),
+(313,50,7,'2026-06-09 07:06:39','2026-06-09 07:06:39'),
+(314,49,7,'2026-06-09 07:07:10','2026-06-09 07:07:10'),
+(315,47,7,'2026-06-09 07:08:08','2026-06-09 07:08:08'),
+(316,43,7,'2026-06-09 07:08:55','2026-06-09 07:08:55'),
+(317,42,7,'2026-06-09 07:11:05','2026-06-09 07:11:05'),
+(318,37,7,'2026-06-09 07:11:58','2026-06-09 07:11:58'),
+(319,36,7,'2026-06-09 07:12:56','2026-06-09 07:12:56'),
+(320,35,7,'2026-06-09 07:13:28','2026-06-09 07:13:28'),
+(321,32,7,'2026-06-09 07:13:56','2026-06-09 07:13:56'),
+(322,58,8,'2026-06-09 07:17:09','2026-06-09 07:17:09'),
+(323,57,8,'2026-06-09 07:18:32','2026-06-09 07:18:32'),
+(324,56,8,'2026-06-09 07:18:55','2026-06-09 07:18:55'),
+(325,55,8,'2026-06-09 07:20:03','2026-06-09 07:20:03'),
+(326,54,8,'2026-06-09 07:20:50','2026-06-09 07:20:50'),
+(327,46,8,'2026-06-09 07:21:19','2026-06-09 07:21:19'),
+(328,41,8,'2026-06-09 07:21:46','2026-06-09 07:21:46'),
+(329,40,8,'2026-06-09 07:22:09','2026-06-09 07:22:09'),
+(330,39,8,'2026-06-09 07:22:35','2026-06-09 07:22:35'),
+(331,38,8,'2026-06-09 07:22:58','2026-06-09 07:22:58'),
+(332,34,8,'2026-06-09 07:23:19','2026-06-09 07:23:19'),
+(333,45,10,'2026-06-09 07:24:49','2026-06-09 07:24:49'),
+(334,35,10,'2026-06-09 07:25:36','2026-06-09 07:25:36'),
+(335,45,14,'2026-06-09 07:27:02','2026-06-09 07:27:02');
+/*!40000 ALTER TABLE `karyawan_pangkalan` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `kategori_kinerja`
 --
 
+DROP TABLE IF EXISTS `kategori_kinerja`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `kategori_kinerja` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_kategori` varchar(20) NOT NULL,
   `kategori` varchar(255) NOT NULL,
   `jenis` enum('kinerja','kegiatan') NOT NULL DEFAULT 'kinerja',
   `is_wajib` tinyint(1) NOT NULL DEFAULT 0,
   `bobot` decimal(5,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kategori_kinerja_kode_kategori_unique` (`kode_kategori`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `kategori_kinerja`
 --
 
-INSERT INTO `kategori_kinerja` (`id`, `kode_kategori`, `kategori`, `jenis`, `is_wajib`, `bobot`, `created_at`, `updated_at`) VALUES
-(4, 'KTG-004', 'PRAMUKA', 'kegiatan', 1, 33.00, '2026-04-09 16:39:18', '2026-04-09 19:26:57'),
-(5, 'KTG-005', 'PONDOK', 'kegiatan', 1, 34.00, '2026-04-09 16:39:28', '2026-05-31 08:37:05'),
-(6, 'KTG-006', 'MASJID/MQ/DINIYAH', 'kegiatan', 1, 33.00, '2026-04-09 16:39:49', '2026-04-12 17:03:51'),
-(7, 'KTG-007', 'PUSTAKA', 'kegiatan', 0, 0.00, '2026-04-12 23:37:28', '2026-04-12 23:37:28'),
-(8, 'KTG-008', 'MADRASAH', 'kegiatan', 0, 0.00, '2026-04-12 23:37:44', '2026-04-12 23:37:44'),
-(9, 'KTG-009', 'KOPERASI/ TPKU/ TIRTA MULYA', 'kegiatan', 0, 0.00, '2026-04-12 23:37:56', '2026-04-12 23:37:56'),
-(10, 'KTG-010', 'LOGISTIK', 'kegiatan', 0, 0.00, '2026-04-12 23:38:10', '2026-04-12 23:38:10'),
-(14, 'KTG-011', 'Kedisiplinan', 'kinerja', 0, 0.00, '2026-04-13 00:48:19', '2026-04-13 00:48:19'),
-(15, 'KTG-012', 'Karakter', 'kinerja', 0, 0.00, '2026-04-13 00:48:29', '2026-04-13 00:48:29'),
-(16, 'KTG-013', 'Kompetensi', 'kinerja', 0, 0.00, '2026-04-13 00:48:41', '2026-04-13 00:48:41');
-
--- --------------------------------------------------------
+LOCK TABLES `kategori_kinerja` WRITE;
+/*!40000 ALTER TABLE `kategori_kinerja` DISABLE KEYS */;
+INSERT INTO `kategori_kinerja` VALUES
+(4,'KTG-004','Pramuka','kegiatan',1,33.00,'2026-04-09 16:39:18','2026-06-07 07:22:58'),
+(14,'KTG-011','Kedisiplinan','kinerja',0,0.00,'2026-04-13 00:48:19','2026-04-13 00:48:19'),
+(15,'KTG-012','Karakter','kinerja',0,0.00,'2026-04-13 00:48:29','2026-04-13 00:48:29'),
+(16,'KTG-013','Kompetensi','kinerja',0,0.00,'2026-04-13 00:48:41','2026-04-13 00:48:41'),
+(17,'KTG-014','Pengajian','kegiatan',1,0.00,'2026-06-07 07:22:42','2026-06-07 07:22:42'),
+(19,'KTG-016','Jamaah Shalat 5 Waktu','kegiatan',1,0.00,'2026-06-07 07:26:32','2026-06-07 09:49:49');
+/*!40000 ALTER TABLE `kategori_kinerja` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `kategori_kinerja_kompetensi`
 --
 
+DROP TABLE IF EXISTS `kategori_kinerja_kompetensi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `kategori_kinerja_kompetensi` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `kategori_kinerja_id` bigint(20) UNSIGNED NOT NULL,
-  `kompetensi_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `kategori_kinerja_id` bigint(20) unsigned NOT NULL,
+  `kompetensi_id` bigint(20) unsigned NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_kategori_kompetensi` (`kategori_kinerja_id`,`kompetensi_id`),
+  KEY `kategori_kinerja_kompetensi_kompetensi_id_foreign` (`kompetensi_id`),
+  CONSTRAINT `kategori_kinerja_kompetensi_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `kategori_kinerja_kompetensi_kompetensi_id_foreign` FOREIGN KEY (`kompetensi_id`) REFERENCES `kompetensi` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `kategori_kinerja_kompetensi`
 --
 
-INSERT INTO `kategori_kinerja_kompetensi` (`id`, `kategori_kinerja_id`, `kompetensi_id`, `created_at`, `updated_at`) VALUES
-(22, 4, 15, '2026-04-12 23:39:43', '2026-04-12 23:39:43'),
-(23, 5, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(24, 6, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(25, 7, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(26, 8, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(27, 9, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(28, 10, 15, '2026-04-12 23:40:03', '2026-04-12 23:40:03'),
-(29, 4, 16, '2026-04-12 23:40:21', '2026-04-12 23:40:21'),
-(30, 4, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(31, 5, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(32, 6, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(33, 7, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(34, 8, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(35, 9, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(36, 10, 17, '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(37, 4, 18, '2026-04-12 23:56:51', '2026-04-12 23:56:51'),
-(38, 4, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(39, 5, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(40, 6, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(41, 7, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(42, 8, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(43, 9, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(44, 10, 19, '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(45, 14, 20, '2026-04-13 01:00:02', '2026-04-13 01:00:02'),
-(46, 14, 21, '2026-04-13 01:00:13', '2026-04-13 01:00:13'),
-(47, 15, 22, '2026-04-13 01:00:27', '2026-04-13 01:00:27'),
-(48, 15, 23, '2026-04-13 01:00:40', '2026-04-13 01:00:40'),
-(49, 15, 24, '2026-04-13 01:00:51', '2026-04-13 01:00:51'),
-(50, 14, 25, '2026-04-13 01:01:00', '2026-04-13 01:01:00'),
-(51, 16, 26, '2026-04-13 01:01:11', '2026-04-13 01:01:11'),
-(52, 16, 27, '2026-04-13 01:01:21', '2026-04-13 01:01:21'),
-(53, 16, 28, '2026-04-13 01:01:29', '2026-04-13 01:01:29'),
-(54, 16, 29, '2026-04-13 01:01:40', '2026-04-13 01:01:40'),
-(55, 15, 29, '2026-05-31 08:34:45', '2026-05-31 08:34:45');
-
--- --------------------------------------------------------
+LOCK TABLES `kategori_kinerja_kompetensi` WRITE;
+/*!40000 ALTER TABLE `kategori_kinerja_kompetensi` DISABLE KEYS */;
+INSERT INTO `kategori_kinerja_kompetensi` VALUES
+(22,4,15,'2026-04-12 23:39:43','2026-04-12 23:39:43'),
+(29,4,16,'2026-04-12 23:40:21','2026-04-12 23:40:21'),
+(30,4,17,'2026-04-12 23:40:36','2026-04-12 23:40:36'),
+(37,4,18,'2026-04-12 23:56:51','2026-04-12 23:56:51'),
+(38,4,19,'2026-04-13 00:03:15','2026-04-13 00:03:15'),
+(45,14,20,'2026-04-13 01:00:02','2026-04-13 01:00:02'),
+(46,14,21,'2026-04-13 01:00:13','2026-04-13 01:00:13'),
+(47,15,22,'2026-04-13 01:00:27','2026-04-13 01:00:27'),
+(48,15,23,'2026-04-13 01:00:40','2026-04-13 01:00:40'),
+(49,15,24,'2026-04-13 01:00:51','2026-04-13 01:00:51'),
+(50,14,25,'2026-04-13 01:01:00','2026-04-13 01:01:00'),
+(51,16,26,'2026-04-13 01:01:11','2026-04-13 01:01:11'),
+(52,16,27,'2026-04-13 01:01:21','2026-04-13 01:01:21'),
+(53,16,28,'2026-04-13 01:01:29','2026-04-13 01:01:29'),
+(54,16,29,'2026-04-13 01:01:40','2026-04-13 01:01:40'),
+(55,15,29,'2026-05-31 08:34:45','2026-05-31 08:34:45'),
+(56,17,15,'2026-06-07 07:28:37','2026-06-07 07:28:37'),
+(57,19,15,'2026-06-07 07:28:37','2026-06-07 07:28:37'),
+(58,17,19,'2026-06-07 07:31:07','2026-06-07 07:31:07'),
+(59,19,19,'2026-06-07 07:31:07','2026-06-07 07:31:07');
+/*!40000 ALTER TABLE `kategori_kinerja_kompetensi` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `kepala_pangkalan`
 --
 
+DROP TABLE IF EXISTS `kepala_pangkalan`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `kepala_pangkalan` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `pangkalan_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `pangkalan_id` bigint(20) unsigned NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kepala_pangkalan_user_id_pangkalan_id_unique` (`user_id`,`pangkalan_id`),
+  KEY `kepala_pangkalan_pangkalan_id_foreign` (`pangkalan_id`),
+  CONSTRAINT `kepala_pangkalan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `kepala_pangkalan_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `kepala_pangkalan`
 --
 
-INSERT INTO `kepala_pangkalan` (`id`, `user_id`, `pangkalan_id`, `created_at`, `updated_at`) VALUES
-(1, 4, 1, '2026-06-04 17:26:47', '2026-06-04 17:26:47'),
-(2, 32, 2, '2026-06-04 17:27:10', '2026-06-04 17:27:10'),
-(3, 37, 4, '2026-06-04 17:28:19', '2026-06-04 17:28:19'),
-(4, 33, 9, '2026-06-04 17:28:35', '2026-06-04 17:28:35'),
-(5, 39, 7, '2026-06-04 17:28:52', '2026-06-04 17:28:52'),
-(6, 38, 5, '2026-06-04 17:29:13', '2026-06-04 17:29:13'),
-(7, 32, 10, '2026-06-04 17:30:05', '2026-06-04 17:30:05'),
-(8, 34, 11, '2026-06-04 17:32:51', '2026-06-04 17:32:51'),
-(9, 36, 12, '2026-06-04 17:33:04', '2026-06-04 17:33:04'),
-(11, 33, 8, '2026-06-05 08:58:52', '2026-06-05 08:58:52'),
-(12, 32, 14, '2026-06-06 05:06:43', '2026-06-06 05:06:43'),
-(13, 40, 3, '2026-06-06 05:29:58', '2026-06-06 05:29:58'),
-(14, 41, 6, '2026-06-06 06:11:20', '2026-06-06 06:11:20'),
-(15, 39, 13, '2026-06-06 07:36:11', '2026-06-06 07:36:11'),
-(16, 36, 16, '2026-06-06 07:53:01', '2026-06-06 07:53:01');
-
--- --------------------------------------------------------
+LOCK TABLES `kepala_pangkalan` WRITE;
+/*!40000 ALTER TABLE `kepala_pangkalan` DISABLE KEYS */;
+INSERT INTO `kepala_pangkalan` VALUES
+(1,4,1,'2026-06-04 17:26:47','2026-06-04 17:26:47'),
+(2,32,2,'2026-06-04 17:27:10','2026-06-04 17:27:10'),
+(3,37,4,'2026-06-04 17:28:19','2026-06-04 17:28:19'),
+(4,33,9,'2026-06-04 17:28:35','2026-06-04 17:28:35'),
+(5,39,7,'2026-06-04 17:28:52','2026-06-04 17:28:52'),
+(6,38,5,'2026-06-04 17:29:13','2026-06-04 17:29:13'),
+(7,32,10,'2026-06-04 17:30:05','2026-06-04 17:30:05'),
+(8,34,11,'2026-06-04 17:32:51','2026-06-04 17:32:51'),
+(9,36,12,'2026-06-04 17:33:04','2026-06-04 17:33:04'),
+(11,33,8,'2026-06-05 08:58:52','2026-06-05 08:58:52'),
+(12,32,14,'2026-06-06 05:06:43','2026-06-06 05:06:43'),
+(13,40,3,'2026-06-06 05:29:58','2026-06-06 05:29:58'),
+(14,41,6,'2026-06-06 06:11:20','2026-06-06 06:11:20'),
+(15,39,13,'2026-06-06 07:36:11','2026-06-06 07:36:11'),
+(16,36,16,'2026-06-06 07:53:01','2026-06-06 07:53:01'),
+(17,42,17,'2026-06-07 09:53:20','2026-06-07 09:53:20');
+/*!40000 ALTER TABLE `kepala_pangkalan` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `kompetensi`
 --
 
+DROP TABLE IF EXISTS `kompetensi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `kompetensi` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_kompetensi` varchar(20) NOT NULL,
-  `kategori_kinerja_id` bigint(20) UNSIGNED NOT NULL,
+  `kategori_kinerja_id` bigint(20) unsigned NOT NULL,
   `kompetensi` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kompetensi_kode_kompetensi_unique` (`kode_kompetensi`),
+  KEY `kompetensi_kategori_kinerja_id_foreign` (`kategori_kinerja_id`),
+  CONSTRAINT `kompetensi_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `kompetensi`
 --
 
-INSERT INTO `kompetensi` (`id`, `kode_kompetensi`, `kategori_kinerja_id`, `kompetensi`, `created_at`, `updated_at`) VALUES
-(15, 'KMP-001', 4, 'Kehadiran', '2026-04-12 23:39:43', '2026-04-12 23:39:43'),
-(16, 'KMP-002', 4, 'Kepemimpinan', '2026-04-12 23:40:21', '2026-04-12 23:40:21'),
-(17, 'KMP-003', 4, 'Kompetensi', '2026-04-12 23:40:36', '2026-04-12 23:40:36'),
-(18, 'KMP-004', 4, 'Karakter', '2026-04-12 23:56:51', '2026-04-12 23:56:51'),
-(19, 'KMP-005', 4, 'Kedisiplinan', '2026-04-13 00:03:15', '2026-04-13 00:03:15'),
-(20, 'KMP-006', 14, 'Tepat Waktu', '2026-04-13 01:00:02', '2026-04-13 01:00:02'),
-(21, 'KMP-007', 14, 'Penggunaan Waktu', '2026-04-13 01:00:13', '2026-04-13 01:00:13'),
-(22, 'KMP-008', 15, 'Kepatuhan', '2026-04-13 01:00:27', '2026-04-13 01:00:27'),
-(23, 'KMP-009', 15, 'Loyalitas', '2026-04-13 01:00:40', '2026-04-13 01:00:40'),
-(24, 'KMP-010', 15, 'Leadership', '2026-04-13 01:00:51', '2026-04-13 01:00:51'),
-(25, 'KMP-011', 14, 'Tanggung-jawab', '2026-04-13 01:01:00', '2026-04-13 01:01:00'),
-(26, 'KMP-012', 16, 'Inisiatif', '2026-04-13 01:01:11', '2026-04-13 01:01:11'),
-(27, 'KMP-013', 16, 'Adaptasi', '2026-04-13 01:01:21', '2026-04-13 01:01:21'),
-(28, 'KMP-014', 16, 'Pemecahan Masalah', '2026-04-13 01:01:29', '2026-04-13 01:01:29'),
-(29, 'KMP-015', 15, 'Pengambilan Keputusan', '2026-04-13 01:01:40', '2026-05-31 08:34:45');
-
--- --------------------------------------------------------
+LOCK TABLES `kompetensi` WRITE;
+/*!40000 ALTER TABLE `kompetensi` DISABLE KEYS */;
+INSERT INTO `kompetensi` VALUES
+(15,'KMP-001',4,'Kehadiran','2026-04-12 23:39:43','2026-04-12 23:39:43'),
+(16,'KMP-002',4,'Kepemimpinan','2026-04-12 23:40:21','2026-04-12 23:40:21'),
+(17,'KMP-003',4,'Kompetensi','2026-04-12 23:40:36','2026-04-12 23:40:36'),
+(18,'KMP-004',4,'Karakter','2026-04-12 23:56:51','2026-04-12 23:56:51'),
+(19,'KMP-005',4,'Kedisiplinan','2026-04-13 00:03:15','2026-04-13 00:03:15'),
+(20,'KMP-006',14,'Tepat Waktu','2026-04-13 01:00:02','2026-04-13 01:00:02'),
+(21,'KMP-007',14,'Penggunaan Waktu','2026-04-13 01:00:13','2026-04-13 01:00:13'),
+(22,'KMP-008',15,'Kepatuhan','2026-04-13 01:00:27','2026-04-13 01:00:27'),
+(23,'KMP-009',15,'Loyalitas','2026-04-13 01:00:40','2026-04-13 01:00:40'),
+(24,'KMP-010',15,'Leadership','2026-04-13 01:00:51','2026-04-13 01:00:51'),
+(25,'KMP-011',14,'Tanggung-jawab','2026-04-13 01:01:00','2026-04-13 01:01:00'),
+(26,'KMP-012',16,'Inisiatif','2026-04-13 01:01:11','2026-04-13 01:01:11'),
+(27,'KMP-013',16,'Adaptasi','2026-04-13 01:01:21','2026-04-13 01:01:21'),
+(28,'KMP-014',16,'Pemecahan Masalah','2026-04-13 01:01:29','2026-04-13 01:01:29'),
+(29,'KMP-015',15,'Pengambilan Keputusan','2026-04-13 01:01:40','2026-05-31 08:34:45');
+/*!40000 ALTER TABLE `kompetensi` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `migrations`
 --
 
+DROP TABLE IF EXISTS `migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `migrations` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) NOT NULL,
-  `batch` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `migrations`
 --
 
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
-(1, '0001_01_01_000000_create_users_table', 1),
-(2, '0001_01_01_000001_create_cache_table', 1),
-(3, '0001_01_01_000002_create_jobs_table', 1),
-(4, '2026_02_26_235503_create_kategori_kinerja_table', 1),
-(5, '2026_02_26_235503_create_tahun_penilaian_table', 1),
-(6, '2026_02_26_235504_create_kompetensi_table', 1),
-(7, '2026_02_26_235504_create_performance_rating_table', 1),
-(8, '2026_02_26_235505_create_karyawan_table', 1),
-(9, '2026_02_27_003552_create_mutasi_table', 1),
-(10, '2026_02_27_003553_create_transaksi_table', 1),
-(11, '2026_02_27_010311_add_user_id_to_karyawan_table', 1),
-(12, '2026_02_27_013207_create_pangkalan_table', 1),
-(13, '2026_02_27_013208_add_pangkalan_tugas_to_karyawan_table', 1),
-(14, '2026_04_09_100001_add_uac_fields_to_users_table', 2),
-(15, '2026_04_09_100002_add_foto_to_karyawan_table', 2),
-(16, '2026_04_09_100003_add_jenis_to_kategori_kinerja_table', 2),
-(17, '2026_04_09_100004_create_setting_lembaga_table', 2),
-(18, '2026_04_09_100005_create_penilaian_locks_table', 2),
-(19, '2026_04_09_100006_create_penilaian_unlock_requests_table', 2),
-(20, '2026_04_10_090001_add_is_active_to_karyawan_table', 3),
-(21, '2026_04_10_090002_add_kepala_level_to_users_table', 3),
-(22, '2026_04_10_090003_add_lokasi_surat_to_setting_lembaga_table', 3),
-(23, '2026_04_10_120001_remove_kepala_level_from_users_table', 4),
-(24, '2026_04_10_130001_create_kategori_kinerja_kompetensi_table', 5),
-(25, '2026_04_10_140001_add_is_wajib_and_karyawan_pangkalan_table', 6),
-(26, '2026_04_10_160001_add_laporan_format_fields_to_setting_lembaga_table', 7),
-(27, '2026_04_10_170001_add_laporan_layout_settings_to_setting_lembaga_table', 8),
-(28, '2026_04_10_180001_add_laporan_column_labels_order_and_scoring_to_setting_lembaga_table', 9),
-(29, '2026_04_13_090001_add_sidebar_fields_to_setting_lembaga_table', 10),
-(30, '2026_04_13_100002_add_profile_fields_to_karyawan_table', 11),
-(31, '2026_04_13_120001_add_kop_contact_fields_to_setting_lembaga_table', 12),
-(32, '2026_04_13_130001_add_sidebar_visibility_fields_to_setting_lembaga_table', 13),
-(33, '2026_04_13_130002_add_is_wajib_to_kategori_kinerja_table', 13),
-(34, '2026_04_13_150003_create_pangkalan_kategori_kinerja_table', 14),
-(35, '2026_04_27_120001_add_laporan_jenis_weight_fields_to_setting_lembaga_table', 15),
-(36, '2026_06_04_100001_create_kepala_pangkalan_table', 16),
-(37, '2026_06_04_100002_create_karyawan_pangkalan_table', 17),
-(38, '2026_06_04_200001_add_contact_fields_to_karyawan_table', 18),
-(39, '2026_06_05_100001_add_is_active_to_pangkalan_table', 19),
-(40, '2026_06_05_100002_add_kepala_user_id_to_pangkalan_table', 20),
-(41, '2026_06_05_100003_add_pangkalan_id_to_transaksi_table', 21);
-
--- --------------------------------------------------------
+LOCK TABLES `migrations` WRITE;
+/*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
+INSERT INTO `migrations` VALUES
+(1,'0001_01_01_000000_create_users_table',1),
+(2,'0001_01_01_000001_create_cache_table',1),
+(3,'0001_01_01_000002_create_jobs_table',1),
+(4,'2026_02_26_235503_create_kategori_kinerja_table',1),
+(5,'2026_02_26_235503_create_tahun_penilaian_table',1),
+(6,'2026_02_26_235504_create_kompetensi_table',1),
+(7,'2026_02_26_235504_create_performance_rating_table',1),
+(8,'2026_02_26_235505_create_karyawan_table',1),
+(9,'2026_02_27_003552_create_mutasi_table',1),
+(10,'2026_02_27_003553_create_transaksi_table',1),
+(11,'2026_02_27_010311_add_user_id_to_karyawan_table',1),
+(12,'2026_02_27_013207_create_pangkalan_table',1),
+(13,'2026_02_27_013208_add_pangkalan_tugas_to_karyawan_table',1),
+(14,'2026_04_09_100001_add_uac_fields_to_users_table',2),
+(15,'2026_04_09_100002_add_foto_to_karyawan_table',2),
+(16,'2026_04_09_100003_add_jenis_to_kategori_kinerja_table',2),
+(17,'2026_04_09_100004_create_setting_lembaga_table',2),
+(18,'2026_04_09_100005_create_penilaian_locks_table',2),
+(19,'2026_04_09_100006_create_penilaian_unlock_requests_table',2),
+(20,'2026_04_10_090001_add_is_active_to_karyawan_table',3),
+(21,'2026_04_10_090002_add_kepala_level_to_users_table',3),
+(22,'2026_04_10_090003_add_lokasi_surat_to_setting_lembaga_table',3),
+(23,'2026_04_10_120001_remove_kepala_level_from_users_table',4),
+(24,'2026_04_10_130001_create_kategori_kinerja_kompetensi_table',5),
+(25,'2026_04_10_140001_add_is_wajib_and_karyawan_pangkalan_table',6),
+(26,'2026_04_10_160001_add_laporan_format_fields_to_setting_lembaga_table',7),
+(27,'2026_04_10_170001_add_laporan_layout_settings_to_setting_lembaga_table',8),
+(28,'2026_04_10_180001_add_laporan_column_labels_order_and_scoring_to_setting_lembaga_table',9),
+(29,'2026_04_13_090001_add_sidebar_fields_to_setting_lembaga_table',10),
+(30,'2026_04_13_100002_add_profile_fields_to_karyawan_table',11),
+(31,'2026_04_13_120001_add_kop_contact_fields_to_setting_lembaga_table',12),
+(32,'2026_04_13_130001_add_sidebar_visibility_fields_to_setting_lembaga_table',13),
+(33,'2026_04_13_130002_add_is_wajib_to_kategori_kinerja_table',13),
+(34,'2026_04_13_150003_create_pangkalan_kategori_kinerja_table',14),
+(35,'2026_04_27_120001_add_laporan_jenis_weight_fields_to_setting_lembaga_table',15),
+(36,'2026_06_04_100001_create_kepala_pangkalan_table',16),
+(37,'2026_06_04_100002_create_karyawan_pangkalan_table',17),
+(38,'2026_06_04_200001_add_contact_fields_to_karyawan_table',18),
+(39,'2026_06_05_100001_add_is_active_to_pangkalan_table',19),
+(40,'2026_06_05_100002_add_kepala_user_id_to_pangkalan_table',20),
+(41,'2026_06_05_100003_add_pangkalan_id_to_transaksi_table',21),
+(42,'2026_06_07_100001_add_tata_usaha_role_to_users_table',22),
+(43,'2026_06_07_100002_create_reward_punishment_table',22),
+(44,'2026_06_07_200001_add_penanggung_jawab_to_pangkalan_kategori_kinerja_table',23),
+(45,'2026_06_08_100001_add_kategori_kinerja_id_to_transaksi_table',24);
+/*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `mutasi`
 --
 
+DROP TABLE IF EXISTS `mutasi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mutasi` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_mutasi` varchar(20) NOT NULL,
-  `karyawan_id` bigint(20) UNSIGNED NOT NULL,
-  `tahun_penilaian_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `karyawan_id` bigint(20) unsigned NOT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned DEFAULT NULL,
   `jenis_mutasi` varchar(255) NOT NULL DEFAULT 'pindah',
   `keterangan` text DEFAULT NULL,
   `tanggal_mutasi` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `mutasi_kode_mutasi_unique` (`kode_mutasi`),
+  KEY `mutasi_karyawan_id_foreign` (`karyawan_id`),
+  KEY `mutasi_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  CONSTRAINT `mutasi_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `mutasi_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `mutasi`
+--
+
+LOCK TABLES `mutasi` WRITE;
+/*!40000 ALTER TABLE `mutasi` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mutasi` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `pangkalan`
 --
 
+DROP TABLE IF EXISTS `pangkalan`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pangkalan` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_pangkalan` varchar(20) NOT NULL,
   `nama_pangkalan` varchar(255) NOT NULL,
   `is_wajib` tinyint(1) NOT NULL DEFAULT 0,
   `pimpinan_pos` varchar(255) DEFAULT NULL,
   `keterangan` text DEFAULT NULL,
-  `kepala_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `kepala_user_id` bigint(20) unsigned DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pangkalan_kode_pangkalan_unique` (`kode_pangkalan`),
+  KEY `pangkalan_kepala_user_id_foreign` (`kepala_user_id`),
+  CONSTRAINT `pangkalan_kepala_user_id_foreign` FOREIGN KEY (`kepala_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `pangkalan`
 --
 
-INSERT INTO `pangkalan` (`id`, `kode_pangkalan`, `nama_pangkalan`, `is_wajib`, `pimpinan_pos`, `keterangan`, `kepala_user_id`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'PNG-001', 'MA AL-HUDA AL-ILAHIYAH', 0, 'FATHUL MU\'IN, S.Pd.', NULL, 4, 1, '2026-02-27 00:30:48', '2026-06-04 17:26:47'),
-(2, 'PNG-002', 'MTs AL-HUDA AL-ILAHIYAH', 0, 'Drs. H. Anas, M.Pd', NULL, 32, 1, '2026-02-27 00:30:48', '2026-06-04 17:27:10'),
-(3, 'PNG-003', 'MI AL-HUDA AL-ILAHIYAH', 0, 'SUJITHO, S.Pd.SD', NULL, 40, 1, '2026-02-27 00:30:48', '2026-06-06 05:29:58'),
-(4, 'PNG-004', 'RA AL-HUDA AL-ILAHIYAH', 0, 'BANDIYAH', NULL, 37, 1, '2026-02-27 00:30:48', '2026-06-04 17:28:19'),
-(5, 'PNG-005', 'PAUD DASARI BUDI', 0, 'SITI JUARIAH', NULL, 38, 1, '2026-02-27 00:30:48', '2026-06-04 17:29:12'),
-(6, 'PNG-006', 'MDTA AL-HUDA AL-ILAHIYAH', 0, 'NUR MAKMUROH', NULL, 41, 1, '2026-02-27 00:30:48', '2026-06-06 06:11:20'),
-(7, 'PNG-007', 'PENGURUS PONPES PA', 0, 'MISRUN', NULL, 39, 1, '2026-02-27 00:30:48', '2026-06-04 17:28:52'),
-(8, 'PNG-008', 'PENGURUS PONPES PI', 0, 'NINA MARLINA, S.Pd.', NULL, 33, 1, '2026-02-27 00:30:48', '2026-06-05 08:58:52'),
-(9, 'PNG-009', 'KOPERASI PONTREN', 0, 'Nina Marlina, S.Pd, M.E', NULL, 33, 1, '2026-02-27 00:30:48', '2026-06-04 17:28:35'),
-(10, 'PNG-010', 'KEMASJIDAN', 1, 'Drs. ANAS', NULL, 32, 1, '2026-02-27 00:30:48', '2026-06-04 17:30:05'),
-(11, 'PNG-011', 'DEPOT AIR, TAMAN, LOGISTIK', 0, 'Rahmat Budi Permana, S.Pd., M.E', NULL, 34, 1, '2026-02-27 00:30:48', '2026-06-04 17:32:51'),
-(12, 'PNG-012', 'PERPUSTAKAAN', 0, 'MUH. HARUN, S.H.I., M.Sos', NULL, 36, 1, '2026-02-27 00:30:48', '2026-06-04 17:33:04'),
-(13, 'PNG-013', 'PRAMUKA', 1, 'FATHUL MU\'IN, S.Pd.', NULL, 39, 1, '2026-02-27 00:30:48', '2026-06-06 07:36:11'),
-(14, 'PNG-014', 'MADRASAH QUR\'AN (MQ)', 0, NULL, NULL, 32, 1, '2026-06-05 00:34:51', '2026-06-06 05:06:43'),
-(16, 'PNG-015', 'PENGAJIAN', 0, NULL, 'Kegiatan Pengajian Khusus Alumni', 36, 1, '2026-06-06 07:53:00', '2026-06-06 07:53:00');
-
--- --------------------------------------------------------
+LOCK TABLES `pangkalan` WRITE;
+/*!40000 ALTER TABLE `pangkalan` DISABLE KEYS */;
+INSERT INTO `pangkalan` VALUES
+(1,'PNG-001','MA AL-HUDA AL-ILAHIYAH',0,'FATHUL MU\'IN, S.Pd.',NULL,4,1,'2026-02-27 00:30:48','2026-06-04 17:26:47'),
+(2,'PNG-002','MTs AL-HUDA AL-ILAHIYAH',0,'Drs. H. Anas, M.Pd',NULL,32,1,'2026-02-27 00:30:48','2026-06-04 17:27:10'),
+(3,'PNG-003','MI AL-HUDA AL-ILAHIYAH',0,'SUJITHO, S.Pd.SD',NULL,40,1,'2026-02-27 00:30:48','2026-06-06 05:29:58'),
+(4,'PNG-004','RA AL-HUDA AL-ILAHIYAH',0,'BANDIYAH',NULL,37,1,'2026-02-27 00:30:48','2026-06-04 17:28:19'),
+(5,'PNG-005','PAUD DASARI BUDI',0,'SITI JUARIAH',NULL,38,1,'2026-02-27 00:30:48','2026-06-04 17:29:12'),
+(6,'PNG-006','MDTA AL-HUDA AL-ILAHIYAH',0,'NUR MAKMUROH',NULL,41,1,'2026-02-27 00:30:48','2026-06-06 06:11:20'),
+(7,'PNG-007','PENGURUS PONPES PA',0,'MISRUN',NULL,39,1,'2026-02-27 00:30:48','2026-06-04 17:28:52'),
+(8,'PNG-008','PENGURUS PONPES PI',0,'NINA MARLINA, S.Pd.',NULL,33,1,'2026-02-27 00:30:48','2026-06-05 08:58:52'),
+(9,'PNG-009','KOPERASI PONTREN',0,'Nina Marlina, S.Pd, M.E',NULL,33,1,'2026-02-27 00:30:48','2026-06-04 17:28:35'),
+(10,'PNG-010','KEMASJIDAN',0,NULL,NULL,32,1,'2026-02-27 00:30:48','2026-06-07 09:49:28'),
+(11,'PNG-011','DEPOT AIR, TAMAN, LOGISTIK',0,'Rahmat Budi Permana, S.Pd., M.E',NULL,34,1,'2026-02-27 00:30:48','2026-06-04 17:32:51'),
+(12,'PNG-012','PERPUSTAKAAN',0,'MUH. HARUN, S.H.I., M.Sos',NULL,36,1,'2026-02-27 00:30:48','2026-06-04 17:33:04'),
+(13,'PNG-013','PRAMUKA',1,NULL,NULL,39,1,'2026-02-27 00:30:48','2026-06-07 10:03:57'),
+(14,'PNG-014','MADRASAH QUR\'AN (MQ)',0,NULL,NULL,32,1,'2026-06-05 00:34:51','2026-06-06 05:06:43'),
+(16,'PNG-015','PENGAJIAN',1,NULL,'Kegiatan Pengajian Khusus Alumni',36,1,'2026-06-06 07:53:00','2026-06-07 09:34:45'),
+(17,'PNG-016','Jamaah Shalat',1,NULL,'Kegiatan Jamaah Shalat',42,1,'2026-06-07 09:53:20','2026-06-07 09:53:20');
+/*!40000 ALTER TABLE `pangkalan` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `pangkalan_kategori_kinerja`
 --
 
+DROP TABLE IF EXISTS `pangkalan_kategori_kinerja`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pangkalan_kategori_kinerja` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `pangkalan_id` bigint(20) UNSIGNED NOT NULL,
-  `kategori_kinerja_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `pangkalan_id` bigint(20) unsigned NOT NULL,
+  `kategori_kinerja_id` bigint(20) unsigned NOT NULL,
+  `penanggung_jawab_user_id` bigint(20) unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pangkalan_kategori_unique` (`pangkalan_id`,`kategori_kinerja_id`),
+  KEY `pangkalan_kategori_kinerja_kategori_kinerja_id_foreign` (`kategori_kinerja_id`),
+  KEY `pangkalan_kategori_kinerja_penanggung_jawab_user_id_foreign` (`penanggung_jawab_user_id`),
+  CONSTRAINT `pangkalan_kategori_kinerja_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pangkalan_kategori_kinerja_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `pangkalan_kategori_kinerja_penanggung_jawab_user_id_foreign` FOREIGN KEY (`penanggung_jawab_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `pangkalan_kategori_kinerja`
 --
 
-INSERT INTO `pangkalan_kategori_kinerja` (`id`, `pangkalan_id`, `kategori_kinerja_id`, `created_at`, `updated_at`) VALUES
-(1, 1, 14, '2026-04-13 01:19:58', '2026-04-13 01:19:58'),
-(2, 1, 15, '2026-04-13 01:19:58', '2026-04-13 01:19:58'),
-(3, 1, 16, '2026-04-13 01:19:58', '2026-04-13 01:19:58'),
-(4, 2, 14, '2026-04-13 01:20:05', '2026-04-13 01:20:05'),
-(5, 2, 15, '2026-04-13 01:20:05', '2026-04-13 01:20:05'),
-(6, 2, 16, '2026-04-13 01:20:05', '2026-04-13 01:20:05'),
-(7, 3, 14, '2026-04-13 01:20:11', '2026-04-13 01:20:11'),
-(8, 3, 15, '2026-04-13 01:20:11', '2026-04-13 01:20:11'),
-(9, 3, 16, '2026-04-13 01:20:11', '2026-04-13 01:20:11'),
-(10, 10, 14, '2026-04-13 01:20:18', '2026-04-13 01:20:18'),
-(11, 10, 15, '2026-04-13 01:20:18', '2026-04-13 01:20:18'),
-(12, 10, 16, '2026-04-13 01:20:18', '2026-04-13 01:20:18'),
-(13, 8, 14, '2026-04-13 01:20:24', '2026-04-13 01:20:24'),
-(14, 8, 15, '2026-04-13 01:20:24', '2026-04-13 01:20:24'),
-(15, 8, 16, '2026-04-13 01:20:24', '2026-04-13 01:20:24'),
-(16, 7, 14, '2026-04-13 01:20:30', '2026-04-13 01:20:30'),
-(17, 7, 15, '2026-04-13 01:20:30', '2026-04-13 01:20:30'),
-(18, 7, 16, '2026-04-13 01:20:30', '2026-04-13 01:20:30'),
-(19, 6, 14, '2026-04-13 01:20:35', '2026-04-13 01:20:35'),
-(20, 6, 15, '2026-04-13 01:20:35', '2026-04-13 01:20:35'),
-(21, 6, 16, '2026-04-13 01:20:35', '2026-04-13 01:20:35'),
-(22, 5, 14, '2026-04-13 01:20:41', '2026-04-13 01:20:41'),
-(23, 5, 15, '2026-04-13 01:20:41', '2026-04-13 01:20:41'),
-(24, 5, 16, '2026-04-13 01:20:41', '2026-04-13 01:20:41'),
-(25, 4, 14, '2026-04-13 01:20:46', '2026-04-13 01:20:46'),
-(26, 4, 15, '2026-04-13 01:20:46', '2026-04-13 01:20:46'),
-(27, 4, 16, '2026-04-13 01:20:46', '2026-04-13 01:20:46'),
-(28, 9, 14, '2026-04-13 01:20:52', '2026-04-13 01:20:52'),
-(29, 9, 15, '2026-04-13 01:20:52', '2026-04-13 01:20:52'),
-(30, 9, 16, '2026-04-13 01:20:52', '2026-04-13 01:20:52'),
-(31, 13, 14, '2026-04-13 01:20:59', '2026-04-13 01:20:59'),
-(32, 13, 15, '2026-04-13 01:20:59', '2026-04-13 01:20:59'),
-(33, 13, 16, '2026-04-13 01:20:59', '2026-04-13 01:20:59'),
-(34, 12, 14, '2026-04-13 01:21:06', '2026-04-13 01:21:06'),
-(35, 12, 15, '2026-04-13 01:21:06', '2026-04-13 01:21:06'),
-(36, 12, 16, '2026-04-13 01:21:06', '2026-04-13 01:21:06'),
-(37, 11, 14, '2026-04-13 01:21:20', '2026-04-13 01:21:20'),
-(38, 11, 15, '2026-04-13 01:21:20', '2026-04-13 01:21:20'),
-(39, 11, 16, '2026-04-13 01:21:20', '2026-04-13 01:21:20'),
-(40, 14, 14, '2026-06-05 00:34:51', '2026-06-05 00:34:51'),
-(41, 14, 15, '2026-06-05 00:34:51', '2026-06-05 00:34:51'),
-(42, 14, 16, '2026-06-05 00:34:51', '2026-06-05 00:34:51'),
-(46, 16, 14, '2026-06-06 07:53:00', '2026-06-06 07:53:00'),
-(47, 16, 15, '2026-06-06 07:53:00', '2026-06-06 07:53:00'),
-(48, 16, 16, '2026-06-06 07:53:00', '2026-06-06 07:53:00');
-
--- --------------------------------------------------------
+LOCK TABLES `pangkalan_kategori_kinerja` WRITE;
+/*!40000 ALTER TABLE `pangkalan_kategori_kinerja` DISABLE KEYS */;
+INSERT INTO `pangkalan_kategori_kinerja` VALUES
+(1,1,14,NULL,'2026-04-13 01:19:58','2026-04-13 01:19:58'),
+(2,1,15,NULL,'2026-04-13 01:19:58','2026-04-13 01:19:58'),
+(3,1,16,NULL,'2026-04-13 01:19:58','2026-04-13 01:19:58'),
+(4,2,14,NULL,'2026-04-13 01:20:05','2026-04-13 01:20:05'),
+(5,2,15,NULL,'2026-04-13 01:20:05','2026-04-13 01:20:05'),
+(6,2,16,NULL,'2026-04-13 01:20:05','2026-04-13 01:20:05'),
+(7,3,14,NULL,'2026-04-13 01:20:11','2026-04-13 01:20:11'),
+(8,3,15,NULL,'2026-04-13 01:20:11','2026-04-13 01:20:11'),
+(9,3,16,NULL,'2026-04-13 01:20:11','2026-04-13 01:20:11'),
+(10,10,14,NULL,'2026-04-13 01:20:18','2026-04-13 01:20:18'),
+(11,10,15,NULL,'2026-04-13 01:20:18','2026-04-13 01:20:18'),
+(12,10,16,NULL,'2026-04-13 01:20:18','2026-04-13 01:20:18'),
+(13,8,14,NULL,'2026-04-13 01:20:24','2026-04-13 01:20:24'),
+(14,8,15,NULL,'2026-04-13 01:20:24','2026-04-13 01:20:24'),
+(15,8,16,NULL,'2026-04-13 01:20:24','2026-04-13 01:20:24'),
+(16,7,14,NULL,'2026-04-13 01:20:30','2026-04-13 01:20:30'),
+(17,7,15,NULL,'2026-04-13 01:20:30','2026-04-13 01:20:30'),
+(18,7,16,NULL,'2026-04-13 01:20:30','2026-04-13 01:20:30'),
+(19,6,14,NULL,'2026-04-13 01:20:35','2026-04-13 01:20:35'),
+(20,6,15,NULL,'2026-04-13 01:20:35','2026-04-13 01:20:35'),
+(21,6,16,NULL,'2026-04-13 01:20:35','2026-04-13 01:20:35'),
+(22,5,14,NULL,'2026-04-13 01:20:41','2026-04-13 01:20:41'),
+(23,5,15,NULL,'2026-04-13 01:20:41','2026-04-13 01:20:41'),
+(24,5,16,NULL,'2026-04-13 01:20:41','2026-04-13 01:20:41'),
+(25,4,14,NULL,'2026-04-13 01:20:46','2026-04-13 01:20:46'),
+(26,4,15,NULL,'2026-04-13 01:20:46','2026-04-13 01:20:46'),
+(27,4,16,NULL,'2026-04-13 01:20:46','2026-04-13 01:20:46'),
+(28,9,14,NULL,'2026-04-13 01:20:52','2026-04-13 01:20:52'),
+(29,9,15,NULL,'2026-04-13 01:20:52','2026-04-13 01:20:52'),
+(30,9,16,NULL,'2026-04-13 01:20:52','2026-04-13 01:20:52'),
+(34,12,14,NULL,'2026-04-13 01:21:06','2026-04-13 01:21:06'),
+(35,12,15,NULL,'2026-04-13 01:21:06','2026-04-13 01:21:06'),
+(36,12,16,NULL,'2026-04-13 01:21:06','2026-04-13 01:21:06'),
+(37,11,14,NULL,'2026-04-13 01:21:20','2026-04-13 01:21:20'),
+(38,11,15,NULL,'2026-04-13 01:21:20','2026-04-13 01:21:20'),
+(39,11,16,NULL,'2026-04-13 01:21:20','2026-04-13 01:21:20'),
+(40,14,14,NULL,'2026-06-05 00:34:51','2026-06-05 00:34:51'),
+(41,14,15,NULL,'2026-06-05 00:34:51','2026-06-05 00:34:51'),
+(42,14,16,NULL,'2026-06-05 00:34:51','2026-06-05 00:34:51'),
+(49,16,17,NULL,'2026-06-07 08:48:36','2026-06-07 08:48:36'),
+(50,13,4,NULL,'2026-06-07 08:50:12','2026-06-07 08:50:12'),
+(51,17,19,NULL,'2026-06-07 09:53:20','2026-06-07 09:53:20');
+/*!40000 ALTER TABLE `pangkalan_kategori_kinerja` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `password_reset_tokens`
 --
 
+DROP TABLE IF EXISTS `password_reset_tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `password_reset_tokens`
+--
+
+LOCK TABLES `password_reset_tokens` WRITE;
+/*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
+/*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `penilaian_locks`
 --
 
+DROP TABLE IF EXISTS `penilaian_locks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `penilaian_locks` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `karyawan_id` bigint(20) UNSIGNED NOT NULL,
-  `tahun_penilaian_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `karyawan_id` bigint(20) unsigned NOT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned NOT NULL,
   `is_final_submitted` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `submitted_by_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `submitted_by_user_id` bigint(20) unsigned DEFAULT NULL,
   `submitted_at` timestamp NULL DEFAULT NULL,
-  `locked_by_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `locked_by_user_id` bigint(20) unsigned DEFAULT NULL,
   `locked_at` timestamp NULL DEFAULT NULL,
-  `unlocked_by_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `unlocked_by_user_id` bigint(20) unsigned DEFAULT NULL,
   `unlocked_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `penilaian_locks_karyawan_id_tahun_penilaian_id_unique` (`karyawan_id`,`tahun_penilaian_id`),
+  KEY `penilaian_locks_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  KEY `penilaian_locks_submitted_by_user_id_foreign` (`submitted_by_user_id`),
+  KEY `penilaian_locks_locked_by_user_id_foreign` (`locked_by_user_id`),
+  KEY `penilaian_locks_unlocked_by_user_id_foreign` (`unlocked_by_user_id`),
+  CONSTRAINT `penilaian_locks_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `penilaian_locks_locked_by_user_id_foreign` FOREIGN KEY (`locked_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `penilaian_locks_submitted_by_user_id_foreign` FOREIGN KEY (`submitted_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `penilaian_locks_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `penilaian_locks_unlocked_by_user_id_foreign` FOREIGN KEY (`unlocked_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `penilaian_locks`
 --
 
-INSERT INTO `penilaian_locks` (`id`, `karyawan_id`, `tahun_penilaian_id`, `is_final_submitted`, `is_locked`, `submitted_by_user_id`, `submitted_at`, `locked_by_user_id`, `locked_at`, `unlocked_by_user_id`, `unlocked_at`, `created_at`, `updated_at`) VALUES
-(2, 32, 2, 0, 0, NULL, NULL, 1, '2026-05-31 08:55:36', 1, '2026-05-31 08:56:20', '2026-05-31 08:55:13', '2026-05-31 08:56:20');
-
--- --------------------------------------------------------
+LOCK TABLES `penilaian_locks` WRITE;
+/*!40000 ALTER TABLE `penilaian_locks` DISABLE KEYS */;
+INSERT INTO `penilaian_locks` VALUES
+(3,37,2,0,0,NULL,NULL,35,'2026-06-08 21:44:09',35,'2026-06-08 21:44:24','2026-06-08 21:44:09','2026-06-08 21:44:24'),
+(4,53,2,0,0,NULL,NULL,1,'2026-06-09 09:07:31',1,'2026-06-09 09:08:05','2026-06-09 09:07:27','2026-06-09 09:08:05');
+/*!40000 ALTER TABLE `penilaian_locks` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `penilaian_unlock_requests`
 --
 
+DROP TABLE IF EXISTS `penilaian_unlock_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `penilaian_unlock_requests` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `karyawan_id` bigint(20) UNSIGNED NOT NULL,
-  `tahun_penilaian_id` bigint(20) UNSIGNED NOT NULL,
-  `requested_by_user_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `karyawan_id` bigint(20) unsigned NOT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned NOT NULL,
+  `requested_by_user_id` bigint(20) unsigned NOT NULL,
   `alasan` text DEFAULT NULL,
   `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `reviewed_by_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `reviewed_by_user_id` bigint(20) unsigned DEFAULT NULL,
   `reviewed_at` timestamp NULL DEFAULT NULL,
   `catatan_admin` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `penilaian_unlock_requests_karyawan_id_foreign` (`karyawan_id`),
+  KEY `penilaian_unlock_requests_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  KEY `penilaian_unlock_requests_requested_by_user_id_foreign` (`requested_by_user_id`),
+  KEY `penilaian_unlock_requests_reviewed_by_user_id_foreign` (`reviewed_by_user_id`),
+  KEY `penilaian_unlock_requests_status_created_at_index` (`status`,`created_at`),
+  CONSTRAINT `penilaian_unlock_requests_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `penilaian_unlock_requests_requested_by_user_id_foreign` FOREIGN KEY (`requested_by_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `penilaian_unlock_requests_reviewed_by_user_id_foreign` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `penilaian_unlock_requests_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `penilaian_unlock_requests`
+--
+
+LOCK TABLES `penilaian_unlock_requests` WRITE;
+/*!40000 ALTER TABLE `penilaian_unlock_requests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `penilaian_unlock_requests` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `performance_rating`
 --
 
+DROP TABLE IF EXISTS `performance_rating`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `performance_rating` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_rating` varchar(20) NOT NULL,
   `rating` varchar(255) NOT NULL,
   `keterangan` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `performance_rating_kode_rating_unique` (`kode_rating`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `performance_rating`
 --
 
-INSERT INTO `performance_rating` (`id`, `kode_rating`, `rating`, `keterangan`, `created_at`, `updated_at`) VALUES
-(1, 'RTG-001', 'A (Sangat Baik)', 'Nilai 90 ke atas', '2026-02-27 00:30:47', '2026-02-27 00:30:47'),
-(2, 'RTG-002', 'B (Baik)', 'Nilai 80 - 89', '2026-02-27 00:30:47', '2026-02-27 00:30:47'),
-(3, 'RTG-003', 'C (Cukup)', 'Nilai 70 - 79', '2026-02-27 00:30:47', '2026-02-27 00:30:47'),
-(4, 'RTG-004', 'D (Kurang)', 'Nilai 60 - 69', '2026-02-27 00:30:47', '2026-02-27 00:30:47'),
-(5, 'RTG-005', 'E (Sangat Kurang)', 'Nilai di bawah 60', '2026-02-27 00:30:48', '2026-02-27 00:30:48');
+LOCK TABLES `performance_rating` WRITE;
+/*!40000 ALTER TABLE `performance_rating` DISABLE KEYS */;
+INSERT INTO `performance_rating` VALUES
+(1,'RTG-001','A (Sangat Baik)','Nilai 90 ke atas','2026-02-27 00:30:47','2026-02-27 00:30:47'),
+(2,'RTG-002','B (Baik)','Nilai 80 - 89','2026-02-27 00:30:47','2026-02-27 00:30:47'),
+(3,'RTG-003','C (Cukup)','Nilai 70 - 79','2026-02-27 00:30:47','2026-02-27 00:30:47'),
+(4,'RTG-004','D (Kurang)','Nilai 60 - 69','2026-02-27 00:30:47','2026-02-27 00:30:47'),
+(5,'RTG-005','E (Sangat Kurang)','Nilai di bawah 60','2026-02-27 00:30:48','2026-02-27 00:30:48');
+/*!40000 ALTER TABLE `performance_rating` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- --------------------------------------------------------
+--
+-- Table structure for table `reward_punishment`
+--
+
+DROP TABLE IF EXISTS `reward_punishment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reward_punishment` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `kode` varchar(20) NOT NULL,
+  `tipe` enum('reward','punishment') NOT NULL,
+  `grade` varchar(10) NOT NULL,
+  `nama` varchar(255) NOT NULL,
+  `deskripsi` text DEFAULT NULL,
+  `satuan` varchar(255) DEFAULT NULL,
+  `jumlah` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `reward_punishment_kode_unique` (`kode`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reward_punishment`
+--
+
+LOCK TABLES `reward_punishment` WRITE;
+/*!40000 ALTER TABLE `reward_punishment` DISABLE KEYS */;
+INSERT INTO `reward_punishment` VALUES
+(1,'RP-001','punishment','C','Hukuman Nilai C','Karyawan yang mendapatkan nilai akhir C (Cukup) mendapatkan hukuman berupa pengurangan tunjangan.','Sak Semen',5,1,'2026-06-07 07:04:46','2026-06-07 07:04:46'),
+(2,'RP-002','punishment','D','Hukuman Nilai D','Karyawan yang mendapatkan nilai akhir D (Kurang) mendapatkan hukuman berupa pengurangan tunjangan.','Sak Semen',10,1,'2026-06-07 07:04:46','2026-06-07 07:04:46'),
+(3,'RP-003','reward','A','Reward Nilai A','Karyawan yang mendapatkan nilai akhir A (Sangat Baik) mendapatkan reward berupa bonus kinerja.',NULL,0,1,'2026-06-07 07:04:46','2026-06-07 07:04:46'),
+(4,'RP-004','reward','B','Reward Nilai B','Karyawan yang mendapatkan nilai akhir B (Baik) mendapatkan reward berupa apresiasi.',NULL,0,1,'2026-06-07 07:04:46','2026-06-07 07:04:46'),
+(5,'RP-005','punishment','E','Tidak Lulus',NULL,NULL,0,1,'2026-06-07 07:36:59','2026-06-07 07:36:59');
+/*!40000 ALTER TABLE `reward_punishment` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `sessions`
 --
 
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sessions` (
   `id` varchar(255) NOT NULL,
-  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` text DEFAULT NULL,
   `payload` longtext NOT NULL,
-  `last_activity` int(11) NOT NULL
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `sessions`
+--
+
+LOCK TABLES `sessions` WRITE;
+/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `setting_lembaga`
 --
 
+DROP TABLE IF EXISTS `setting_lembaga`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `setting_lembaga` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nama_lembaga` varchar(255) DEFAULT NULL,
   `nama_yayasan` varchar(255) DEFAULT NULL,
   `alamat_lembaga` varchar(255) DEFAULT NULL,
@@ -842,16 +1152,16 @@ CREATE TABLE `setting_lembaga` (
   `laporan_margin_left` decimal(4,2) NOT NULL DEFAULT 2.54,
   `laporan_text_align` varchar(20) NOT NULL DEFAULT 'left',
   `laporan_header_align` varchar(20) NOT NULL DEFAULT 'center',
-  `laporan_cell_padding` tinyint(3) UNSIGNED NOT NULL DEFAULT 6,
+  `laporan_cell_padding` tinyint(3) unsigned NOT NULL DEFAULT 6,
   `laporan_border_width` decimal(3,1) NOT NULL DEFAULT 1.0,
-  `laporan_font_size` tinyint(3) UNSIGNED NOT NULL DEFAULT 11,
-  `laporan_title_font_size` tinyint(3) UNSIGNED NOT NULL DEFAULT 16,
-  `laporan_col_width_no` smallint(5) UNSIGNED NOT NULL DEFAULT 32,
-  `laporan_col_width_kode` smallint(5) UNSIGNED NOT NULL DEFAULT 72,
-  `laporan_col_width_nama` smallint(5) UNSIGNED NOT NULL DEFAULT 190,
-  `laporan_col_width_pangkalan` smallint(5) UNSIGNED NOT NULL DEFAULT 140,
-  `laporan_col_width_nilai` smallint(5) UNSIGNED NOT NULL DEFAULT 88,
-  `laporan_col_width_rating` smallint(5) UNSIGNED NOT NULL DEFAULT 108,
+  `laporan_font_size` tinyint(3) unsigned NOT NULL DEFAULT 11,
+  `laporan_title_font_size` tinyint(3) unsigned NOT NULL DEFAULT 16,
+  `laporan_col_width_no` smallint(5) unsigned NOT NULL DEFAULT 32,
+  `laporan_col_width_kode` smallint(5) unsigned NOT NULL DEFAULT 72,
+  `laporan_col_width_nama` smallint(5) unsigned NOT NULL DEFAULT 190,
+  `laporan_col_width_pangkalan` smallint(5) unsigned NOT NULL DEFAULT 140,
+  `laporan_col_width_nilai` smallint(5) unsigned NOT NULL DEFAULT 88,
+  `laporan_col_width_rating` smallint(5) unsigned NOT NULL DEFAULT 108,
   `laporan_column_order` text DEFAULT NULL,
   `laporan_label_no` varchar(100) NOT NULL DEFAULT 'No',
   `laporan_label_kode_karyawan` varchar(100) NOT NULL DEFAULT 'Kode Karyawan',
@@ -863,565 +1173,420 @@ CREATE TABLE `setting_lembaga` (
   `laporan_scoring_method` varchar(40) NOT NULL DEFAULT 'weighted_kategori',
   `laporan_bobot_kinerja` decimal(5,2) NOT NULL DEFAULT 70.00,
   `laporan_bobot_kegiatan` decimal(5,2) NOT NULL DEFAULT 30.00,
-  `tahun_penilaian_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `setting_lembaga_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  CONSTRAINT `setting_lembaga_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `setting_lembaga`
 --
 
-INSERT INTO `setting_lembaga` (`id`, `nama_lembaga`, `nama_yayasan`, `alamat_lembaga`, `telepon_lembaga`, `email_lembaga`, `website_lembaga`, `sidebar_title`, `sidebar_subtitle_1`, `sidebar_subtitle_2`, `sidebar_show_title`, `sidebar_show_subtitle_1`, `sidebar_show_subtitle_2`, `lokasi_surat`, `nama_ketua_yayasan`, `nama_ketua_babinlumni`, `logo_path`, `ttd_ketua_yayasan_path`, `ttd_ketua_babinlumni_path`, `show_logo`, `show_tahun_ajaran`, `show_nama_pimpinan`, `show_tanda_tangan`, `laporan_default_jenis`, `laporan_show_no`, `laporan_show_kode_karyawan`, `laporan_show_pangkalan`, `laporan_show_nilai_akhir`, `laporan_show_rating`, `laporan_show_detail_kompetensi`, `laporan_show_bobot_kategori`, `laporan_paper_size`, `laporan_orientation`, `laporan_margin_top`, `laporan_margin_right`, `laporan_margin_bottom`, `laporan_margin_left`, `laporan_text_align`, `laporan_header_align`, `laporan_cell_padding`, `laporan_border_width`, `laporan_font_size`, `laporan_title_font_size`, `laporan_col_width_no`, `laporan_col_width_kode`, `laporan_col_width_nama`, `laporan_col_width_pangkalan`, `laporan_col_width_nilai`, `laporan_col_width_rating`, `laporan_column_order`, `laporan_label_no`, `laporan_label_kode_karyawan`, `laporan_label_nama_karyawan`, `laporan_label_pangkalan`, `laporan_label_detail_kompetensi`, `laporan_label_nilai_akhir`, `laporan_label_rating`, `laporan_scoring_method`, `laporan_bobot_kinerja`, `laporan_bobot_kegiatan`, `tahun_penilaian_id`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Yayasan Pondok Pesantren Al-Huda Mugomulyo', NULL, 'Mugomulyo Kec.Sungai Batang Kab.INHIL', '+62 852-2870-4379', 'ypphmugomulyo@gmail.com', 'https.//ypphmugomulyo.id', 'Website Aplikasi', 'Manajemen Kinerja Pengabdian', 'YPP. Al-Huda Mugomulyo', 1, 1, 1, 'Mugomulyo', 'Drs. H. AH. MASYHURI SA, M.Pd.I', 'Muh. Harun S.H.I., M.Sos.', 'setting-lembaga/rrojgIB1ZBbrq1EqBYSpsh5IJqQxBKvii2qIikcU.png', NULL, NULL, 1, 1, 1, 1, 'rinci', 1, 0, 1, 1, 1, 1, 1, 'a4', 'portrait', 2.54, 2.54, 2.54, 2.54, 'left', 'center', 6, 1.0, 11, 16, 32, 72, 190, 140, 88, 108, '[\"no\",\"kode_karyawan\",\"nama_karyawan\",\"pangkalan\",\"detail_kompetensi\",\"nilai_akhir\",\"rating\"]', 'No', 'Kode Karyawan', 'Nama Karyawan', 'Pangkalan', 'Detail Kompetensi', 'Nilai Akhir', 'Rating', 'weighted_kinerja_kegiatan', 70.00, 30.00, 2, 1, '2026-04-09 02:32:10', '2026-05-29 07:29:22');
-
--- --------------------------------------------------------
+LOCK TABLES `setting_lembaga` WRITE;
+/*!40000 ALTER TABLE `setting_lembaga` DISABLE KEYS */;
+INSERT INTO `setting_lembaga` VALUES
+(1,'Yayasan Pondok Pesantren Al-Huda Mugomulyo',NULL,'Mugomulyo Kec.Sungai Batang Kab.INHIL','+62 852-2870-4379','ypphmugomulyo@gmail.com','https.//ypphmugomulyo.id','Website Aplikasi','Manajemen Kinerja Pengabdian','YPP. Al-Huda Mugomulyo',1,1,1,'Mugomulyo','Drs. H. AH. MASYHURI SA, M.Pd.I','Muh. Harun S.H.I., M.Sos.','setting-lembaga/rrojgIB1ZBbrq1EqBYSpsh5IJqQxBKvii2qIikcU.png',NULL,NULL,1,1,1,1,'rinci',1,0,1,1,1,1,1,'a4','portrait',2.54,2.54,2.54,2.54,'left','center',6,1.0,11,16,32,72,190,140,88,108,'[\"no\",\"kode_karyawan\",\"nama_karyawan\",\"pangkalan\",\"detail_kompetensi\",\"nilai_akhir\",\"rating\"]','No','Kode Karyawan','Nama Karyawan','Pangkalan','Detail Kompetensi','Nilai Akhir','Rating','weighted_kinerja_kegiatan',70.00,30.00,2,1,'2026-04-09 02:32:10','2026-05-29 07:29:22');
+/*!40000 ALTER TABLE `setting_lembaga` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `tahun_penilaian`
 --
 
+DROP TABLE IF EXISTS `tahun_penilaian`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tahun_penilaian` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `periode_penilaian` varchar(255) NOT NULL,
   `keterangan` text DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `tahun_penilaian`
 --
 
-INSERT INTO `tahun_penilaian` (`id`, `periode_penilaian`, `keterangan`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, '2023/2024', 'Tahun Pengabdian 2023/2024', 0, '2026-02-27 00:30:47', '2026-05-08 23:07:29'),
-(2, '2025/2026', 'Tahun Pengabdian 2025/2026', 1, '2026-04-12 22:59:05', '2026-05-08 23:07:29'),
-(3, '2024/2025', 'Tahun Pengabdian 2024/2025', 0, '2026-04-12 22:59:46', '2026-04-12 22:59:54');
-
--- --------------------------------------------------------
+LOCK TABLES `tahun_penilaian` WRITE;
+/*!40000 ALTER TABLE `tahun_penilaian` DISABLE KEYS */;
+INSERT INTO `tahun_penilaian` VALUES
+(1,'2023/2024','Tahun Pengabdian 2023/2024',0,'2026-02-27 00:30:47','2026-05-08 23:07:29'),
+(2,'2025/2026','Tahun Pengabdian 2025/2026',1,'2026-04-12 22:59:05','2026-05-08 23:07:29'),
+(3,'2024/2025','Tahun Pengabdian 2024/2025',0,'2026-04-12 22:59:46','2026-04-12 22:59:54');
+/*!40000 ALTER TABLE `tahun_penilaian` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `transaksi`
 --
 
+DROP TABLE IF EXISTS `transaksi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `transaksi` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `kode_transaksi` varchar(20) NOT NULL,
-  `karyawan_id` bigint(20) UNSIGNED NOT NULL,
-  `pangkalan_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `tahun_penilaian_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `kompetensi_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `performance_rating_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `karyawan_id` bigint(20) unsigned NOT NULL,
+  `pangkalan_id` bigint(20) unsigned DEFAULT NULL,
+  `tahun_penilaian_id` bigint(20) unsigned DEFAULT NULL,
+  `kompetensi_id` bigint(20) unsigned DEFAULT NULL,
+  `kategori_kinerja_id` bigint(20) unsigned DEFAULT NULL,
+  `performance_rating_id` bigint(20) unsigned DEFAULT NULL,
   `nilai` decimal(5,2) DEFAULT NULL,
   `keterangan` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `transaksi_kode_transaksi_unique` (`kode_transaksi`),
+  KEY `transaksi_karyawan_id_foreign` (`karyawan_id`),
+  KEY `transaksi_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
+  KEY `transaksi_kompetensi_id_foreign` (`kompetensi_id`),
+  KEY `transaksi_performance_rating_id_foreign` (`performance_rating_id`),
+  KEY `transaksi_pangkalan_id_foreign` (`pangkalan_id`),
+  KEY `transaksi_kategori_kinerja_id_foreign` (`kategori_kinerja_id`),
+  CONSTRAINT `transaksi_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `transaksi_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transaksi_kompetensi_id_foreign` FOREIGN KEY (`kompetensi_id`) REFERENCES `kompetensi` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transaksi_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transaksi_performance_rating_id_foreign` FOREIGN KEY (`performance_rating_id`) REFERENCES `performance_rating` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transaksi_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=263 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `transaksi`
 --
 
-INSERT INTO `transaksi` (`id`, `kode_transaksi`, `karyawan_id`, `pangkalan_id`, `tahun_penilaian_id`, `kompetensi_id`, `performance_rating_id`, `nilai`, `keterangan`, `created_at`, `updated_at`) VALUES
-(14, 'TRX-0029', 32, 2, 2, 20, NULL, 85.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(15, 'TRX-0030', 32, 2, 2, 21, NULL, 95.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(16, 'TRX-0031', 32, 2, 2, 25, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(17, 'TRX-0032', 32, 2, 2, 22, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(18, 'TRX-0033', 32, 2, 2, 23, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(19, 'TRX-0034', 32, 2, 2, 24, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(20, 'TRX-0036', 32, 2, 2, 26, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(21, 'TRX-0037', 32, 2, 2, 27, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(22, 'TRX-0038', 32, 2, 2, 28, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(23, 'TRX-0035', 32, 2, 2, 29, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(24, 'TRX-0039', 32, 2, 2, 15, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(25, 'TRX-0040', 32, 2, 2, 16, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(26, 'TRX-0041', 32, 2, 2, 17, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(27, 'TRX-0042', 32, 2, 2, 18, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28'),
-(28, 'TRX-0043', 32, 2, 2, 19, NULL, 90.00, NULL, '2026-05-28 11:40:25', '2026-05-31 09:00:28');
-
--- --------------------------------------------------------
+LOCK TABLES `transaksi` WRITE;
+/*!40000 ALTER TABLE `transaksi` DISABLE KEYS */;
+INSERT INTO `transaksi` VALUES
+(32,'TRX-0258',37,3,2,20,14,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(33,'TRX-0259',37,3,2,21,14,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(34,'TRX-0260',37,3,2,25,14,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(35,'TRX-0261',37,3,2,22,15,NULL,75.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(36,'TRX-0262',37,3,2,23,15,NULL,75.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(37,'TRX-0263',37,3,2,24,15,NULL,65.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(38,'TRX-0264',37,3,2,29,16,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(39,'TRX-0265',37,3,2,26,16,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(40,'TRX-0266',37,3,2,27,16,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(41,'TRX-0267',37,3,2,28,16,NULL,70.00,NULL,'2026-06-08 19:08:44','2026-06-09 09:05:18'),
+(42,'TRX-0042',53,3,2,20,14,NULL,85.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(43,'TRX-0043',53,3,2,21,14,NULL,80.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(44,'TRX-0044',53,3,2,25,14,NULL,80.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(45,'TRX-0045',53,3,2,22,15,NULL,80.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(46,'TRX-0046',53,3,2,23,15,NULL,75.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(47,'TRX-0047',53,3,2,24,15,NULL,75.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(48,'TRX-0048',53,3,2,29,16,NULL,85.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(49,'TRX-0049',53,3,2,26,16,NULL,80.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(50,'TRX-0050',53,3,2,27,16,NULL,80.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(51,'TRX-0051',53,3,2,28,16,NULL,75.00,NULL,'2026-06-08 19:10:45','2026-06-08 19:10:45'),
+(52,'TRX-0052',52,3,2,20,14,NULL,85.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(53,'TRX-0053',52,3,2,21,14,NULL,80.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(54,'TRX-0054',52,3,2,25,14,NULL,85.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(55,'TRX-0055',52,3,2,22,15,NULL,85.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(56,'TRX-0056',52,3,2,23,15,NULL,80.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(57,'TRX-0057',52,3,2,24,15,NULL,85.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(58,'TRX-0058',52,3,2,29,16,NULL,80.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(59,'TRX-0059',52,3,2,26,16,NULL,80.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(60,'TRX-0060',52,3,2,27,16,NULL,80.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(61,'TRX-0061',52,3,2,28,16,NULL,78.00,NULL,'2026-06-08 19:12:26','2026-06-08 19:12:26'),
+(62,'TRX-0062',42,12,2,20,14,NULL,80.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(63,'TRX-0063',42,12,2,21,14,NULL,70.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(64,'TRX-0064',42,12,2,25,14,NULL,73.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(65,'TRX-0065',42,12,2,22,15,NULL,75.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(66,'TRX-0066',42,12,2,23,15,NULL,70.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(67,'TRX-0067',42,12,2,24,15,NULL,76.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(68,'TRX-0068',42,12,2,29,16,NULL,75.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(69,'TRX-0069',42,12,2,26,16,NULL,74.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(70,'TRX-0070',42,12,2,27,16,NULL,73.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(71,'TRX-0071',42,12,2,28,16,NULL,75.00,NULL,'2026-06-08 21:10:30','2026-06-08 21:10:30'),
+(72,'TRX-0072',37,16,2,15,17,NULL,70.00,NULL,'2026-06-08 21:14:17','2026-06-08 21:14:17'),
+(73,'TRX-0073',37,16,2,19,17,NULL,73.00,NULL,'2026-06-08 21:14:17','2026-06-08 21:14:17'),
+(74,'TRX-0074',32,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:15:42','2026-06-08 21:15:42'),
+(75,'TRX-0075',32,16,2,19,17,NULL,85.00,NULL,'2026-06-08 21:15:42','2026-06-08 21:15:42'),
+(76,'TRX-0076',35,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:16:49','2026-06-08 21:16:49'),
+(77,'TRX-0077',35,16,2,19,17,NULL,80.00,NULL,'2026-06-08 21:16:49','2026-06-08 21:16:49'),
+(78,'TRX-0078',36,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:17:33','2026-06-08 21:17:33'),
+(79,'TRX-0079',36,16,2,19,17,NULL,82.00,NULL,'2026-06-08 21:17:33','2026-06-08 21:17:33'),
+(80,'TRX-0080',54,16,2,15,17,NULL,90.00,NULL,'2026-06-08 21:18:32','2026-06-08 21:18:32'),
+(81,'TRX-0081',54,16,2,19,17,NULL,87.00,NULL,'2026-06-08 21:18:32','2026-06-08 21:18:32'),
+(82,'TRX-0082',55,16,2,15,17,NULL,90.00,NULL,'2026-06-08 21:19:19','2026-06-08 21:19:19'),
+(83,'TRX-0083',55,16,2,19,17,NULL,86.00,NULL,'2026-06-08 21:19:19','2026-06-08 21:19:19'),
+(84,'TRX-0084',38,16,2,15,17,NULL,88.00,NULL,'2026-06-08 21:20:02','2026-06-08 21:20:02'),
+(85,'TRX-0085',38,16,2,19,17,NULL,85.00,NULL,'2026-06-08 21:20:02','2026-06-08 21:20:02'),
+(86,'TRX-0086',39,16,2,15,17,NULL,87.00,NULL,'2026-06-08 21:21:13','2026-06-08 21:21:13'),
+(87,'TRX-0087',39,16,2,19,17,NULL,86.00,NULL,'2026-06-08 21:21:13','2026-06-08 21:21:13'),
+(88,'TRX-0088',40,16,2,15,17,NULL,88.00,NULL,'2026-06-08 21:22:27','2026-06-08 21:22:27'),
+(89,'TRX-0089',40,16,2,19,17,NULL,85.00,NULL,'2026-06-08 21:22:27','2026-06-08 21:22:27'),
+(90,'TRX-0090',41,16,2,15,17,NULL,89.00,NULL,'2026-06-08 21:23:09','2026-06-08 21:23:09'),
+(91,'TRX-0091',41,16,2,19,17,NULL,87.00,NULL,'2026-06-08 21:23:09','2026-06-08 21:23:09'),
+(92,'TRX-0092',56,16,2,15,17,NULL,88.00,NULL,'2026-06-08 21:23:55','2026-06-08 21:23:55'),
+(93,'TRX-0093',56,16,2,19,17,NULL,85.00,NULL,'2026-06-08 21:23:55','2026-06-08 21:23:55'),
+(94,'TRX-0094',43,16,2,15,17,NULL,70.00,NULL,'2026-06-08 21:24:39','2026-06-08 21:24:39'),
+(95,'TRX-0095',43,16,2,19,17,NULL,72.00,NULL,'2026-06-08 21:24:39','2026-06-08 21:24:39'),
+(96,'TRX-0096',57,16,2,15,17,NULL,89.00,NULL,'2026-06-08 21:25:27','2026-06-08 21:25:27'),
+(97,'TRX-0097',57,16,2,19,17,NULL,87.00,NULL,'2026-06-08 21:25:27','2026-06-08 21:25:27'),
+(98,'TRX-0098',58,16,2,15,17,NULL,87.00,NULL,'2026-06-08 21:26:01','2026-06-08 21:26:01'),
+(99,'TRX-0099',58,16,2,19,17,NULL,86.00,NULL,'2026-06-08 21:26:01','2026-06-08 21:26:01'),
+(100,'TRX-0100',59,16,2,15,17,NULL,89.00,NULL,'2026-06-08 21:26:40','2026-06-08 21:26:40'),
+(101,'TRX-0101',59,16,2,19,17,NULL,88.00,NULL,'2026-06-08 21:26:40','2026-06-08 21:26:40'),
+(102,'TRX-0102',34,16,2,15,17,NULL,90.00,NULL,'2026-06-08 21:27:09','2026-06-08 21:27:09'),
+(103,'TRX-0103',34,16,2,19,17,NULL,89.00,NULL,'2026-06-08 21:27:10','2026-06-08 21:27:10'),
+(104,'TRX-0104',42,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:27:54','2026-06-08 21:27:54'),
+(105,'TRX-0105',42,16,2,19,17,NULL,80.00,NULL,'2026-06-08 21:27:54','2026-06-08 21:27:54'),
+(106,'TRX-0106',60,16,2,15,17,NULL,87.00,NULL,'2026-06-08 21:28:54','2026-06-08 21:28:54'),
+(107,'TRX-0107',60,16,2,19,17,NULL,86.00,NULL,'2026-06-08 21:28:54','2026-06-08 21:28:54'),
+(108,'TRX-0108',45,16,2,15,17,NULL,85.00,NULL,'2026-06-08 21:29:40','2026-06-08 21:29:40'),
+(109,'TRX-0109',45,16,2,19,17,NULL,87.00,NULL,'2026-06-08 21:29:40','2026-06-08 21:29:40'),
+(110,'TRX-0110',46,16,2,15,17,NULL,87.00,NULL,'2026-06-08 21:30:12','2026-06-08 21:30:12'),
+(111,'TRX-0111',46,16,2,19,17,NULL,86.00,NULL,'2026-06-08 21:30:13','2026-06-08 21:30:13'),
+(112,'TRX-0112',47,16,2,15,17,NULL,78.00,NULL,'2026-06-08 21:31:05','2026-06-08 21:31:05'),
+(113,'TRX-0113',47,16,2,19,17,NULL,76.00,NULL,'2026-06-08 21:31:05','2026-06-08 21:31:05'),
+(114,'TRX-0114',49,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:31:57','2026-06-08 21:31:57'),
+(115,'TRX-0115',49,16,2,19,17,NULL,80.00,NULL,'2026-06-08 21:31:57','2026-06-08 21:31:57'),
+(116,'TRX-0116',50,16,2,15,17,NULL,80.00,NULL,'2026-06-08 21:32:32','2026-06-08 21:32:32'),
+(117,'TRX-0117',50,16,2,19,17,NULL,80.00,NULL,'2026-06-08 21:32:32','2026-06-08 21:32:32'),
+(118,'TRX-0118',56,4,2,20,14,NULL,84.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(119,'TRX-0119',56,4,2,21,14,NULL,75.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(120,'TRX-0120',56,4,2,25,14,NULL,75.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(121,'TRX-0121',56,4,2,22,15,NULL,85.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(122,'TRX-0122',56,4,2,23,15,NULL,84.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(123,'TRX-0123',56,4,2,24,15,NULL,75.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(124,'TRX-0124',56,4,2,29,16,NULL,73.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(125,'TRX-0125',56,4,2,26,16,NULL,43.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(126,'TRX-0126',56,4,2,27,16,NULL,80.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(127,'TRX-0127',56,4,2,28,16,NULL,75.00,NULL,'2026-06-08 22:24:04','2026-06-08 22:24:04'),
+(128,'TRX-0128',58,4,2,20,14,NULL,65.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(129,'TRX-0129',58,4,2,21,14,NULL,75.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(130,'TRX-0130',58,4,2,25,14,NULL,73.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(131,'TRX-0131',58,4,2,22,15,NULL,73.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(132,'TRX-0132',58,4,2,23,15,NULL,78.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(133,'TRX-0133',58,4,2,24,15,NULL,75.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(134,'TRX-0134',58,4,2,29,16,NULL,70.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(135,'TRX-0135',58,4,2,26,16,NULL,70.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(136,'TRX-0136',58,4,2,27,16,NULL,80.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(137,'TRX-0137',58,4,2,28,16,NULL,72.00,NULL,'2026-06-08 23:00:59','2026-06-08 23:00:59'),
+(138,'TRX-0138',60,4,2,20,14,NULL,80.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(139,'TRX-0139',60,4,2,21,14,NULL,82.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(140,'TRX-0140',60,4,2,25,14,NULL,75.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(141,'TRX-0141',60,4,2,22,15,NULL,80.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(142,'TRX-0142',60,4,2,23,15,NULL,83.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(143,'TRX-0143',60,4,2,24,15,NULL,80.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(144,'TRX-0144',60,4,2,29,16,NULL,73.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(145,'TRX-0145',60,4,2,26,16,NULL,80.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(146,'TRX-0146',60,4,2,27,16,NULL,80.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(147,'TRX-0147',60,4,2,28,16,NULL,75.00,NULL,'2026-06-08 23:08:01','2026-06-08 23:08:01'),
+(148,'TRX-0148',53,6,2,20,14,NULL,87.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(149,'TRX-0149',53,6,2,21,14,NULL,86.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(150,'TRX-0150',53,6,2,25,14,NULL,87.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(151,'TRX-0151',53,6,2,22,15,NULL,88.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(152,'TRX-0152',53,6,2,23,15,NULL,89.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(153,'TRX-0153',53,6,2,24,15,NULL,88.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(154,'TRX-0154',53,6,2,29,16,NULL,87.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(155,'TRX-0155',53,6,2,26,16,NULL,89.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(156,'TRX-0156',53,6,2,27,16,NULL,88.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(157,'TRX-0157',53,6,2,28,16,NULL,87.00,NULL,'2026-06-09 07:31:37','2026-06-09 07:31:37'),
+(158,'TRX-0158',32,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:02:34','2026-06-09 08:02:34'),
+(159,'TRX-0159',32,7,2,21,14,NULL,90.00,NULL,'2026-06-09 08:02:34','2026-06-09 08:02:34'),
+(160,'TRX-0160',32,7,2,25,14,NULL,85.00,NULL,'2026-06-09 08:02:34','2026-06-09 08:02:34'),
+(161,'TRX-0161',32,7,2,22,15,NULL,90.00,NULL,'2026-06-09 08:02:34','2026-06-09 08:02:34'),
+(162,'TRX-0162',32,7,2,23,15,NULL,90.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(163,'TRX-0163',32,7,2,24,15,NULL,85.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(164,'TRX-0164',32,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(165,'TRX-0165',32,7,2,26,16,NULL,87.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(166,'TRX-0166',32,7,2,27,16,NULL,85.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(167,'TRX-0167',32,7,2,28,16,NULL,85.00,NULL,'2026-06-09 08:03:47','2026-06-09 08:03:47'),
+(168,'TRX-0168',35,7,2,20,14,NULL,84.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(169,'TRX-0169',35,7,2,21,14,NULL,85.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(170,'TRX-0170',35,7,2,25,14,NULL,88.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(171,'TRX-0171',35,7,2,22,15,NULL,86.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(172,'TRX-0172',35,7,2,23,15,NULL,86.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(173,'TRX-0173',35,7,2,24,15,NULL,80.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(174,'TRX-0174',35,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(175,'TRX-0175',35,7,2,26,16,NULL,85.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(176,'TRX-0176',35,7,2,27,16,NULL,80.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(177,'TRX-0177',35,7,2,28,16,NULL,85.00,NULL,'2026-06-09 08:20:27','2026-06-09 08:20:27'),
+(178,'TRX-0178',36,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(179,'TRX-0179',36,7,2,21,14,NULL,86.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(180,'TRX-0180',36,7,2,25,14,NULL,80.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(181,'TRX-0181',36,7,2,22,15,NULL,86.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(182,'TRX-0182',36,7,2,23,15,NULL,85.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(183,'TRX-0183',36,7,2,24,15,NULL,80.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(184,'TRX-0184',36,7,2,29,16,NULL,80.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(185,'TRX-0185',36,7,2,26,16,NULL,84.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(186,'TRX-0186',36,7,2,27,16,NULL,82.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(187,'TRX-0187',36,7,2,28,16,NULL,80.00,NULL,'2026-06-09 08:28:23','2026-06-09 08:28:23'),
+(188,'TRX-0188',37,7,2,20,14,NULL,82.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(189,'TRX-0189',37,7,2,21,14,NULL,80.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(190,'TRX-0190',37,7,2,25,14,NULL,75.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(191,'TRX-0191',37,7,2,22,15,NULL,77.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(192,'TRX-0192',37,7,2,23,15,NULL,80.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(193,'TRX-0193',37,7,2,24,15,NULL,75.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(194,'TRX-0194',37,7,2,29,16,NULL,77.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(195,'TRX-0195',37,7,2,26,16,NULL,76.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(196,'TRX-0196',37,7,2,27,16,NULL,75.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(197,'TRX-0197',37,7,2,28,16,NULL,76.00,NULL,'2026-06-09 08:38:05','2026-06-09 08:38:05'),
+(198,'TRX-0198',42,7,2,20,14,NULL,82.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(199,'TRX-0199',42,7,2,21,14,NULL,85.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(200,'TRX-0200',42,7,2,25,14,NULL,80.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(201,'TRX-0201',42,7,2,22,15,NULL,88.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(202,'TRX-0202',42,7,2,23,15,NULL,80.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(203,'TRX-0203',42,7,2,24,15,NULL,80.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(204,'TRX-0204',42,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(205,'TRX-0205',42,7,2,26,16,NULL,80.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(206,'TRX-0206',42,7,2,27,16,NULL,82.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(207,'TRX-0207',42,7,2,28,16,NULL,90.00,NULL,'2026-06-09 08:42:44','2026-06-09 08:42:44'),
+(208,'TRX-0208',43,7,2,20,14,NULL,80.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(209,'TRX-0209',43,7,2,21,14,NULL,80.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(210,'TRX-0210',43,7,2,25,14,NULL,76.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(211,'TRX-0211',43,7,2,22,15,NULL,75.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(212,'TRX-0212',43,7,2,23,15,NULL,75.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(213,'TRX-0213',43,7,2,24,15,NULL,77.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(214,'TRX-0214',43,7,2,29,16,NULL,80.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(215,'TRX-0215',43,7,2,26,16,NULL,75.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(216,'TRX-0216',43,7,2,27,16,NULL,75.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(217,'TRX-0217',43,7,2,28,16,NULL,76.00,NULL,'2026-06-09 08:45:45','2026-06-09 08:45:45'),
+(218,'TRX-0218',45,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(219,'TRX-0219',45,7,2,21,14,NULL,90.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(220,'TRX-0220',45,7,2,25,14,NULL,90.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(221,'TRX-0221',45,7,2,22,15,NULL,90.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(222,'TRX-0222',45,7,2,23,15,NULL,88.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(223,'TRX-0223',45,7,2,24,15,NULL,86.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(224,'TRX-0224',45,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(225,'TRX-0225',45,7,2,26,16,NULL,86.00,NULL,'2026-06-09 08:50:01','2026-06-09 08:50:01'),
+(226,'TRX-0226',45,7,2,27,16,NULL,85.00,NULL,'2026-06-09 08:50:02','2026-06-09 08:50:02'),
+(227,'TRX-0227',45,7,2,28,16,NULL,85.00,NULL,'2026-06-09 08:50:02','2026-06-09 08:50:02'),
+(228,'TRX-0228',47,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(229,'TRX-0229',47,7,2,21,14,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(230,'TRX-0230',47,7,2,25,14,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(231,'TRX-0231',47,7,2,22,15,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(232,'TRX-0232',47,7,2,23,15,NULL,86.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(233,'TRX-0233',47,7,2,24,15,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(234,'TRX-0234',47,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(235,'TRX-0235',47,7,2,26,16,NULL,86.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(236,'TRX-0236',47,7,2,27,16,NULL,80.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(237,'TRX-0237',47,7,2,28,16,NULL,80.00,NULL,'2026-06-09 08:53:08','2026-06-09 08:53:08'),
+(238,'TRX-0238',49,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(239,'TRX-0239',49,7,2,21,14,NULL,90.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(240,'TRX-0240',49,7,2,25,14,NULL,87.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(241,'TRX-0241',49,7,2,22,15,NULL,88.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(242,'TRX-0242',49,7,2,23,15,NULL,85.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(243,'TRX-0243',49,7,2,24,15,NULL,85.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(244,'TRX-0244',49,7,2,29,16,NULL,80.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(245,'TRX-0245',49,7,2,26,16,NULL,88.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(246,'TRX-0246',49,7,2,27,16,NULL,85.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(247,'TRX-0247',49,7,2,28,16,NULL,80.00,NULL,'2026-06-09 08:55:27','2026-06-09 08:55:27'),
+(248,'TRX-0248',50,7,2,20,14,NULL,85.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(249,'TRX-0249',50,7,2,21,14,NULL,88.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(250,'TRX-0250',50,7,2,25,14,NULL,90.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(251,'TRX-0251',50,7,2,22,15,NULL,90.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(252,'TRX-0252',50,7,2,23,15,NULL,88.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(253,'TRX-0253',50,7,2,24,15,NULL,88.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(254,'TRX-0254',50,7,2,29,16,NULL,85.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(255,'TRX-0255',50,7,2,26,16,NULL,88.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(256,'TRX-0256',50,7,2,27,16,NULL,85.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56'),
+(257,'TRX-0257',50,7,2,28,16,NULL,90.00,NULL,'2026-06-09 08:57:56','2026-06-09 08:57:56');
+/*!40000 ALTER TABLE `transaksi` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `users`
 --
 
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
-  `id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','user') NOT NULL DEFAULT 'user',
-  `pangkalan_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `role` enum('admin','user','tata_usaha') NOT NULL DEFAULT 'user',
+  `pangkalan_id` bigint(20) unsigned DEFAULT NULL,
   `is_kepala` tinyint(1) NOT NULL DEFAULT 0,
   `remember_token` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_username_unique` (`username`),
+  UNIQUE KEY `users_email_unique` (`email`),
+  KEY `users_pangkalan_id_foreign` (`pangkalan_id`),
+  CONSTRAINT `users_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `username`, `email`, `email_verified_at`, `password`, `role`, `pangkalan_id`, `is_kepala`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'admin', 'admin@penilaian.com', NULL, '$2y$12$E6WsuGJY3g2tEMWqT4Uvfu1opztcjix9/joamBaTgEk.14FyGUigS', 'admin', NULL, 0, '3Fx43PXSCyEDOaSfTUne3rpPi0VvTwegsP4flLDX4BrQ8zlzvyVedFwl79Ja', '2026-02-27 00:30:47', '2026-02-27 00:30:47'),
-(2, 'User Penilai', 'user', 'user@penilaian.com', NULL, '$2y$12$djdlHO554Gv9j509VQVMwuu6e3Y3U8pB49AoGeyhNcd/6DLLtJUKm', 'user', NULL, 0, NULL, '2026-02-27 00:30:47', '2026-04-09 17:19:05'),
-(4, 'Fathul Mu\'in, S.Pd.', 'fathul', 'fathul@website.com', NULL, '$2y$12$NIo.z9.qFFKOibbmcEcqku46dZ.FlhnmElF7/UtBnTpFiJywJ/WtS', 'user', 1, 1, NULL, '2026-04-13 00:14:08', '2026-06-04 17:33:17'),
-(5, 'Agus Ihsan', 'agus', 'agusihsann@gmail.com', NULL, '$2y$12$8B6TZegbrTu8Q6Iphl5sBuO4DbwcJkOB36FOJid1ZV9XKD996S1Dy', 'user', 2, 0, 'lSx371sh9mfprlpjcJsP2ViwngLK1br97ipbdNXtiitkAtS2pTFVq9Fsna4G', '2026-05-08 22:56:10', '2026-05-08 22:56:10'),
-(6, 'Riza Wafirotun Nisa`', 'riza', 'rizawafirotunnisa@gmail.com', NULL, '$2y$12$06Z9AJc6kR.jocQPMkTlyeAJiTtszPJiao6A/4HS7cDKAImQE9F8y', 'user', 1, 0, 'AxIYJpQ25XH8HOCR34PGYgV7PwtdoPkZvfE5oiPP0qWFHoJAHU7QxrHeHcYk', '2026-05-09 00:08:00', '2026-05-09 00:08:00'),
-(7, 'Ahmad Khoirul Amin', 'amin', 'ahmadkhoirulamin65@gmail.com', NULL, '$2y$12$nmHs3fSTJ23fC1hBAwBnP.AA0DrcEhfSMqzPEZX3F2zfQ4k1QlFFS', 'user', 5, 0, NULL, '2026-05-27 02:00:24', '2026-05-27 02:00:24'),
-(8, 'Ahmad Shofyan Nur Shobah', 'ahmad', 'ahmadshofyannurshobah@gmail.com', NULL, '$2y$12$tcmnddlavipuflsPUZ0NSOH4rGsdlecAxjZCPxnBQjL0ozpaj3B.i', 'user', 1, 0, 'LAzizste4AlTzR2QnqKxpbrdOdSTS6rkOjHDSXqVmkaUQmj2W4xSHsZzTIF8', '2026-05-27 02:06:37', '2026-05-27 02:06:37'),
-(9, 'Fadhil Nandila', 'fadhil', 'fadhilnandila62@gmail.com', NULL, '$2y$12$pvexvYsu/J3SCbfs9gzWTevAsjDEtUjIhrH3G3ORHuMXjoSLh6i5y', 'user', 3, 0, NULL, '2026-05-27 02:10:22', '2026-05-27 02:10:22'),
-(10, 'Himmatul Ulya Hs', 'hima', 'himmatululyahs3@gmail.com', NULL, '$2y$12$AhjiXWYUg3NNaPQxFfBlRum4ehnZ0TwrMaXdCl6tPmCb1j1qoQ3Y6', 'user', 9, 0, NULL, '2026-05-27 02:15:06', '2026-05-27 02:15:06'),
-(11, 'Indah Mustika Sari', 'indah', 'mustikasari17032007@gmail.com', NULL, '$2y$12$1oA9ZGrUmTt379CBZpQubeTjT61M8ElgzyoO4ILC/oeOdWqiuoZQa', 'user', NULL, 0, NULL, '2026-05-27 02:57:55', '2026-05-27 02:57:55'),
-(12, 'Khozainul Muna', 'muna', 'Khozainulmuna026@gmail.com', NULL, '$2y$12$rzZua93UJjqWYOeNKCITz.2Dte4OBhrvgKxj1tpNg80W8UUIQiJW6', 'user', 5, 0, NULL, '2026-05-27 03:01:15', '2026-05-27 03:01:15'),
-(13, 'Maya Sulis Stiawati', 'maya', 'mayasulisstiawati@gmail.com', NULL, '$2y$12$c2lHn3JXZB05dNSjxSfyze9AxyzpI5JM3fpeIGFttO3CjrGDswZ1m', 'user', 1, 0, NULL, '2026-05-27 03:07:25', '2026-05-27 03:07:25'),
-(14, 'Moh. Celvin Nugroho', 'celvin', 'muhammadcelvinnugroho.ypph.mts@gmail.com', NULL, '$2y$12$eY9IpdOY0bFndGTMs1LH8.PqOIuT/HNE4kBqRmYww3hgnx9V/zkr2', 'user', 12, 0, NULL, '2026-05-27 03:10:03', '2026-05-27 03:10:03'),
-(15, 'Nabila Salwa Zanjabila', 'nabil', 'nabilslawazanzabila@gmail.com', NULL, '$2y$12$dQlkTyvq6iZMsYCjJd5jC.dMc/R5m0FMVDRLiGFQrFhz3Y228TQ1e', 'user', 11, 0, NULL, '2026-05-27 03:15:18', '2026-05-27 03:15:18'),
-(17, 'Syakur Sofian Tahir', 'syukur', 'syukurshofiantahir@gmail.com', NULL, '$2y$12$vI8Lq6AlV1rY8CYvC04ntOP8jLVsw1wwQbFrD0kkeerV5D37wr.BK', 'user', 9, 0, NULL, '2026-05-27 05:20:04', '2026-05-27 05:20:04'),
-(18, 'Umi Masruroh', 'umi', 'umimasruroh1607@gmail.com', NULL, '$2y$12$DDpg6nw3AzplnVqRDNfZK.1he3Z.C3eJrbF7hybETJ6HC8LgwjjOW', 'user', 9, 0, NULL, '2026-05-27 05:22:35', '2026-05-27 05:22:35'),
-(19, 'Viko Romadhon', 'viko', 'vikoromadhon18@gmail.com', NULL, '$2y$12$DgW0OFFIgzDGO95.YfQgTeP6XcWk9aSjD.4.57AoUH2plLRezuQ56', 'user', 11, 0, NULL, '2026-05-27 05:26:23', '2026-05-27 05:26:23'),
-(20, 'Wahyu Pratama', 'wahyu', 'wahyupratama@gmail.com', NULL, '$2y$12$TIbKdIk2aABjh8G9hM1e1OBU4Hl5efpYsbgooK1ePZ0fkPJ95Bfk2', 'user', 3, 0, NULL, '2026-05-27 05:28:54', '2026-05-27 05:28:54'),
-(21, 'Yusuf Mahendra', 'yusuf', 'yusufmahendra866@gmail.com', NULL, '$2y$12$bs2LtMclpLwLvj62gN/M/OsIIFR0yrUGcfGuMw4QAqxO6nOln.vpC', 'user', 9, 0, NULL, '2026-05-27 05:31:30', '2026-05-27 05:31:30'),
-(22, 'Zainul Rifa`i', 'zainul', 'zainulrifai@gmail.com', NULL, '$2y$12$9Xzu1eVhs.Ge9quKSLiZB.LuWrC4p6lUSHK4RMoRecKWKhx7YKV/C', 'user', 5, 0, NULL, '2026-05-27 05:33:22', '2026-05-27 05:33:22'),
-(23, 'Nadiatun Na`imah', 'nadia', 'nadiatunnaimah10@gmail.com', NULL, '$2y$12$ummYHuaKRkaymqN3B6qy3ehobgmNRgu45A.P.eO1yCPUWWHGqCAFC', 'user', 3, 0, NULL, '2026-05-28 10:42:59', '2026-05-28 10:42:59'),
-(24, 'Irma Safitri', 'irma', 'irmasaftiri@gmail.com', NULL, '$2y$12$X8CKog/uiBp2gEAUvBhHCeEse5AY7s3wlWrkeE7rzb3d3.6W8rliu', 'user', 3, 0, NULL, '2026-05-28 10:45:21', '2026-05-28 10:45:21'),
-(25, 'Ananda Indah Pangestuti', 'nanda', 'anandaindahpangastuti@gmail.com', NULL, '$2y$12$IOXoCxP8BTuwZl34uezdVeB8dG.AUbx/pNr.ErEnMKPwszTGGHQki', 'user', 5, 0, NULL, '2026-05-28 10:49:58', '2026-05-28 10:49:58'),
-(26, 'Ayu Royyana', 'ayu', 'ayuroyyana8@gmail.com', NULL, '$2y$12$2ZUjUoEkttinIsszRZncau/M6qeFvMswV0v5Sdip7UdB6EhDNRQKm', 'user', 2, 0, NULL, '2026-05-28 10:52:29', '2026-05-28 10:52:29'),
-(27, 'Nashfa Erlina Sahli', 'nashfa', 'nashfaerlianasahli@gmail.com', NULL, '$2y$12$nmSbsCPIZrW1PnCOg5nNduF11DGon213MtQSxpjjPUH4UmRGgesO2', 'user', 4, 0, NULL, '2026-05-28 10:55:26', '2026-05-28 10:55:26'),
-(28, 'Neli Syahputri', 'neli', 'nelysyaputri34@gmail.com', NULL, '$2y$12$dCbp5U1I4LRV1Em9wuXwV.DJzTY6gi1o3SpeLK0MNSYnrV6M4QFJS', 'user', 9, 0, NULL, '2026-05-28 10:58:32', '2026-05-28 10:58:32'),
-(29, 'Putri Zahrotul Kholisah', 'putri', 'putrizahrotulkholisah@gmail.com', NULL, '$2y$12$glbMdZX6F6rSXzg4YRiTW.XmvLxmxh7BYLKtAiCmAv72TrpRhBv26', 'user', 4, 0, NULL, '2026-05-28 11:00:23', '2026-05-28 11:00:23'),
-(30, 'Risna Maila Zulfa', 'risna', 'risnamailazulfa@gmail.com', NULL, '$2y$12$nTLs9CpLLwcidZsT2fBOIepu7PaZaH8i0SN14h1eMeQ75FAks6QPG', 'user', 2, 0, NULL, '2026-05-28 11:02:41', '2026-05-28 11:02:41'),
-(31, 'Siti Nur Hasanah', 'siti', 'sitinurhasanah0114@gmail.com', NULL, '$2y$12$thohlcPftLxXKQYtKyoUSuJMzAD9OJSd1wY7ewvN5tkG777IEQFkK', 'user', 4, 0, NULL, '2026-05-28 11:05:08', '2026-05-28 11:05:08'),
-(32, 'Drs. H. Anas, M.Pd', 'anas', 'anasmts112@gmail.com', NULL, '$2y$12$dzt6megxyyxgcdOKq6MAGeXCIe2Hf/Nl/ZHOpsA65gkOqz0K26NMq', 'user', 2, 1, NULL, '2026-05-28 11:18:08', '2026-06-06 05:06:43'),
-(33, 'Nina Marlina, S.Pd, M.E', 'nina', 'nienamarlina470@gmail.com', NULL, '$2y$12$EHqDWbOg6JCj2ru2lTP9neXaBFqSWmdZ0BBCOjdGOFlT2YM4P/5me', 'user', 9, 1, NULL, '2026-05-28 11:33:09', '2026-06-05 08:58:52'),
-(34, 'Rahmat Budi Permana, S.Pd., M.E', 'rahmat', 'rbpermana@gmail.com', NULL, '$2y$12$c8CZLcRMv6Zty4GdS1To3OBg.v56tt8Tcp6P5JozaZvu8BPn.6g9O', 'user', 11, 1, NULL, '2026-05-28 11:35:31', '2026-06-04 17:32:51'),
-(35, 'MUH. HARUN, S.H.I., M.Sos', 'babinlumni', 'harun.syirahay@gmail.com', NULL, '$2y$12$1pRW9gQgu52.Kl8d0Qekq.qakZHWeVmLKn7wZ.CEtlM/F8CZ22XXW', 'admin', NULL, 0, 'DsapmOejEaQBgzF2TOOaw4brzoSLv3TPP1mifnzoiZDhcmkFXTneBXtJeQPG', '2026-05-28 21:45:20', '2026-05-28 21:45:20'),
-(36, 'MUH. HARUN, S.H.I., M.Sos', 'harun', 'harun.ysk4@gmail.com', NULL, '$2y$12$rww1XoZHEIWgihZl8zgof.0NnQ4JOfWKQ1KjSMB8D9KzhF/sQO/Sa', 'user', 12, 1, NULL, '2026-05-28 21:49:53', '2026-06-06 07:53:00'),
-(37, 'BANDIYAH', 'bandiyah', 'bandiyah@gmail.com', NULL, '$2y$12$29AO4gP1.imkZjkMHmXfk.BKp2XnlL9.2TZVdzQ1MX4At7t4BISsi', 'user', 4, 1, NULL, '2026-06-02 06:14:52', '2026-06-04 17:28:19'),
-(38, 'SITI JUARIAH', 'juariyah', 'juariyah@gmail.com', NULL, '$2y$12$5OTuiWsoiMMSDh2I4.ZkCukLNfaRovXaP9aoBkfwMr/lwP7yP0eXq', 'user', 5, 1, NULL, '2026-06-02 06:19:16', '2026-06-04 17:29:12'),
-(39, 'MISRUN', 'misrun', 'misrun@gmail.com', NULL, '$2y$12$/Q2Qua5OAqzqvmQAJ6xcJOxEWwZE.i9hP/cisDPyqprEUm5pvKy7e', 'user', 7, 1, NULL, '2026-06-02 06:30:33', '2026-06-06 07:36:11'),
-(40, 'Sujitho, S.Pd. SD', 'sujitho', 'sujitho@gmail.com', NULL, '$2y$12$1.uq0mCJ8FBLHjHsdUlxyuJujemrzjLhNu4Y9lZHbmsVUECZvFpzu', 'user', 3, 1, NULL, '2026-06-06 05:12:55', '2026-06-06 05:29:58'),
-(41, 'Nur Makmuroh', 'makmuroh', 'nurmakmuroh@gmail.com', NULL, '$2y$12$lJmUq9S8iZFaR95T5MS0b.0jzGu7EdfQqeQPTR37ACC5voOAcOvvm', 'user', 6, 1, NULL, '2026-06-06 06:10:25', '2026-06-06 06:11:20');
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES
+(1,'Administrator','admin','admin@penilaian.com',NULL,'$2y$12$E6WsuGJY3g2tEMWqT4Uvfu1opztcjix9/joamBaTgEk.14FyGUigS','admin',NULL,0,'boMJG4S9WJVpbJxY35EqP6vLAcnEdoe4cbUTaQOlanaqGKvemXYD8GPWSql9','2026-02-27 00:30:47','2026-02-27 00:30:47'),
+(2,'User Penilai','user','user@penilaian.com',NULL,'$2y$12$djdlHO554Gv9j509VQVMwuu6e3Y3U8pB49AoGeyhNcd/6DLLtJUKm','user',NULL,0,NULL,'2026-02-27 00:30:47','2026-04-09 17:19:05'),
+(4,'Fathul Mu\'in, S.Pd.','fathul','fathul@website.com',NULL,'$2y$12$ubEdapKfVNDFtOPH37eVuO/7yQhhKus/Srp5Sd5Gb3aDOvbtzpFju','user',1,1,'QemjujWykopO3E8RmaXRSXm31Lgj1pNQhqDjBG4mcGoRAlP0lPicR2pocEqc','2026-04-13 00:14:08','2026-06-08 08:42:18'),
+(5,'Agus Ihsan','agus','agusihsann@gmail.com',NULL,'$2y$12$8B6TZegbrTu8Q6Iphl5sBuO4DbwcJkOB36FOJid1ZV9XKD996S1Dy','user',2,0,'2X91LkZRd49VNf4BDDp8XkA6Fxo0xoZHrpW0gggqh9bsAbnRvegDt3Lzj1wY','2026-05-08 22:56:10','2026-05-08 22:56:10'),
+(6,'Riza Wafirotun Nisa`','riza','rizawafirotunnisa@gmail.com',NULL,'$2y$12$06Z9AJc6kR.jocQPMkTlyeAJiTtszPJiao6A/4HS7cDKAImQE9F8y','user',1,0,'AxIYJpQ25XH8HOCR34PGYgV7PwtdoPkZvfE5oiPP0qWFHoJAHU7QxrHeHcYk','2026-05-09 00:08:00','2026-05-09 00:08:00'),
+(7,'Ahmad Khoirul Amin','amin','ahmadkhoirulamin65@gmail.com',NULL,'$2y$12$nmHs3fSTJ23fC1hBAwBnP.AA0DrcEhfSMqzPEZX3F2zfQ4k1QlFFS','user',5,0,NULL,'2026-05-27 02:00:24','2026-05-27 02:00:24'),
+(8,'Ahmad Shofyan Nur Shobah','ahmad','ahmadshofyannurshobah@gmail.com',NULL,'$2y$12$tcmnddlavipuflsPUZ0NSOH4rGsdlecAxjZCPxnBQjL0ozpaj3B.i','user',1,0,'LAzizste4AlTzR2QnqKxpbrdOdSTS6rkOjHDSXqVmkaUQmj2W4xSHsZzTIF8','2026-05-27 02:06:37','2026-05-27 02:06:37'),
+(9,'Fadhil Nandila','fadhil','fadhilnandila62@gmail.com',NULL,'$2y$12$pvexvYsu/J3SCbfs9gzWTevAsjDEtUjIhrH3G3ORHuMXjoSLh6i5y','user',3,0,NULL,'2026-05-27 02:10:22','2026-05-27 02:10:22'),
+(10,'Himmatul Ulya Hs','hima','himmatululyahs3@gmail.com',NULL,'$2y$12$AhjiXWYUg3NNaPQxFfBlRum4ehnZ0TwrMaXdCl6tPmCb1j1qoQ3Y6','user',9,0,NULL,'2026-05-27 02:15:06','2026-05-27 02:15:06'),
+(11,'Indah Mustika Sari','indah','mustikasari17032007@gmail.com',NULL,'$2y$12$1oA9ZGrUmTt379CBZpQubeTjT61M8ElgzyoO4ILC/oeOdWqiuoZQa','user',NULL,0,NULL,'2026-05-27 02:57:55','2026-05-27 02:57:55'),
+(12,'Khozainul Muna','muna','Khozainulmuna026@gmail.com',NULL,'$2y$12$rzZua93UJjqWYOeNKCITz.2Dte4OBhrvgKxj1tpNg80W8UUIQiJW6','user',5,0,NULL,'2026-05-27 03:01:15','2026-05-27 03:01:15'),
+(13,'Maya Sulis Stiawati','maya','mayasulisstiawati@gmail.com',NULL,'$2y$12$c2lHn3JXZB05dNSjxSfyze9AxyzpI5JM3fpeIGFttO3CjrGDswZ1m','user',1,0,NULL,'2026-05-27 03:07:25','2026-05-27 03:07:25'),
+(14,'Moh. Celvin Nugroho','celvin','muhammadcelvinnugroho.ypph.mts@gmail.com',NULL,'$2y$12$eY9IpdOY0bFndGTMs1LH8.PqOIuT/HNE4kBqRmYww3hgnx9V/zkr2','user',12,0,NULL,'2026-05-27 03:10:03','2026-05-27 03:10:03'),
+(15,'Nabila Salwa Zanjabila','nabil','nabilslawazanzabila@gmail.com',NULL,'$2y$12$dQlkTyvq6iZMsYCjJd5jC.dMc/R5m0FMVDRLiGFQrFhz3Y228TQ1e','user',11,0,NULL,'2026-05-27 03:15:18','2026-05-27 03:15:18'),
+(17,'Syakur Sofian Tahir','syukur','syukurshofiantahir@gmail.com',NULL,'$2y$12$vI8Lq6AlV1rY8CYvC04ntOP8jLVsw1wwQbFrD0kkeerV5D37wr.BK','user',9,0,NULL,'2026-05-27 05:20:04','2026-05-27 05:20:04'),
+(18,'Umi Masruroh','umi','umimasruroh1607@gmail.com',NULL,'$2y$12$DDpg6nw3AzplnVqRDNfZK.1he3Z.C3eJrbF7hybETJ6HC8LgwjjOW','user',9,0,NULL,'2026-05-27 05:22:35','2026-05-27 05:22:35'),
+(19,'Viko Romadhon','viko','vikoromadhon18@gmail.com',NULL,'$2y$12$DgW0OFFIgzDGO95.YfQgTeP6XcWk9aSjD.4.57AoUH2plLRezuQ56','user',11,0,NULL,'2026-05-27 05:26:23','2026-05-27 05:26:23'),
+(20,'Wahyu Pratama','wahyu','wahyupratama@gmail.com',NULL,'$2y$12$TIbKdIk2aABjh8G9hM1e1OBU4Hl5efpYsbgooK1ePZ0fkPJ95Bfk2','user',3,0,NULL,'2026-05-27 05:28:54','2026-05-27 05:28:54'),
+(21,'Yusuf Mahendra','yusuf','yusufmahendra866@gmail.com',NULL,'$2y$12$bs2LtMclpLwLvj62gN/M/OsIIFR0yrUGcfGuMw4QAqxO6nOln.vpC','user',9,0,NULL,'2026-05-27 05:31:30','2026-05-27 05:31:30'),
+(22,'Zainul Rifa`i','zainul','zainulrifai@gmail.com',NULL,'$2y$12$9Xzu1eVhs.Ge9quKSLiZB.LuWrC4p6lUSHK4RMoRecKWKhx7YKV/C','user',5,0,NULL,'2026-05-27 05:33:22','2026-05-27 05:33:22'),
+(23,'Nadiatun Na`imah','nadia','nadiatunnaimah10@gmail.com',NULL,'$2y$12$ummYHuaKRkaymqN3B6qy3ehobgmNRgu45A.P.eO1yCPUWWHGqCAFC','user',3,0,NULL,'2026-05-28 10:42:59','2026-05-28 10:42:59'),
+(24,'Irma Safitri','irma','irmasaftiri@gmail.com',NULL,'$2y$12$X8CKog/uiBp2gEAUvBhHCeEse5AY7s3wlWrkeE7rzb3d3.6W8rliu','user',3,0,NULL,'2026-05-28 10:45:21','2026-05-28 10:45:21'),
+(25,'Ananda Indah Pangestuti','nanda','anandaindahpangastuti@gmail.com',NULL,'$2y$12$IOXoCxP8BTuwZl34uezdVeB8dG.AUbx/pNr.ErEnMKPwszTGGHQki','user',5,0,NULL,'2026-05-28 10:49:58','2026-05-28 10:49:58'),
+(26,'Ayu Royyana','ayu','ayuroyyana8@gmail.com',NULL,'$2y$12$2ZUjUoEkttinIsszRZncau/M6qeFvMswV0v5Sdip7UdB6EhDNRQKm','user',2,0,NULL,'2026-05-28 10:52:29','2026-05-28 10:52:29'),
+(27,'Nashfa Erlina Sahli','nashfa','nashfaerlianasahli@gmail.com',NULL,'$2y$12$nmSbsCPIZrW1PnCOg5nNduF11DGon213MtQSxpjjPUH4UmRGgesO2','user',4,0,NULL,'2026-05-28 10:55:26','2026-05-28 10:55:26'),
+(28,'Neli Syahputri','neli','nelysyaputri34@gmail.com',NULL,'$2y$12$dCbp5U1I4LRV1Em9wuXwV.DJzTY6gi1o3SpeLK0MNSYnrV6M4QFJS','user',9,0,NULL,'2026-05-28 10:58:32','2026-05-28 10:58:32'),
+(29,'Putri Zahrotul Kholisah','putri','putrizahrotulkholisah@gmail.com',NULL,'$2y$12$glbMdZX6F6rSXzg4YRiTW.XmvLxmxh7BYLKtAiCmAv72TrpRhBv26','user',4,0,NULL,'2026-05-28 11:00:23','2026-05-28 11:00:23'),
+(30,'Risna Maila Zulfa','risna','risnamailazulfa@gmail.com',NULL,'$2y$12$nTLs9CpLLwcidZsT2fBOIepu7PaZaH8i0SN14h1eMeQ75FAks6QPG','user',2,0,NULL,'2026-05-28 11:02:41','2026-05-28 11:02:41'),
+(31,'Siti Nur Hasanah','siti','sitinurhasanah0114@gmail.com',NULL,'$2y$12$thohlcPftLxXKQYtKyoUSuJMzAD9OJSd1wY7ewvN5tkG777IEQFkK','user',4,0,NULL,'2026-05-28 11:05:08','2026-05-28 11:05:08'),
+(32,'Drs. H. Anas, M.Pd','anas','anasmts112@gmail.com',NULL,'$2y$12$dzt6megxyyxgcdOKq6MAGeXCIe2Hf/Nl/ZHOpsA65gkOqz0K26NMq','user',2,1,'dOEg2odwfJ7KWFRJbxNnKlB27EdV14U0AMAUgLrCmrny35goakaoH10KfizJ','2026-05-28 11:18:08','2026-06-07 09:49:28'),
+(33,'Nina Marlina, S.Pd, M.E','nina','nienamarlina470@gmail.com',NULL,'$2y$12$EHqDWbOg6JCj2ru2lTP9neXaBFqSWmdZ0BBCOjdGOFlT2YM4P/5me','user',9,1,NULL,'2026-05-28 11:33:09','2026-06-05 08:58:52'),
+(34,'Rahmat Budi Permana, S.Pd., M.E','rahmat','rbpermana@gmail.com',NULL,'$2y$12$c8CZLcRMv6Zty4GdS1To3OBg.v56tt8Tcp6P5JozaZvu8BPn.6g9O','user',11,1,NULL,'2026-05-28 11:35:31','2026-06-04 17:32:51'),
+(35,'MUH. HARUN, S.H.I., M.Sos','babinlumni','harun.syirahay@gmail.com',NULL,'$2y$12$1pRW9gQgu52.Kl8d0Qekq.qakZHWeVmLKn7wZ.CEtlM/F8CZ22XXW','admin',NULL,0,'DsapmOejEaQBgzF2TOOaw4brzoSLv3TPP1mifnzoiZDhcmkFXTneBXtJeQPG','2026-05-28 21:45:20','2026-05-28 21:45:20'),
+(36,'MUH. HARUN, S.H.I., M.Sos','harun','harun.ysk4@gmail.com',NULL,'$2y$12$rww1XoZHEIWgihZl8zgof.0NnQ4JOfWKQ1KjSMB8D9KzhF/sQO/Sa','user',12,1,NULL,'2026-05-28 21:49:53','2026-06-07 10:08:09'),
+(37,'BANDIYAH','bandiyah','bandiyah@gmail.com',NULL,'$2y$12$29AO4gP1.imkZjkMHmXfk.BKp2XnlL9.2TZVdzQ1MX4At7t4BISsi','user',4,1,NULL,'2026-06-02 06:14:52','2026-06-04 17:28:19'),
+(38,'SITI JUARIAH','juariyah','juariyah@gmail.com',NULL,'$2y$12$5OTuiWsoiMMSDh2I4.ZkCukLNfaRovXaP9aoBkfwMr/lwP7yP0eXq','user',5,1,NULL,'2026-06-02 06:19:16','2026-06-04 17:29:12'),
+(39,'MISRUN','misrun','misrun@gmail.com',NULL,'$2y$12$/Q2Qua5OAqzqvmQAJ6xcJOxEWwZE.i9hP/cisDPyqprEUm5pvKy7e','user',7,1,'YdSfVTu7KDgNyyFf5SlFeCakMFfGoVWfrsvHp5rSjCqG0mc03OgAGdqWTKhA','2026-06-02 06:30:33','2026-06-07 10:03:57'),
+(40,'Sujitho, S.Pd. SD','sujitho','sujitho@gmail.com',NULL,'$2y$12$1.uq0mCJ8FBLHjHsdUlxyuJujemrzjLhNu4Y9lZHbmsVUECZvFpzu','user',3,1,'iDBcQMrnw4puqi1jT3XtCVY6RD6FrhrRP3o2t6xQTv0hu1tTJx8Q4KfCXREP','2026-06-06 05:12:55','2026-06-06 05:29:58'),
+(41,'Nur Makmuroh','makmuroh','nurmakmuroh@gmail.com',NULL,'$2y$12$lJmUq9S8iZFaR95T5MS0b.0jzGu7EdfQqeQPTR37ACC5voOAcOvvm','user',6,1,NULL,'2026-06-06 06:10:25','2026-06-06 06:11:20'),
+(42,'Drs. H. Ah. Masyhuri SA, M.Pd.I','masyhuri','masyhuri@gmail.com',NULL,'$2y$12$/f6Re32gRH3BT.XEo7P.vO.T94P3XNSdiLBLpQ.oWLSFWT./k6Wn.','user',17,1,NULL,'2026-06-07 09:52:00','2026-06-07 09:58:10');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Indexes for dumped tables
+-- Dumping routines for database 'ypphmugo_apk'
 --
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
---
--- Indexes for table `cache`
---
-ALTER TABLE `cache`
-  ADD PRIMARY KEY (`key`),
-  ADD KEY `cache_expiration_index` (`expiration`);
-
---
--- Indexes for table `cache_locks`
---
-ALTER TABLE `cache_locks`
-  ADD PRIMARY KEY (`key`),
-  ADD KEY `cache_locks_expiration_index` (`expiration`);
-
---
--- Indexes for table `failed_jobs`
---
-ALTER TABLE `failed_jobs`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
-
---
--- Indexes for table `jobs`
---
-ALTER TABLE `jobs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `jobs_queue_index` (`queue`);
-
---
--- Indexes for table `job_batches`
---
-ALTER TABLE `job_batches`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `karyawan`
---
-ALTER TABLE `karyawan`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `karyawan_kode_karyawan_unique` (`kode_karyawan`),
-  ADD UNIQUE KEY `karyawan_nomor_induk_unique` (`nomor_induk`),
-  ADD KEY `karyawan_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
-  ADD KEY `karyawan_user_id_foreign` (`user_id`),
-  ADD KEY `karyawan_pangkalan_id_foreign` (`pangkalan_id`);
-
---
--- Indexes for table `karyawan_pangkalan`
---
-ALTER TABLE `karyawan_pangkalan`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `karyawan_pangkalan_karyawan_id_pangkalan_id_unique` (`karyawan_id`,`pangkalan_id`),
-  ADD KEY `karyawan_pangkalan_pangkalan_id_foreign` (`pangkalan_id`);
-
---
--- Indexes for table `kategori_kinerja`
---
-ALTER TABLE `kategori_kinerja`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `kategori_kinerja_kode_kategori_unique` (`kode_kategori`);
-
---
--- Indexes for table `kategori_kinerja_kompetensi`
---
-ALTER TABLE `kategori_kinerja_kompetensi`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_kategori_kompetensi` (`kategori_kinerja_id`,`kompetensi_id`),
-  ADD KEY `kategori_kinerja_kompetensi_kompetensi_id_foreign` (`kompetensi_id`);
-
---
--- Indexes for table `kepala_pangkalan`
---
-ALTER TABLE `kepala_pangkalan`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `kepala_pangkalan_user_id_pangkalan_id_unique` (`user_id`,`pangkalan_id`),
-  ADD KEY `kepala_pangkalan_pangkalan_id_foreign` (`pangkalan_id`);
-
---
--- Indexes for table `kompetensi`
---
-ALTER TABLE `kompetensi`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `kompetensi_kode_kompetensi_unique` (`kode_kompetensi`),
-  ADD KEY `kompetensi_kategori_kinerja_id_foreign` (`kategori_kinerja_id`);
-
---
--- Indexes for table `migrations`
---
-ALTER TABLE `migrations`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `mutasi`
---
-ALTER TABLE `mutasi`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `mutasi_kode_mutasi_unique` (`kode_mutasi`),
-  ADD KEY `mutasi_karyawan_id_foreign` (`karyawan_id`),
-  ADD KEY `mutasi_tahun_penilaian_id_foreign` (`tahun_penilaian_id`);
-
---
--- Indexes for table `pangkalan`
---
-ALTER TABLE `pangkalan`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `pangkalan_kode_pangkalan_unique` (`kode_pangkalan`),
-  ADD KEY `pangkalan_kepala_user_id_foreign` (`kepala_user_id`);
-
---
--- Indexes for table `pangkalan_kategori_kinerja`
---
-ALTER TABLE `pangkalan_kategori_kinerja`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `pangkalan_kategori_unique` (`pangkalan_id`,`kategori_kinerja_id`),
-  ADD KEY `pangkalan_kategori_kinerja_kategori_kinerja_id_foreign` (`kategori_kinerja_id`);
-
---
--- Indexes for table `password_reset_tokens`
---
-ALTER TABLE `password_reset_tokens`
-  ADD PRIMARY KEY (`email`);
-
---
--- Indexes for table `penilaian_locks`
---
-ALTER TABLE `penilaian_locks`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `penilaian_locks_karyawan_id_tahun_penilaian_id_unique` (`karyawan_id`,`tahun_penilaian_id`),
-  ADD KEY `penilaian_locks_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
-  ADD KEY `penilaian_locks_submitted_by_user_id_foreign` (`submitted_by_user_id`),
-  ADD KEY `penilaian_locks_locked_by_user_id_foreign` (`locked_by_user_id`),
-  ADD KEY `penilaian_locks_unlocked_by_user_id_foreign` (`unlocked_by_user_id`);
-
---
--- Indexes for table `penilaian_unlock_requests`
---
-ALTER TABLE `penilaian_unlock_requests`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `penilaian_unlock_requests_karyawan_id_foreign` (`karyawan_id`),
-  ADD KEY `penilaian_unlock_requests_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
-  ADD KEY `penilaian_unlock_requests_requested_by_user_id_foreign` (`requested_by_user_id`),
-  ADD KEY `penilaian_unlock_requests_reviewed_by_user_id_foreign` (`reviewed_by_user_id`),
-  ADD KEY `penilaian_unlock_requests_status_created_at_index` (`status`,`created_at`);
-
---
--- Indexes for table `performance_rating`
---
-ALTER TABLE `performance_rating`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `performance_rating_kode_rating_unique` (`kode_rating`);
-
---
--- Indexes for table `sessions`
---
-ALTER TABLE `sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `sessions_user_id_index` (`user_id`),
-  ADD KEY `sessions_last_activity_index` (`last_activity`);
-
---
--- Indexes for table `setting_lembaga`
---
-ALTER TABLE `setting_lembaga`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `setting_lembaga_tahun_penilaian_id_foreign` (`tahun_penilaian_id`);
-
---
--- Indexes for table `tahun_penilaian`
---
-ALTER TABLE `tahun_penilaian`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `transaksi`
---
-ALTER TABLE `transaksi`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `transaksi_kode_transaksi_unique` (`kode_transaksi`),
-  ADD KEY `transaksi_karyawan_id_foreign` (`karyawan_id`),
-  ADD KEY `transaksi_tahun_penilaian_id_foreign` (`tahun_penilaian_id`),
-  ADD KEY `transaksi_kompetensi_id_foreign` (`kompetensi_id`),
-  ADD KEY `transaksi_performance_rating_id_foreign` (`performance_rating_id`),
-  ADD KEY `transaksi_pangkalan_id_foreign` (`pangkalan_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `users_username_unique` (`username`),
-  ADD UNIQUE KEY `users_email_unique` (`email`),
-  ADD KEY `users_pangkalan_id_foreign` (`pangkalan_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `failed_jobs`
---
-ALTER TABLE `failed_jobs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `jobs`
---
-ALTER TABLE `jobs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `karyawan`
---
-ALTER TABLE `karyawan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
-
---
--- AUTO_INCREMENT for table `karyawan_pangkalan`
---
-ALTER TABLE `karyawan_pangkalan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=173;
-
---
--- AUTO_INCREMENT for table `kategori_kinerja`
---
-ALTER TABLE `kategori_kinerja`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `kategori_kinerja_kompetensi`
---
-ALTER TABLE `kategori_kinerja_kompetensi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
-
---
--- AUTO_INCREMENT for table `kepala_pangkalan`
---
-ALTER TABLE `kepala_pangkalan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `kompetensi`
---
-ALTER TABLE `kompetensi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
-
---
--- AUTO_INCREMENT for table `migrations`
---
-ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
-
---
--- AUTO_INCREMENT for table `mutasi`
---
-ALTER TABLE `mutasi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `pangkalan`
---
-ALTER TABLE `pangkalan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `pangkalan_kategori_kinerja`
---
-ALTER TABLE `pangkalan_kategori_kinerja`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
-
---
--- AUTO_INCREMENT for table `penilaian_locks`
---
-ALTER TABLE `penilaian_locks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `penilaian_unlock_requests`
---
-ALTER TABLE `penilaian_unlock_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `performance_rating`
---
-ALTER TABLE `performance_rating`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `setting_lembaga`
---
-ALTER TABLE `setting_lembaga`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `tahun_penilaian`
---
-ALTER TABLE `tahun_penilaian`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `transaksi`
---
-ALTER TABLE `transaksi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `karyawan`
---
-ALTER TABLE `karyawan`
-  ADD CONSTRAINT `karyawan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `karyawan_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `karyawan_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `karyawan_pangkalan`
---
-ALTER TABLE `karyawan_pangkalan`
-  ADD CONSTRAINT `karyawan_pangkalan_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `karyawan_pangkalan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `kategori_kinerja_kompetensi`
---
-ALTER TABLE `kategori_kinerja_kompetensi`
-  ADD CONSTRAINT `kategori_kinerja_kompetensi_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `kategori_kinerja_kompetensi_kompetensi_id_foreign` FOREIGN KEY (`kompetensi_id`) REFERENCES `kompetensi` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `kepala_pangkalan`
---
-ALTER TABLE `kepala_pangkalan`
-  ADD CONSTRAINT `kepala_pangkalan_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `kepala_pangkalan_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `kompetensi`
---
-ALTER TABLE `kompetensi`
-  ADD CONSTRAINT `kompetensi_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `mutasi`
---
-ALTER TABLE `mutasi`
-  ADD CONSTRAINT `mutasi_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `mutasi_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `pangkalan`
---
-ALTER TABLE `pangkalan`
-  ADD CONSTRAINT `pangkalan_kepala_user_id_foreign` FOREIGN KEY (`kepala_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `pangkalan_kategori_kinerja`
---
-ALTER TABLE `pangkalan_kategori_kinerja`
-  ADD CONSTRAINT `pangkalan_kategori_kinerja_kategori_kinerja_id_foreign` FOREIGN KEY (`kategori_kinerja_id`) REFERENCES `kategori_kinerja` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `pangkalan_kategori_kinerja_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `penilaian_locks`
---
-ALTER TABLE `penilaian_locks`
-  ADD CONSTRAINT `penilaian_locks_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `penilaian_locks_locked_by_user_id_foreign` FOREIGN KEY (`locked_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `penilaian_locks_submitted_by_user_id_foreign` FOREIGN KEY (`submitted_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `penilaian_locks_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `penilaian_locks_unlocked_by_user_id_foreign` FOREIGN KEY (`unlocked_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `penilaian_unlock_requests`
---
-ALTER TABLE `penilaian_unlock_requests`
-  ADD CONSTRAINT `penilaian_unlock_requests_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `penilaian_unlock_requests_requested_by_user_id_foreign` FOREIGN KEY (`requested_by_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `penilaian_unlock_requests_reviewed_by_user_id_foreign` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `penilaian_unlock_requests_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `setting_lembaga`
---
-ALTER TABLE `setting_lembaga`
-  ADD CONSTRAINT `setting_lembaga_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `transaksi`
---
-ALTER TABLE `transaksi`
-  ADD CONSTRAINT `transaksi_karyawan_id_foreign` FOREIGN KEY (`karyawan_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `transaksi_kompetensi_id_foreign` FOREIGN KEY (`kompetensi_id`) REFERENCES `kompetensi` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `transaksi_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `transaksi_performance_rating_id_foreign` FOREIGN KEY (`performance_rating_id`) REFERENCES `performance_rating` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `transaksi_tahun_penilaian_id_foreign` FOREIGN KEY (`tahun_penilaian_id`) REFERENCES `tahun_penilaian` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_pangkalan_id_foreign` FOREIGN KEY (`pangkalan_id`) REFERENCES `pangkalan` (`id`) ON DELETE SET NULL;
-COMMIT;
-
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-06-10  6:56:45

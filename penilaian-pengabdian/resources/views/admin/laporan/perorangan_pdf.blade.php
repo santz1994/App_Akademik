@@ -319,7 +319,8 @@
                 @endphp
                 @foreach($kat->kompetensi as $komp)
                     @php
-                        $t = $trxByKompetensi->get($komp->id);
+                        $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                        $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                         $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                         if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                     @endphp
@@ -362,7 +363,8 @@
             @php $kategoriNilai = []; @endphp
             @foreach($kat->kompetensi as $komp)
                 @php
-                    $t = $trxByKompetensi->get((int) $komp->id . ':' . (int) $kat->id);
+                    $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                    $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                     $nilai = ($t && $t->nilai !== null) ? (float) $t->nilai : null;
                     if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                 @endphp
@@ -394,7 +396,8 @@
                         $kinerjaNilai = [];
                         foreach ($kinerjaKategori as $kat) {
                             foreach ($kat->kompetensi as $komp) {
-                                $t = $trxByKompetensi->get($komp->id);
+                                $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                                $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                                 if ($t && $t->nilai !== null) { $kinerjaNilai[] = (float) $t->nilai; }
                             }
                         }
@@ -418,7 +421,8 @@
                         $kegiatanNilai = [];
                         foreach ($kegiatanKategori as $kat) {
                             foreach ($kat->kompetensi as $komp) {
-                                $t = $trxByKompetensi->get($komp->id);
+                                $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                                $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                                 if ($t && $t->nilai !== null) { $kegiatanNilai[] = (float) $t->nilai; }
                             }
                         }

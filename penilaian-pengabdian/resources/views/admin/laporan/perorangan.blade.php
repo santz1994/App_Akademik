@@ -199,15 +199,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                        @php
-                            // DEBUG: Log kategoriDetails for this pangkalan
-                            \Illuminate\Support\Facades\Log::debug('PERORANGAN DEBUG', [
-                                'pangkalan' => $ppData['pangkalan']?->nama_pangkalan,
-                                'pangkalan_id' => $ppData['pangkalan_id'],
-                                'kategoriDetails_count' => count($ppData['kategoriDetails']),
-                                'kategoriDetails_ids' => collect($ppData['kategoriDetails'])->pluck('kategori.id')->toArray(),
-                            ]);
-                        @endphp
                         @foreach($ppData['kategoriDetails'] as $kd)
                             @foreach($kd['kategori']->kompetensi as $komp)
                                 @php
@@ -299,7 +290,8 @@
                     @php $kategoriNilai = []; @endphp
                     @foreach($kat->kompetensi as $komp)
                         @php
-                            $t = $pkTrx->get($komp->id);
+                            $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                            $t = $pkTrx->get($compositeKey) ?? $pkTrx->get($komp->id);
                             $nilai = ($t && $t->nilai !== null && (int) $t->kategori_kinerja_id === (int) $kat->id) ? (float) $t->nilai : null;
                             if ($nilai !== null) { $kategoriNilai[] = $nilai; }
                         @endphp
