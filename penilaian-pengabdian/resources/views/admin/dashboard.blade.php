@@ -27,6 +27,11 @@
                 <div class="mt-2 text-muted" style="font-size:.78rem;">
                     {{ $stats['sudah_dinilai_tahun_aktif'] }} dari {{ $stats['total_karyawan_aktif'] }} karyawan aktif sudah dinilai
                 </div>
+                @if($stats['belum_lengkap_count'] > 0)
+                <div class="mt-1" style="font-size:.78rem;">
+                    <span class="text-warning fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>{{ $stats['belum_lengkap_count'] }} karyawan belum lengkap</span>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -59,6 +64,69 @@
         </div>
     </div>
 </div>
+
+@if($stats['belum_lengkap_count'] > 0)
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-10 py-2 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Karyawan Belum Lengkap Nilai ({{ $stats['belum_lengkap_count'] }})
+                </h6>
+                <small class="text-muted">Tahun Aktif: {{ $stats['tahun_aktif'] }}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0 align-middle" style="font-size:.84rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="36">No</th>
+                                <th>Karyawan</th>
+                                <th>Pangkalan Job</th>
+                                <th width="120" class="text-center">Terisi</th>
+                                <th width="80" class="text-center">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($stats['belum_lengkap_list'] as $idx => $item)
+                            <tr>
+                                <td>{{ $idx + 1 }}</td>
+                                <td>
+                                    <a href="{{ route('admin.laporan.perorangan', ['karyawan_id' => $item['karyawan']->id, 'tahun_penilaian_id' => request('tahun_penilaian_id')]) }}"
+                                       class="text-decoration-none fw-semibold">
+                                        {{ $item['karyawan']->nama_karyawan }}
+                                    </a>
+                                </td>
+                                <td>
+                                    @if($item['karyawan']->pangkalans->count())
+                                        @foreach($item['karyawan']->pangkalans as $p)
+                                            <span class="badge bg-info text-dark" style="font-size:.65rem;">{{ $p->nama_pangkalan }}</span>{{ $loop->last ? '' : ' ' }}
+                                        @endforeach
+                                    @else <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <span class="{{ $item['terisi'] == $item['total'] ? 'text-success fw-semibold' : 'text-danger fw-semibold' }}">
+                                        {{ $item['terisi'] }}/{{ $item['total'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height:6px;">
+                                        <div class="progress-bar {{ $item['persen'] >= 100 ? 'bg-success' : ($item['persen'] >= 50 ? 'bg-warning' : 'bg-danger') }}"
+                                             style="width: {{ $item['persen'] }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ $item['persen'] }}%</small>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="row g-3">
     <div class="col-lg-8">

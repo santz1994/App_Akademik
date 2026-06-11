@@ -210,21 +210,25 @@
                                     <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                                 </tr>
                             @endforeach
+                            @if($kd['average'] !== null)
                             <tr class="table-primary">
                                 <td class="fw-bold">Rata-rata {{ $kd['kategori']->kategori }}</td>
-                                <td class="text-center fw-bold">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
+                                <td class="text-center fw-bold">{{ number_format($kd['average'], 2) }}</td>
                             </tr>
+                            @endif
                         @endforeach
                         </tbody>
                     </table>
+                    @if($ppData['kinerjaAvg'] !== null)
                     <table class="table table-bordered table-sm mb-0" style="font-size:.82rem;">
                         <tbody>
                             <tr class="table-primary">
                                 <td class="fw-bold">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
-                                <td class="text-center fw-bold">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
+                                <td class="text-center fw-bold">{{ number_format($ppData['kinerjaAvg'], 2) }}</td>
                             </tr>
                         </tbody>
                     </table>
+                    @endif
                 </div>
             </div>
         </div>
@@ -300,10 +304,12 @@
                             <td class="text-center fw-semibold">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                         </tr>
                     @endforeach
+                    @if(count($kategoriNilai) > 0)
                     <tr class="table-success">
                         <td class="fw-bold">Rata-rata {{ $kat->kategori }}</td>
-                        <td class="text-center fw-bold">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
+                        <td class="text-center fw-bold">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
                     </tr>
+                    @endif
                     </tbody>
                 </table>
             </div>

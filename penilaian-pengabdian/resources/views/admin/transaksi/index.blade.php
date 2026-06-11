@@ -139,23 +139,31 @@
                         $trx      = $k->transaksi;
                         $kategoriForKaryawan = \App\Support\LaporanScoreCalculator::resolveKategoriUntukKaryawan(($kategoriListForScore ?? collect()), $k);
 
-                        // FIX: Count total kompetensi per pangkalan (including duplicates across pangkalans)
-                        // Non-wajib pangkalan: scored at pangkalan level
-                        // Wajib pangkalan: specific kompetensi indicators
+                        // FIX: Count total kompetensi per kategori (not unique)
+                        // Shared kompetensi (e.g. Pengambilan Keputusan) in multiple kategoris = multiple inputs
                         $totalKompetensiAktif = 0;
                         $terisi = 0;
                         if ($k->pangkalans && $k->pangkalans->count() > 0) {
                             foreach ($k->pangkalans as $pk) {
                                 $pkKatIds = $pk->kategoriKinerja->pluck('id')->toArray();
-                                $pkKompCount = \App\Models\KategoriKinerja::with('kompetensi')
+                                $pkKats = \App\Models\KategoriKinerja::with('kompetensi')
                                     ->whereIn('id', $pkKatIds)
-                                    ->get()
-                                    ->sum(fn($kat) => $kat->kompetensi->count());
-                                $totalKompetensiAktif += $pkKompCount;
+                                    ->get();
+                                // Sum kompetensi per kategori (shared kompetensi counted per kategori)
+                                $totalKompetensiAktif += $pkKats->sum(fn($kat) => $kat->kompetensi->count());
 
-                                // Count scored transaksi for this pangkalan
-                                $pkScored = $trx->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === (int) $pk->id);
-                                $terisi += $pkScored->count();
+                                // Count scored transaksi per kategori-kompetensi (enrichment-aware)
+                                // If a transaksi exists for the kompetensi at this pangkalan, it counts for ALL kategoris it belongs to
+                                foreach ($pkKats as $kat) {
+                                    foreach ($kat->kompetensi as $komp) {
+                                        $hasScore = $trx->contains(fn($t) =>
+                                            $t->nilai !== null
+                                            && (int) ($t->pangkalan_id ?? 0) === (int) $pk->id
+                                            && (int) $t->kompetensi_id === (int) $komp->id
+                                        );
+                                        if ($hasScore) { $terisi++; }
+                                    }
+                                }
                             }
                         } else {
                             $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriForKaryawan);

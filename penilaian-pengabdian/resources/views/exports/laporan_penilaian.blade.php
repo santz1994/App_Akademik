@@ -169,15 +169,18 @@
                 $trxByKompetensi = $allTrx
                     ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
                     ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
-                $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                // Enrich: ensure shared kompetensi (belonging to multiple kategoris) has entries under all kategoris
+                $trxByKompetensi = \App\Support\LaporanScoreCalculator::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriUntukKaryawan);
+                // Use unified per-pangkalan calculation for consistent scoring
+                $scoreResult = \App\Support\LaporanScoreCalculator::calculateNilaiAkhirForKaryawan(
                     $kategoriUntukKaryawan,
-                    $allTrx->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))->keyBy('kompetensi_id'),
-                    $reportFormat['scoring_method'],
+                    $k,
                     [
                         'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
                         'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
                     ]
                 );
+                $nilaiAkhir = $scoreResult['nilaiAkhir'];
                 $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
             @endphp
             <tr>

@@ -168,8 +168,7 @@ class LaporanScoreCalculator
                 // Try composite key first (kompetensi_id:kategori_kinerja_id), fallback to kompetensi_id
                 $compositeKey = (int) $kompetensi->id . ':' . (int) $kategori->id;
                 $transaksi = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($kompetensi->id);
-                if ($transaksi && self::isScored($transaksi->nilai)
-                    && ((int) $transaksi->kategori_kinerja_id === (int) $kategori->id || $trxByKompetensi->has($compositeKey))) {
+                if ($transaksi && self::isScored($transaksi->nilai)) {
                     $values[] = (float) $transaksi->nilai;
                 }
             }
@@ -340,8 +339,7 @@ class LaporanScoreCalculator
                 foreach ($kat->kompetensi as $komp) {
                     $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
                     $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
-                    if ($t && self::isScored($t->nilai)
-                        && ((int) $t->kategori_kinerja_id === (int) $kat->id || $pangkalanTrx->has($compositeKey))) {
+                    if ($t && self::isScored($t->nilai)) {
                         $values[] = (float) $t->nilai;
                     }
                 }
@@ -367,8 +365,7 @@ class LaporanScoreCalculator
                 foreach ($kat->kompetensi as $komp) {
                     $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
                     $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
-                    if ($t && self::isScored($t->nilai)
-                        && ((int) $t->kategori_kinerja_id === (int) $kat->id || $pangkalanTrx->has($compositeKey))) {
+                    if ($t && self::isScored($t->nilai)) {
                         $values[] = (float) $t->nilai;
                     }
                 }
@@ -516,5 +513,99 @@ class LaporanScoreCalculator
         }
 
         return null;
+    }
+
+    /**
+     * Calculate final score for a karyawan using the per-pangkalan approach.
+     * This ensures consistent results between laporan keseluruhan and perorangan.
+     *
+     * @param Collection $kategoriList  Resolved kategori list with kompetensi loaded
+     * @param mixed      $karyawan     Karyawan model with pangkalans.kategoriKinerja and transaksi loaded
+     * @param array      $options      ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
+     * @return array  ['nilaiAkhir' => float|null, 'kinerjaFinal' => float|null, 'kegiatanAvg' => float|null]
+     */
+    public static function calculateNilaiAkhirForKaryawan(
+        Collection $kategoriList,
+        mixed $karyawan,
+        array $options = []
+    ): array {
+        $allPangkalanIds = $karyawan->getAllPangkalanIds();
+        $allPangkalan = $karyawan->pangkalans;
+
+        // Build composite-keyed trxByKompetensi with enrichment
+        $trxByKompetensi = $karyawan->transaksi
+            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+
+        $trxByKompetensi = self::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriList);
+
+        // Build per-pangkalan transaksi maps
+        $trxByPangkalan = [];
+        foreach ($allPangkalanIds as $pId) {
+            $pIdInt = (int) $pId;
+            $trxByPangkalan[$pIdInt] = self::enrichTrxForSharedKompetensi(
+                $karyawan->transaksi
+                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                $kategoriList
+            );
+        }
+
+        $result = self::calculatePerPangkalan(
+            $kategoriList,
+            $trxByKompetensi,
+            $allPangkalanIds,
+            $allPangkalan,
+            $options,
+            $trxByPangkalan
+        );
+
+        return [
+            'nilaiAkhir' => $result['nilaiAkhir'],
+            'kinerjaFinal' => $result['kinerjaFinal'],
+            'kegiatanAvg' => $result['kegiatanAvg'],
+        ];
+    }
+
+    /**
+     * Enrich trxByKompetensi so that a shared kompetensi (belonging to multiple kategoris)
+     * has an entry under every kategori it belongs to, using the same transaksi score.
+     *
+     * This fixes the case where "Pengambilan Keputusan" appears under both "Karakter" and
+     * "Kompetensi", but transaksi only stores kategori_kinerja_id for one of them.
+     *
+     * @param Collection $trxByKompetensi  Keyed by "kompetensi_id:kategori_kinerja_id"
+     * @param Collection $kategoriList     Resolved kategori list with kompetensi loaded
+     * @return Collection  Enriched collection with additional composite-key entries
+     */
+    public static function enrichTrxForSharedKompetensi(
+        Collection $trxByKompetensi,
+        Collection $kategoriList
+    ): Collection {
+        $enriched = clone $trxByKompetensi;
+
+        // Build a lookup: kompetensi_id => [transaksi, ...]
+        $trxByKompId = [];
+        foreach ($enriched as $key => $trx) {
+            $parts = explode(':', (string) $key);
+            $kompId = (int) ($parts[0] ?? 0);
+            if ($kompId > 0) {
+                $trxByKompId[$kompId] = $trx;
+            }
+        }
+
+        // For each kategori, for each kompetensi, ensure a composite-key entry exists
+        foreach ($kategoriList as $kat) {
+            $katId = (int) $kat->id;
+            foreach ($kat->kompetensi as $komp) {
+                $kompId = (int) $komp->id;
+                $compositeKey = $kompId . ':' . $katId;
+                if (!$enriched->has($compositeKey) && isset($trxByKompId[$kompId])) {
+                    $enriched->put($compositeKey, $trxByKompId[$kompId]);
+                }
+            }
+        }
+
+        return $enriched;
     }
 }

@@ -525,9 +525,12 @@ class LaporanController extends Controller
         $trxByPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
-            $trxByPangkalan[$pIdInt] = $karyawan->transaksi
-                ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+            $trxByPangkalan[$pIdInt] = LaporanScoreCalculator::enrichTrxForSharedKompetensi(
+                $karyawan->transaksi
+                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                $kategoriList
+            );
         }
 
         // Calculate per-pangkalan breakdown
@@ -642,13 +645,19 @@ class LaporanController extends Controller
             ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
             ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
 
+        // Enrich: ensure shared kompetensi (belonging to multiple kategoris) has entries under all kategoris
+        $trxByKompetensi = LaporanScoreCalculator::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriList);
+
         // Build per-pangkalan transaksi map (keyed by kompetensi_id:kategori_kinerja_id)
         $trxByPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
-            $trxByPangkalan[$pIdInt] = $karyawan->transaksi
-                ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+            $trxByPangkalan[$pIdInt] = LaporanScoreCalculator::enrichTrxForSharedKompetensi(
+                $karyawan->transaksi
+                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                $kategoriList
+            );
         }
 
         // Calculate per-pangkalan breakdown

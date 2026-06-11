@@ -401,6 +401,8 @@
                     $trxByKompetensi = $allTrx
                         ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))
                         ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) $t->kategori_kinerja_id => $t]);
+                    // Enrich: ensure shared kompetensi (belonging to multiple kategoris) has entries under all kategoris
+                    $trxByKompetensi = \App\Support\LaporanScoreCalculator::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriUntukKaryawan);
                     $karyawanPangkalans = $k->pangkalans->count() > 0 ? $k->pangkalans : collect();
                     if ($karyawanPangkalans->isEmpty() && $k->pangkalan) {
                         $karyawanPangkalans = collect([$k->pangkalan]);
@@ -408,15 +410,16 @@
                     $pangkalanNames = $karyawanPangkalans->isNotEmpty()
                         ? $karyawanPangkalans->pluck('nama_pangkalan')->implode(', ')
                         : '-';
-                    $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                    // Use unified per-pangkalan calculation for consistent scoring
+                    $scoreResult = \App\Support\LaporanScoreCalculator::calculateNilaiAkhirForKaryawan(
                         $kategoriUntukKaryawan,
-                        $allTrx->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id))->keyBy('kompetensi_id'),
-                        $reportFormat['scoring_method'],
+                        $k,
                         [
                             'bobot_kinerja' => $reportFormat['score_weight_kinerja'],
                             'bobot_kegiatan' => $reportFormat['score_weight_kegiatan'],
                         ]
                     );
+                    $nilaiAkhir = $scoreResult['nilaiAkhir'];
                     $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
                     $rowCounter++;
                 @endphp

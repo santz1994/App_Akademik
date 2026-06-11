@@ -260,21 +260,25 @@
                         <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                     </tr>
                 @endforeach
+                @if($kd['average'] !== null)
                 <tr class="kategori-header">
                     <td>Rata-rata {{ $kd['kategori']->kategori }}</td>
-                    <td class="kategori-avg">{{ $kd['average'] !== null ? number_format($kd['average'], 2) : '-' }}</td>
+                    <td class="kategori-avg">{{ number_format($kd['average'], 2) }}</td>
                 </tr>
+                @endif
             @endforeach
         </tbody>
     </table>
+    @if($ppData['kinerjaAvg'] !== null)
     <table class="score-table" style="margin-top: 2px;">
         <tbody>
             <tr class="kategori-header">
                 <td style="font-size: 11px;">Rata-Rata {{ $ppData['pangkalan'] ? $ppData['pangkalan']->nama_pangkalan : 'Pangkalan #' . $ppData['pangkalan_id'] }}</td>
-                <td class="kategori-avg" style="font-size: 12px;">{{ $ppData['kinerjaAvg'] !== null ? number_format($ppData['kinerjaAvg'], 2) : '-' }}</td>
+                <td class="kategori-avg" style="font-size: 12px;">{{ number_format($ppData['kinerjaAvg'], 2) }}</td>
             </tr>
         </tbody>
     </table>
+    @endif
 
     {{-- Kegiatan for this pangkalan --}}
     @if(isset($ppData['kegiatanDetails']) && count($ppData['kegiatanDetails']) > 0)
@@ -373,10 +377,12 @@
                     <td class="nilai">{{ $nilai !== null ? number_format($nilai, 0) : '-' }}</td>
                 </tr>
             @endforeach
+            @if(count($kategoriNilai) > 0)
             <tr class="kategori-header">
                 <td>Rata-rata {{ $kat->kategori }}</td>
-                <td class="kategori-avg">{{ count($kategoriNilai) > 0 ? number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) : '-' }}</td>
+                <td class="kategori-avg">{{ number_format(array_sum($kategoriNilai) / count($kategoriNilai), 2) }}</td>
             </tr>
+            @endif
         </tbody>
     </table>
     </div>
