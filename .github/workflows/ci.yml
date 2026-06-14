@@ -85,7 +85,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    name: Deploy to Production
+    name: Deploy to cPanel
 
     needs: [test, lint]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -127,45 +127,40 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Create deployment package
+      - name: Deploy to cPanel via FTP
         run: |
-          tar -czf /tmp/deploy.tar.gz \
-            --exclude='node_modules' \
-            --exclude='.git' \
-            --exclude='tests' \
-            --exclude='Doc' \
-            --exclude='*.sql' \
-            --exclude='*.zip' \
-            --exclude='id_rsa*' \
-            --exclude='convert_to_docx.py' \
-            .
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
 
-      - name: Deploy via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
-          source: "/tmp/deploy.tar.gz"
-          target: ${{ secrets.DEPLOY_PATH }}
-          overwrite: true
+      - name: Upload files
+        run: |
+          lftp -c "set ssl:verify-certificate no; \
+            set net:timeout 30; \
+            set net:max-retries 3; \
+            open ftp://${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}@${{ secrets.FTP_HOST }}; \
+            mirror --reverse --verbose --delete \
+              --exclude .git/ \
+              --exclude .github/ \
+              --exclude node_modules/ \
+              --exclude tests/ \
+              --exclude Doc/ \
+              --exclude *.sql \
+              --exclude *.zip \
+              --exclude id_rsa* \
+              --exclude convert_to_docx.py \
+              --exclude error_log \
+              --exclude .env \
+              --exclude .env.old \
+              --exclude .env.backup \
+              --exclude .env.production \
+              . ${{ secrets.FTP_PATH }}; \
+            quit"
 
-      - name: Post-deploy commands
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            tar -xzf deploy.tar.gz --overwrite
-            rm deploy.tar.gz
-            composer install --prefer-dist --no-interaction --no-progress --no-dev
-            php artisan migrate --force
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan storage:link --force
-            echo "Deployment completed successfully!"
+      - name: Post-deploy via cPanel API
+        if: success()
+        run: |
+          curl -sk -X POST \
+            "https://${{ secrets.CPANEL_HOST }}:2083/execute/Database/import" \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
+            -F "dir=${{ secrets.FTP_PATH }}" \
+            -F "filename=database/dump.sql" || echo "Import skipped - no dump file"
