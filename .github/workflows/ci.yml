@@ -153,14 +153,7 @@ jobs:
               --exclude .env.old \
               --exclude .env.backup \
               --exclude .env.production \
+              --exclude pint.json \
+              --exclude phpunit.xml \
               . ${{ secrets.FTP_PATH }}; \
             quit"
-
-      - name: Post-deploy via cPanel API
-        if: success()
-        run: |
-          curl -sk -X POST \
-            "https://${{ secrets.CPANEL_HOST }}:2083/execute/Database/import" \
-            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
-            -F "dir=${{ secrets.FTP_PATH }}" \
-            -F "filename=database/dump.sql" || echo "Import skipped - no dump file"
