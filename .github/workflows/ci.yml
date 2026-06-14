@@ -134,26 +134,26 @@ jobs:
 
       - name: Upload files
         run: |
-          lftp -c "set ssl:verify-certificate no; \
-            set net:timeout 30; \
-            set net:max-retries 3; \
-            open ftp://${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}@${{ secrets.FTP_HOST }}; \
+          lftp -u "${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }}" "${{ secrets.FTP_HOST }}" -e "
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
             mirror --reverse --verbose --delete \
-              --exclude .git/ \
-              --exclude .github/ \
+              --exclude \.git/ \
+              --exclude \.github/ \
               --exclude node_modules/ \
               --exclude tests/ \
               --exclude Doc/ \
-              --exclude *.sql \
-              --exclude *.zip \
-              --exclude id_rsa* \
-              --exclude convert_to_docx.py \
+              --exclude .*\.sql \
+              --exclude .*\.zip \
+              --exclude id_rsa \
+              --exclude convert_to_docx\.py \
               --exclude error_log \
-              --exclude .env \
-              --exclude .env.old \
-              --exclude .env.backup \
-              --exclude .env.production \
-              --exclude pint.json \
-              --exclude phpunit.xml \
-              . ${{ secrets.FTP_PATH }}; \
+              --exclude \.env \
+              --exclude \.env\.old \
+              --exclude \.env\.backup \
+              --exclude \.env\.production \
+              --exclude pint\.json \
+              --exclude phpunit\.xml \
+              . ${{ secrets.FTP_PATH }};
             quit"
