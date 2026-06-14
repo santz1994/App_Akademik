@@ -11,13 +11,13 @@ class KepalaMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')
                 ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $user = Auth::user();
-        if (!$user->is_kepala) {
+        if (! $user->is_kepala) {
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard')
                     ->with('error', 'Akses ini khusus Kepala Pimpinan Pos.');

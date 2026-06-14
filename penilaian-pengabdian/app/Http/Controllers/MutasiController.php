@@ -32,22 +32,22 @@ class MutasiController extends Controller
 
         $karyawan->update(['tahun_penilaian_id' => $request->tahun_penilaian_id]);
 
-        return back()->with('success', 'Tahun ajaran karyawan <strong>' . $karyawan->nama_karyawan . '</strong> berhasil diperbarui.');
+        return back()->with('success', 'Tahun ajaran karyawan <strong>'.$karyawan->nama_karyawan.'</strong> berhasil diperbarui.');
     }
 
     public function bulkAssign(Request $request)
     {
         $request->validate([
-            'karyawan_ids'       => 'required|array|min:1',
-            'karyawan_ids.*'     => 'exists:karyawan,id',
+            'karyawan_ids' => 'required|array|min:1',
+            'karyawan_ids.*' => 'exists:karyawan,id',
             'tahun_penilaian_id' => 'required|exists:tahun_penilaian,id',
         ]);
 
-        $tahun  = TahunPenilaian::findOrFail($request->tahun_penilaian_id);
-        $count  = Karyawan::whereIn('id', $request->karyawan_ids)
-                    ->update(['tahun_penilaian_id' => $tahun->id]);
+        $tahun = TahunPenilaian::findOrFail($request->tahun_penilaian_id);
+        $count = Karyawan::whereIn('id', $request->karyawan_ids)
+            ->update(['tahun_penilaian_id' => $tahun->id]);
 
-        return back()->with('success', '<strong>' . $count . ' karyawan</strong> berhasil dipindahkan ke tahun <strong>' . $tahun->periode_penilaian . '</strong>.');
+        return back()->with('success', '<strong>'.$count.' karyawan</strong> berhasil dipindahkan ke tahun <strong>'.$tahun->periode_penilaian.'</strong>.');
     }
 
     /**
@@ -66,7 +66,7 @@ class MutasiController extends Controller
                         ->orWhere('kode_karyawan', 'like', "%{$search}%");
                 });
             })
-            ->when($filterPangkalan, fn($q) => $q->where('pangkalan_id', $filterPangkalan))
+            ->when($filterPangkalan, fn ($q) => $q->where('pangkalan_id', $filterPangkalan))
             ->orderBy('nama_karyawan');
 
         $karyawan = $this->paginateWithPerPage($karyawan, $request, 10);
@@ -83,22 +83,22 @@ class MutasiController extends Controller
         $karyawan->update(['pangkalan_id' => $request->pangkalan_id]);
 
         $pangkalan = Pangkalan::find($request->pangkalan_id);
-        return back()->with('success', 'Pangkalan karyawan <strong>' . $karyawan->nama_karyawan . '</strong> berhasil dipindahkan ke <strong>' . $pangkalan->nama_pangkalan . '</strong>.');
+
+        return back()->with('success', 'Pangkalan karyawan <strong>'.$karyawan->nama_karyawan.'</strong> berhasil dipindahkan ke <strong>'.$pangkalan->nama_pangkalan.'</strong>.');
     }
 
     public function bulkAssignPangkalan(Request $request)
     {
         $request->validate([
-            'karyawan_ids'   => 'required|array|min:1',
+            'karyawan_ids' => 'required|array|min:1',
             'karyawan_ids.*' => 'exists:karyawan,id',
-            'pangkalan_id'   => 'required|exists:pangkalan,id',
+            'pangkalan_id' => 'required|exists:pangkalan,id',
         ]);
 
         $pangkalan = Pangkalan::findOrFail($request->pangkalan_id);
         $count = Karyawan::whereIn('id', $request->karyawan_ids)
-                    ->update(['pangkalan_id' => $pangkalan->id]);
+            ->update(['pangkalan_id' => $pangkalan->id]);
 
-        return back()->with('success', '<strong>' . $count . ' karyawan</strong> berhasil dipindahkan ke pangkalan <strong>' . $pangkalan->nama_pangkalan . '</strong>.');
+        return back()->with('success', '<strong>'.$count.' karyawan</strong> berhasil dipindahkan ke pangkalan <strong>'.$pangkalan->nama_pangkalan.'</strong>.');
     }
 }
-

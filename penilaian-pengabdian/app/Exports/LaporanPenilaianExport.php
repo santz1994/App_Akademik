@@ -8,9 +8,13 @@ use Maatwebsite\Excel\Concerns\FromView;
 class LaporanPenilaianExport implements FromView
 {
     private $karyawanList;
+
     private $kategoriList;
+
     private $selectedTahunData;
+
     private $jenisLaporan;
+
     private $reportFormat;
 
     public function __construct($karyawanList, $kategoriList, $selectedTahunData, $jenisLaporan = 'ringkas', array $reportFormat = [])

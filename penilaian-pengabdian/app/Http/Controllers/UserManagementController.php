@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Pangkalan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
@@ -23,7 +23,7 @@ class UserManagementController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when($selectedPangkalan, fn($q) => $q->whereHas('karyawan.pangkalans', fn($pq) => $pq->where('pangkalan.id', $selectedPangkalan)))
+            ->when($selectedPangkalan, fn ($q) => $q->whereHas('karyawan.pangkalans', fn ($pq) => $pq->where('pangkalan.id', $selectedPangkalan)))
             ->latest();
 
         $users = $this->paginateWithPerPage($users, $request, 10);
@@ -36,25 +36,26 @@ class UserManagementController extends Controller
     public function create()
     {
         $pangkalanList = Pangkalan::orderBy('nama_pangkalan')->get();
+
         return view('admin.users.create', compact('pangkalanList'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'username' => 'required|string|max:50|unique:users',
-            'email'    => 'required|email|unique:users',
+            'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'role'     => 'required|in:admin,user,tata_usaha',
+            'role' => 'required|in:admin,user,tata_usaha',
         ]);
 
         $createdUser = User::create([
-            'name'     => $request->name,
+            'name' => $request->name,
             'username' => $request->username,
-            'email'    => $request->email,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => $request->role,
+            'role' => $request->role,
             'is_kepala' => false, // Kepala ditentukan dari data pangkalan
         ]);
 
@@ -65,16 +66,17 @@ class UserManagementController extends Controller
     public function edit(User $user)
     {
         $pangkalanList = Pangkalan::orderBy('nama_pangkalan')->get();
+
         return view('admin.users.edit', compact('user', 'pangkalanList'));
     }
 
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'     => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:users,username,' . $user->id,
-            'email'    => 'required|email|unique:users,email,' . $user->id,
-            'role'     => 'required|in:admin,user,tata_usaha',
+            'name' => 'required|string|max:100',
+            'username' => 'required|string|max:50|unique:users,username,'.$user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'role' => 'required|in:admin,user,tata_usaha',
             'password' => 'nullable|min:6|confirmed',
         ]);
 
@@ -122,8 +124,9 @@ class UserManagementController extends Controller
         $skipped = 0;
 
         foreach ($rows as $idx => $row) {
-            if (!is_array($row)) {
+            if (! is_array($row)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -141,11 +144,13 @@ class UserManagementController extends Controller
 
             if ($name === '' || $username === '' || $email === '') {
                 $skipped++;
+
                 continue;
             }
 
-            if (!in_array($role, ['admin', 'user'], true)) {
+            if (! in_array($role, ['admin', 'user'], true)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -154,14 +159,16 @@ class UserManagementController extends Controller
                 ->exists();
             if ($conflictEmail) {
                 $skipped++;
+
                 continue;
             }
 
             $pangkalanId = null;
             if ($role !== 'admin' && $kodePangkalan !== '') {
                 $pangkalan = Pangkalan::where('kode_pangkalan', $kodePangkalan)->first();
-                if (!$pangkalan) {
+                if (! $pangkalan) {
                     $skipped++;
+
                     continue;
                 }
                 $pangkalanId = $pangkalan->id;
@@ -173,8 +180,9 @@ class UserManagementController extends Controller
                 $pangkalanId = null;
             }
 
-            if ($isKepala && !$pangkalanId) {
+            if ($isKepala && ! $pangkalanId) {
                 $skipped++;
+
                 continue;
             }
 
@@ -191,7 +199,7 @@ class UserManagementController extends Controller
 
             if ($passwordRaw !== '') {
                 $data['password'] = Hash::make($passwordRaw);
-            } elseif (!$existing) {
+            } elseif (! $existing) {
                 $data['password'] = Hash::make('user12345');
             }
 
@@ -209,7 +217,7 @@ class UserManagementController extends Controller
 
     private function looksLikeUserHeaderRow(array $row): bool
     {
-        $header = strtolower(implode(' ', array_map(fn($v) => trim((string) $v), $row)));
+        $header = strtolower(implode(' ', array_map(fn ($v) => trim((string) $v), $row)));
 
         return str_contains($header, 'username')
             || str_contains($header, 'email')
@@ -260,7 +268,7 @@ class UserManagementController extends Controller
             $user->kepalaPangkalan()->detach();
         }
 
-        if (!$user->is_kepala || !$user->pangkalan_id) {
+        if (! $user->is_kepala || ! $user->pangkalan_id) {
             return;
         }
 
@@ -276,7 +284,7 @@ class UserManagementController extends Controller
         }
 
         $pangkalan = Pangkalan::find($userSnapshot['pangkalan_id']);
-        if (!$pangkalan) {
+        if (! $pangkalan) {
             return;
         }
 

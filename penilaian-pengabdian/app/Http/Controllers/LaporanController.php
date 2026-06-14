@@ -65,12 +65,14 @@ class LaporanController extends Controller
 
             $data = $this->buildPeroranganPageData($request, 'user');
             $data['routePrefix'] = 'user';
+
             return view('admin.laporan.perorangan', $data);
         }
 
         // Jika user tidak punya karyawan, tampilkan halaman kosong
         $data = $this->buildReportData($request, 'user', false);
         $data['routePrefix'] = 'user';
+
         return view('admin.laporan.index', $data);
     }
 
@@ -108,14 +110,15 @@ class LaporanController extends Controller
 
         $paperSize = $data['reportFormat']['paper_size'] ?? 'a4';
         $orientation = $data['reportFormat']['orientation'] ?? 'portrait';
-        if (!in_array($paperSize, ['a4', 'letter', 'legal'], true)) {
+        if (! in_array($paperSize, ['a4', 'letter', 'legal'], true)) {
             $paperSize = 'a4';
         }
-        if (!in_array($orientation, ['portrait', 'landscape'], true)) {
+        if (! in_array($orientation, ['portrait', 'landscape'], true)) {
             $orientation = 'portrait';
         }
 
-        $fileName = 'laporan-penilaian-' . now()->format('Ymd-His') . '.pdf';
+        $fileName = 'laporan-penilaian-'.now()->format('Ymd-His').'.pdf';
+
         return Pdf::loadView('admin.laporan.pdf', $data)
             ->setPaper($paperSize, $orientation)
             ->download($fileName);
@@ -126,7 +129,7 @@ class LaporanController extends Controller
         $scope = $this->resolveScope();
         $data = $this->buildReportData($request, $scope, true);
 
-        $fileName = 'laporan-penilaian-' . now()->format('Ymd-His') . '.xlsx';
+        $fileName = 'laporan-penilaian-'.now()->format('Ymd-His').'.xlsx';
 
         return Excel::download(
             new LaporanPenilaianExport(
@@ -145,7 +148,7 @@ class LaporanController extends Controller
         $scope = $this->resolveScope();
         $data = $this->buildReportData($request, $scope, true);
 
-        $fileName = 'laporan-penilaian-' . now()->format('Ymd-His') . '.csv';
+        $fileName = 'laporan-penilaian-'.now()->format('Ymd-His').'.csv';
 
         return Excel::download(
             new LaporanPenilaianExport(
@@ -176,10 +179,9 @@ class LaporanController extends Controller
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
 
-        $tahunList         = TahunPenilaian::orderByDesc('periode_penilaian')->get();
-        $tahunAktif        = TahunPenilaian::where('is_active', true)->first();
-        $defaultTahunId    = $setting?->tahun_penilaian_id ?: $tahunAktif?->id;
-        $selectedTahun     = $request->input('tahun_penilaian_id', $defaultTahunId);
+        $tahunList = TahunPenilaian::orderByDesc('periode_penilaian')->get();
+        $tahunAktif = TahunPenilaian::where('is_active', true)->first();
+        $selectedTahun = $request->input('tahun_penilaian_id', $tahunAktif?->id);
         $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : $tahunAktif;
 
         $allowedModes = $scope === 'admin'
@@ -190,7 +192,7 @@ class LaporanController extends Controller
         if ($mode === 'keseluruhan' && $request->filled('pangkalan_id') && $scope === 'admin') {
             $mode = 'perdireksi';
         }
-        if (!in_array($mode, $allowedModes, true)) {
+        if (! in_array($mode, $allowedModes, true)) {
             $mode = 'keseluruhan';
         }
 
@@ -235,20 +237,20 @@ class LaporanController extends Controller
             'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
         ];
 
-        if (!$reportFormat['show_nilai_akhir']) {
+        if (! $reportFormat['show_nilai_akhir']) {
             $reportFormat['show_rating'] = false;
         }
 
-        if (!in_array($reportFormat['paper_size'], ['a4', 'letter', 'legal'], true)) {
+        if (! in_array($reportFormat['paper_size'], ['a4', 'letter', 'legal'], true)) {
             $reportFormat['paper_size'] = 'a4';
         }
-        if (!in_array($reportFormat['orientation'], ['portrait', 'landscape'], true)) {
+        if (! in_array($reportFormat['orientation'], ['portrait', 'landscape'], true)) {
             $reportFormat['orientation'] = 'portrait';
         }
-        if (!in_array($reportFormat['text_align'], ['left', 'center', 'right', 'justify'], true)) {
+        if (! in_array($reportFormat['text_align'], ['left', 'center', 'right', 'justify'], true)) {
             $reportFormat['text_align'] = 'left';
         }
-        if (!in_array($reportFormat['header_align'], ['left', 'center', 'right'], true)) {
+        if (! in_array($reportFormat['header_align'], ['left', 'center', 'right'], true)) {
             $reportFormat['header_align'] = 'center';
         }
 
@@ -257,18 +259,18 @@ class LaporanController extends Controller
         $normalizedOrder = [];
         foreach ($columnOrder as $columnKey) {
             $columnKey = (string) $columnKey;
-            if (in_array($columnKey, $availableColumns, true) && !in_array($columnKey, $normalizedOrder, true)) {
+            if (in_array($columnKey, $availableColumns, true) && ! in_array($columnKey, $normalizedOrder, true)) {
                 $normalizedOrder[] = $columnKey;
             }
         }
         foreach ($availableColumns as $columnKey) {
-            if (!in_array($columnKey, $normalizedOrder, true)) {
+            if (! in_array($columnKey, $normalizedOrder, true)) {
                 $normalizedOrder[] = $columnKey;
             }
         }
         $reportFormat['column_order'] = $normalizedOrder;
 
-        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+        if (! in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
             $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
         if ($reportFormat['scoring_method'] === 'average_kinerja_kegiatan') {
@@ -279,16 +281,16 @@ class LaporanController extends Controller
         $reportFormat['score_weight_kegiatan'] = max(0.0, min(100.0, (float) $reportFormat['score_weight_kegiatan']));
 
         $defaultJenisLaporan = $setting?->laporan_default_jenis;
-        if (!in_array($defaultJenisLaporan, ['ringkas', 'rinci'], true)) {
+        if (! in_array($defaultJenisLaporan, ['ringkas', 'rinci'], true)) {
             $defaultJenisLaporan = 'ringkas';
         }
 
         $jenisLaporan = $request->input('jenis_laporan', $defaultJenisLaporan);
-        if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
+        if (! in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
             $jenisLaporan = 'ringkas';
         }
 
-        if (!$reportFormat['show_detail_kompetensi'] && $jenisLaporan === 'rinci') {
+        if (! $reportFormat['show_detail_kompetensi'] && $jenisLaporan === 'rinci') {
             $jenisLaporan = 'ringkas';
         }
 
@@ -315,24 +317,24 @@ class LaporanController extends Controller
                 ->get();
             foreach ($kepalaPangkalans as $pangkalan) {
                 $mappedKategoriIds = $mappedKategoriIds->merge(
-                    $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                    $pangkalan->kategoriKinerja->pluck('id')->map(fn ($id) => (int) $id)
                 );
             }
             if ($mappedKategoriIds->isNotEmpty()) {
                 $kategoriList = $kategoriList->filter(
-                    fn($kat) => $mappedKategoriIds->contains((int) $kat->id)
+                    fn ($kat) => $mappedKategoriIds->contains((int) $kat->id)
                 )->values();
             }
         } else {
             // For admin: only show kategori that are mapped to at least one pangkalan
             $allMappedKategoriIds = \Illuminate\Support\Facades\DB::table('pangkalan_kategori_kinerja')
                 ->pluck('kategori_kinerja_id')
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->unique()
                 ->values();
             if ($allMappedKategoriIds->isNotEmpty()) {
                 $kategoriList = $kategoriList->filter(
-                    fn($kat) => $allMappedKategoriIds->contains((int) $kat->id)
+                    fn ($kat) => $allMappedKategoriIds->contains((int) $kat->id)
                 )->values();
             }
         }
@@ -340,19 +342,19 @@ class LaporanController extends Controller
         $karyawanQuery = Karyawan::with([
             'pangkalan.kategoriKinerja',
             'pangkalans.kategoriKinerja',
-            'transaksi' => fn($q) => $q
-                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+            'transaksi' => fn ($q) => $q
+                ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
         ])
-        ->bukanKepala()
-        ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun));
+            ->bukanKepala()
+            ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun));
 
         if ($scope === 'kepala') {
             // Filter by selected pangkalan or all kepala's pangkalans
             $kepalaPangkalanIds = $filterPangkalan
                 ? [(int) $filterPangkalan]
                 : $user->getAllPangkalanIds();
-            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $kepalaPangkalanIds));
+            $karyawanQuery->whereHas('pangkalans', fn ($q) => $q->whereIn('pangkalan.id', $kepalaPangkalanIds));
             if ($mode === 'perorangan' && $filterKaryawan) {
                 $karyawanQuery->where('id', $filterKaryawan);
             }
@@ -360,7 +362,7 @@ class LaporanController extends Controller
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         } else {
             if ($mode === 'perdireksi' && $filterPangkalan) {
-                $karyawanQuery->whereHas('pangkalans', fn($q) => $q->where('pangkalan.id', $filterPangkalan));
+                $karyawanQuery->whereHas('pangkalans', fn ($q) => $q->where('pangkalan.id', $filterPangkalan));
             }
             if ($mode === 'perorangan' && $filterKaryawan) {
                 $karyawanQuery->where('id', $filterKaryawan);
@@ -383,7 +385,7 @@ class LaporanController extends Controller
             ? $karyawanListQuery->get()
             : $this->paginateWithPerPage($karyawanListQuery, $request, 10);
 
-        $totalKompetensi = $kategoriList->sum(fn($k) => $k->kompetensi->count());
+        $totalKompetensi = $kategoriList->sum(fn ($k) => $k->kompetensi->count());
         $totalTransaksi = 0;
         $ratedCount = 0;
 
@@ -392,7 +394,7 @@ class LaporanController extends Controller
             $applicableKompetensiIds = LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriUntukKaryawan);
 
             $jumlahDinilai = $summaryKaryawan->transaksi
-                ->filter(fn($trx) => $trx->nilai !== null && $applicableKompetensiIds->contains((int) $trx->kompetensi_id))
+                ->filter(fn ($trx) => $trx->nilai !== null && $applicableKompetensiIds->contains((int) $trx->kompetensi_id))
                 ->count();
 
             $totalTransaksi += $jumlahDinilai;
@@ -411,9 +413,9 @@ class LaporanController extends Controller
         if ($showKaryawanFilter) {
             $karyawanFilterList = Karyawan::query()
                 ->bukanKepala()
-                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
-                ->when($scope === 'kepala', fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
-                ->when($scope === 'user', fn($q) => $q->where('id', $user->karyawan?->id ?? 0))
+                ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+                ->when($scope === 'kepala', fn ($q) => $q->whereHas('pangkalans', fn ($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
+                ->when($scope === 'user', fn ($q) => $q->where('id', $user->karyawan?->id ?? 0))
                 ->orderBy('nama_karyawan')
                 ->get();
         }
@@ -455,7 +457,7 @@ class LaporanController extends Controller
 
         $karyawanId = $request->input('karyawan_id');
 
-        if (!$karyawanId) {
+        if (! $karyawanId) {
             return back()->with('error', 'Pilih karyawan terlebih dahulu.');
         }
 
@@ -463,24 +465,24 @@ class LaporanController extends Controller
             'pangkalan.kategoriKinerja',
             'pangkalanLain.kategoriKinerja',
             'pangkalans.kategoriKinerja',
-            'transaksi' => fn($q) => $q
-                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+            'transaksi' => fn ($q) => $q
+                ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
             'tahunPenilaian',
             'user',
         ])
-        ->bukanKepala()
-        ->where('id', $karyawanId);
+            ->bukanKepala()
+            ->where('id', $karyawanId);
 
         if ($scope === 'kepala') {
-            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
+            $karyawanQuery->whereHas('pangkalans', fn ($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
         } elseif ($scope === 'user') {
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         }
 
         $karyawan = $karyawanQuery->first();
 
-        if (!$karyawan) {
+        if (! $karyawan) {
             return back()->with('error', 'Data karyawan tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
@@ -497,13 +499,13 @@ class LaporanController extends Controller
             'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
         ];
 
-        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+        if (! in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
             $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
 
         // Determine jenis_laporan for perorangan (ringkas vs rinci)
         $jenisLaporan = $request->input('jenis_laporan', 'rinci');
-        if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
+        if (! in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
             $jenisLaporan = 'rinci';
         }
 
@@ -518,7 +520,7 @@ class LaporanController extends Controller
         // Only include transaksi with valid pangkalan_id matching karyawan's pangkalans
         // This prevents old/legacy data (with NULL pangkalan_id) from appearing in reports
         $trxByKompetensi = $karyawan->transaksi
-            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->filter(fn ($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
             ->keyBy('kompetensi_id');
 
         // Build per-pangkalan transaksi map (keyed by pangkalan_id => kompetensi_id:kategori_kinerja_id)
@@ -527,8 +529,8 @@ class LaporanController extends Controller
             $pIdInt = (int) $pId;
             $trxByPangkalan[$pIdInt] = LaporanScoreCalculator::enrichTrxForSharedKompetensi(
                 $karyawan->transaksi
-                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                    ->filter(fn ($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn ($t) => [(int) $t->kompetensi_id.':'.(int) ($t->kategori_kinerja_id ?? 0) => $t]),
                 $kategoriList
             );
         }
@@ -550,7 +552,7 @@ class LaporanController extends Controller
         $ratingMeta = LaporanScoreCalculator::ratingMeta($nilaiAkhir);
         $rewardPunishmentInfo = LaporanScoreCalculator::getRewardPunishmentInfo($nilaiAkhir);
 
-        $fileName = 'laporan-pegawai-' . strtolower($karyawan->kode_karyawan) . '.pdf';
+        $fileName = 'laporan-pegawai-'.strtolower($karyawan->kode_karyawan).'.pdf';
 
         $viewName = $jenisLaporan === 'ringkas'
             ? 'admin.laporan.perorangan_ringkas_pdf'
@@ -571,8 +573,8 @@ class LaporanController extends Controller
             'trxByPangkalan',
             'rewardPunishmentInfo'
         ))
-        ->setPaper('a4', 'portrait')
-        ->stream($fileName);
+            ->setPaper('a4', 'portrait')
+            ->stream($fileName);
     }
 
     /**
@@ -592,24 +594,24 @@ class LaporanController extends Controller
             'pangkalan.kategoriKinerja',
             'pangkalanLain.kategoriKinerja',
             'pangkalans.kategoriKinerja',
-            'transaksi' => fn($q) => $q
-                ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+            'transaksi' => fn ($q) => $q
+                ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun))
                 ->with('kompetensi.kategoriKinerja'),
             'tahunPenilaian',
             'user',
         ])
-        ->bukanKepala()
-        ->where('id', $karyawanId);
+            ->bukanKepala()
+            ->where('id', $karyawanId);
 
         if ($scope === 'kepala') {
-            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
+            $karyawanQuery->whereHas('pangkalans', fn ($q) => $q->whereIn('pangkalan.id', $user->getAllPangkalanIds()));
         } elseif ($scope === 'user') {
             $karyawanQuery->where('id', $user->karyawan?->id ?? 0);
         }
 
         $karyawan = $karyawanQuery->first();
 
-        if (!$karyawan) {
+        if (! $karyawan) {
             return ['peroranganKaryawan' => null];
         }
 
@@ -626,7 +628,7 @@ class LaporanController extends Controller
             'score_weight_kegiatan' => (float) ($setting?->laporan_bobot_kegiatan ?? 30),
         ];
 
-        if (!in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
+        if (! in_array($reportFormat['scoring_method'], ['weighted_kategori', 'weighted_kinerja_kegiatan', 'average_kinerja_kegiatan'], true)) {
             $reportFormat['scoring_method'] = 'weighted_kinerja_kegiatan';
         }
 
@@ -642,8 +644,8 @@ class LaporanController extends Controller
         // This prevents old/legacy data (with NULL pangkalan_id) from appearing in reports
         // Key by kompetensi_id:kategori_kinerja_id to handle shared kompetensi across kategori
         $trxByKompetensi = $karyawan->transaksi
-            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
-            ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+            ->filter(fn ($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->mapWithKeys(fn ($t) => [(int) $t->kompetensi_id.':'.(int) ($t->kategori_kinerja_id ?? 0) => $t]);
 
         // Enrich: ensure shared kompetensi (belonging to multiple kategoris) has entries under all kategoris
         $trxByKompetensi = LaporanScoreCalculator::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriList);
@@ -654,8 +656,8 @@ class LaporanController extends Controller
             $pIdInt = (int) $pId;
             $trxByPangkalan[$pIdInt] = LaporanScoreCalculator::enrichTrxForSharedKompetensi(
                 $karyawan->transaksi
-                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                    ->filter(fn ($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn ($t) => [(int) $t->kompetensi_id.':'.(int) ($t->kategori_kinerja_id ?? 0) => $t]),
                 $kategoriList
             );
         }
@@ -701,20 +703,19 @@ class LaporanController extends Controller
 
         $tahunList = TahunPenilaian::orderByDesc('periode_penilaian')->get();
         $tahunAktif = TahunPenilaian::where('is_active', true)->first();
-        $defaultTahunId = $setting?->tahun_penilaian_id ?: $tahunAktif?->id;
-        $selectedTahun = $request->input('tahun_penilaian_id', $defaultTahunId);
+        $selectedTahun = $request->input('tahun_penilaian_id', $tahunAktif?->id);
         $selectedTahunData = $selectedTahun ? TahunPenilaian::find($selectedTahun) : $tahunAktif;
 
         $jenisLaporan = $request->input('jenis_laporan', 'rinci');
-        if (!in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
+        if (! in_array($jenisLaporan, ['ringkas', 'rinci'], true)) {
             $jenisLaporan = 'rinci';
         }
 
         // Build karyawan filter list
         $karyawanFilterList = Karyawan::query()
             ->bukanKepala()
-            ->when($selectedTahun, fn($q) => $q->where('tahun_penilaian_id', $selectedTahun))
-            ->when($scope === 'kepala', fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
+            ->when($selectedTahun, fn ($q) => $q->where('tahun_penilaian_id', $selectedTahun))
+            ->when($scope === 'kepala', fn ($q) => $q->whereHas('pangkalans', fn ($pq) => $pq->whereIn('pangkalan.id', $user->getAllPangkalanIds())))
             ->orderBy('nama_karyawan')
             ->get();
 

@@ -2,14 +2,18 @@
 
 Aplikasi manajemen penilaian kinerja pengabdian karyawan untuk **Yayasan Pondok Pesantren Al-Huda Mugomulyo**.
 
-## 📋 Daftar Isi
+## Daftar Isi
 
 - [Fitur Utama](#fitur-utama)
 - [Role & Akses](#role--akses)
 - [Instalasi](#instalasi)
+- [Testing](#testing)
+- [CI/CD](#cicd)
 - [Panduan Penggunaan](#panduan-penggunaan)
 - [Error & Solusi](#error--solusi)
 - [Teknologi](#teknologi)
+- [Struktur Database](#struktur-database)
+- [License](#license)
 
 ---
 
@@ -135,10 +139,92 @@ php artisan view:clear
 php artisan serve
 ```
 
+### Quick Setup
+
+```bash
+composer setup
+```
+
 ### Default Login
 | Role | Username | Password |
 |------|----------|----------|
 | Admin | `admin` | (sesuai database) |
+
+---
+
+## Testing
+
+### Menjalankan Test
+
+```bash
+# Jalankan semua test
+php artisan test
+
+# Jalankan test spesifik
+php artisan test --filter=UserTest
+
+# Jalankan dengan verbose
+php artisan test --verbose
+```
+
+### Code Style Check
+
+```bash
+# Cek style (tanpa auto-fix)
+vendor/bin/pint --test
+
+# Auto-fix style
+vendor/bin/pint
+```
+
+### Struktur Test
+
+```
+tests/
+├── Unit/
+│   ├── ExampleTest.php
+│   └── UserTest.php          # 23 test cases untuk User model
+└── Feature/
+    └── ExampleTest.php
+```
+
+### Test Coverage
+
+| Model | Tests | Coverage |
+|-------|-------|----------|
+| User | 23 | Attributes, relationships, methods, authorization |
+
+---
+
+## CI/CD
+
+### GitHub Actions
+
+Workflow otomatis berjalan di push/PR ke branch `main` atau `master`.
+
+**Jobs:**
+
+| Job | PHP Version | Checks |
+|-----|-------------|--------|
+| `test` | 8.2, 8.3 | Syntax check + PHPUnit |
+| `lint` | 8.2 | Laravel Pint (code style) |
+
+**Konfigurasi:** `.github/workflows/ci.yml`
+
+### Local CI Check
+
+Sebelum push, pastikan:
+
+```bash
+# 1. Semua test passing
+php artisan test
+
+# 2. Code style clean
+vendor/bin/pint --test
+
+# 3. Syntax check
+find app -name "*.php" -exec php -l {} \;
+```
 
 ---
 
@@ -216,12 +302,16 @@ php artisan config:clear
 
 ## Teknologi
 
-- **Framework:** Laravel 11
+- **Framework:** Laravel 12
+- **PHP:** 8.2+
 - **Database:** MySQL/MariaDB
 - **Frontend:** Bootstrap 5, Bootstrap Icons
 - **PDF:** DomPDF
 - **Excel:** Maatwebsite Excel
 - **Image:** Intervention Image
+- **Testing:** PHPUnit 11
+- **Code Style:** Laravel Pint
+- **CI/CD:** GitHub Actions
 
 ---
 
@@ -231,12 +321,12 @@ php artisan config:clear
 |-------|--------|
 | `users` | Akun user (admin, kepala, tata_usaha, user) |
 | `karyawan` | Data karyawan |
-| `karyawan_pangkalan` | Relasi karyawan ↔ pangkalan (many-to-many) |
+| `karyawan_pangkalan` | Relasi karyawan <-> pangkalan (many-to-many) |
 | `pangkalan` | Data pangkalan/job |
-| `kepala_pangkalan` | Relasi kepala ↔ pangkalan |
+| `kepala_pangkalan` | Relasi kepala <-> pangkalan |
 | `kategori_kinerja` | Kategori penilaian |
 | `kompetensi` | Indikator penilaian |
-| `pangkalan_kategori_kinerja` | Mapping pangkalan ↔ kategori |
+| `pangkalan_kategori_kinerja` | Mapping pangkalan <-> kategori |
 | `transaksi` | Data nilai penilaian |
 | `penilaian_locks` | Status lock penilaian |
 | `tahun_penilaian` | Periode penilaian |
@@ -247,4 +337,4 @@ php artisan config:clear
 
 ## License
 
-Proprietary - Yayasan Pondok Pesantren Al-Huda Mugomulyo
+MIT License - [Lihat LICENSE](LICENSE.md)

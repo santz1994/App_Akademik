@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('karyawan_pangkalan')) {
+        if (! Schema::hasTable('karyawan_pangkalan')) {
             Schema::create('karyawan_pangkalan', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('karyawan_id')->constrained('karyawan')->cascadeOnDelete();
@@ -32,7 +32,7 @@ return new class extends Migration
                 // ignore
             }
 
-            if (!$hasUnique) {
+            if (! $hasUnique) {
                 Schema::table('karyawan_pangkalan', function (Blueprint $table) {
                     $table->unique(['karyawan_id', 'pangkalan_id']);
                 });

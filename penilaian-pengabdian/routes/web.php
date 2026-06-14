@@ -1,28 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DatabaseBackupController;
+use App\Http\Controllers\HelpController;
+use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\KategoriKinerjaController;
+use App\Http\Controllers\KepalaController;
+use App\Http\Controllers\KompetensiController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanFormatController;
+use App\Http\Controllers\MutasiController;
+use App\Http\Controllers\PangkalanController;
+use App\Http\Controllers\PenilaianMetodeController;
+use App\Http\Controllers\PerformanceRatingController;
+use App\Http\Controllers\RewardPunishmentController;
+use App\Http\Controllers\SettingLembagaController;
+use App\Http\Controllers\TahunPenilaianController;
+use App\Http\Controllers\TataUsahaController;
+use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\KaryawanController;
-use App\Http\Controllers\TahunPenilaianController;
-use App\Http\Controllers\KategoriKinerjaController;
-use App\Http\Controllers\KompetensiController;
-use App\Http\Controllers\PerformanceRatingController;
-use App\Http\Controllers\MutasiController;
-use App\Http\Controllers\TransaksiController;
-use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\PangkalanController;
-use App\Http\Controllers\KepalaController;
-use App\Http\Controllers\SettingLembagaController;
-use App\Http\Controllers\HelpController;
-use App\Http\Controllers\LaporanFormatController;
-use App\Http\Controllers\PenilaianMetodeController;
-use App\Http\Controllers\TataUsahaController;
-use App\Http\Controllers\DatabaseBackupController;
-use App\Http\Controllers\RewardPunishmentController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // Root redirect
 Route::get('/', function () {
@@ -37,14 +37,16 @@ Route::get('/', function () {
         if ($user->is_kepala) {
             return redirect()->route('kepala.dashboard');
         }
+
         return redirect()->route('user.dashboard');
     }
+
     return redirect()->route('login');
 });
 
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {
-    Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/activate', [AuthController::class, 'showActivate'])->name('activate');
     Route::post('/activate', [AuthController::class, 'activate'])->name('activate.post');
@@ -58,7 +60,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Root redirect to dashboard
-    Route::get('/', fn() => redirect()->route('admin.dashboard'));
+    Route::get('/', fn () => redirect()->route('admin.dashboard'));
 
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -159,7 +161,7 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
 // USER routes
 // ---------------------------------------------------------------
 Route::middleware(['auth', 'role.user'])->prefix('user')->name('user.')->group(function () {
-    Route::get('/', fn() => redirect()->route('user.dashboard'));
+    Route::get('/', fn () => redirect()->route('user.dashboard'));
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
@@ -176,7 +178,7 @@ Route::middleware(['auth', 'role.user'])->prefix('user')->name('user.')->group(f
 // KEPALA routes
 // ---------------------------------------------------------------
 Route::middleware(['auth', 'role.kepala'])->prefix('kepala')->name('kepala.')->group(function () {
-    Route::get('/', fn() => redirect()->route('kepala.dashboard'));
+    Route::get('/', fn () => redirect()->route('kepala.dashboard'));
     Route::get('/dashboard', [KepalaController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/transaksi', [TransaksiController::class, 'kepalaIndex'])->name('transaksi.index');
@@ -198,7 +200,7 @@ Route::middleware(['auth', 'role.kepala'])->prefix('kepala')->name('kepala.')->g
 // TATA USAHA routes
 // ---------------------------------------------------------------
 Route::middleware(['auth', 'role.tata_usaha'])->prefix('tata-usaha')->name('tata-usaha.')->group(function () {
-    Route::get('/', fn() => redirect()->route('tata-usaha.dashboard'));
+    Route::get('/', fn () => redirect()->route('tata-usaha.dashboard'));
     Route::get('/dashboard', [TataUsahaController::class, 'dashboard'])->name('dashboard');
 
     // Laporan (read-only access)
@@ -221,4 +223,3 @@ Route::middleware('auth')->get('/help-qna/template/{entity}/{format}', [HelpCont
     ->where('entity', 'user|karyawan')
     ->where('format', 'csv|xlsx')
     ->name('help.template.import');
-

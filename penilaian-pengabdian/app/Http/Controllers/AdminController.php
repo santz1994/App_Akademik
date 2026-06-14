@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Karyawan;
-use App\Models\TahunPenilaian;
 use App\Models\KategoriKinerja;
 use App\Models\Kompetensi;
-use App\Models\PerformanceRating;
 use App\Models\Pangkalan;
 use App\Models\PenilaianLock;
 use App\Models\PenilaianUnlockRequest;
+use App\Models\TahunPenilaian;
 use App\Models\Transaksi;
+use App\Models\User;
 
 class AdminController extends Controller
 {
@@ -26,7 +25,7 @@ class AdminController extends Controller
 
         $sudahDinilaiAktifTahun = $tahunAktifId
             ? Transaksi::where('tahun_penilaian_id', $tahunAktifId)
-                ->whereHas('karyawan', fn($q) => $q->bukanKepala()->where('is_active', true))
+                ->whereHas('karyawan', fn ($q) => $q->bukanKepala()->where('is_active', true))
                 ->distinct('karyawan_id')
                 ->count('karyawan_id')
             : 0;
@@ -37,14 +36,14 @@ class AdminController extends Controller
 
         $rataNilaiAktifTahun = $tahunAktifId
             ? Transaksi::where('tahun_penilaian_id', $tahunAktifId)
-                ->whereHas('karyawan', fn($q) => $q->bukanKepala())
+                ->whereHas('karyawan', fn ($q) => $q->bukanKepala())
                 ->avg('nilai')
             : null;
 
         $topPangkalan = Pangkalan::withCount([
-            'karyawan' => fn($q) => $q->bukanKepala(),
-            'karyawan as karyawan_aktif_count' => fn($q) => $q->bukanKepala()->where('is_active', true),
-            ])
+            'karyawan' => fn ($q) => $q->bukanKepala(),
+            'karyawan as karyawan_aktif_count' => fn ($q) => $q->bukanKepala()->where('is_active', true),
+        ])
             ->orderByDesc('karyawan_count')
             ->orderBy('nama_pangkalan')
             ->take(6)
@@ -61,12 +60,12 @@ class AdminController extends Controller
         if ($tahunAktifId) {
             $karyawanAktif = Karyawan::with([
                 'pangkalans.kategoriKinerja.kompetensi',
-                'transaksi' => fn($q) => $q->where('tahun_penilaian_id', $tahunAktifId),
+                'transaksi' => fn ($q) => $q->where('tahun_penilaian_id', $tahunAktifId),
             ])
-            ->bukanKepala()
-            ->where('is_active', true)
-            ->where('tahun_penilaian_id', $tahunAktifId)
-            ->get();
+                ->bukanKepala()
+                ->where('is_active', true)
+                ->where('tahun_penilaian_id', $tahunAktifId)
+                ->get();
 
             foreach ($karyawanAktif as $k) {
                 $totalKomp = 0;
@@ -77,12 +76,11 @@ class AdminController extends Controller
                         ->whereIn('id', $pkKatIds)
                         ->get();
                     // Per-kategori sum (shared kompetensi counted per kategori)
-                    $totalKomp += $pkKats->sum(fn($kat) => $kat->kompetensi->count());
+                    $totalKomp += $pkKats->sum(fn ($kat) => $kat->kompetensi->count());
                     // Enrichment-aware: check kompetensi_id only (not kategori_kinerja_id)
                     foreach ($pkKats as $kat) {
                         foreach ($kat->kompetensi as $komp) {
-                            if ($k->transaksi->contains(fn($t) =>
-                                $t->nilai !== null
+                            if ($k->transaksi->contains(fn ($t) => $t->nilai !== null
                                 && (int) ($t->pangkalan_id ?? 0) === (int) $pk->id
                                 && (int) $t->kompetensi_id === (int) $komp->id
                             )) {
@@ -103,16 +101,16 @@ class AdminController extends Controller
         }
 
         $stats = [
-            'total_users'      => User::count(),
-            'total_karyawan'   => $totalKaryawan,
+            'total_users' => User::count(),
+            'total_karyawan' => $totalKaryawan,
             'total_karyawan_aktif' => $totalKaryawanAktif,
             'total_karyawan_nonaktif' => $totalKaryawanNonaktif,
-            'total_pangkalan'  => Pangkalan::count(),
-            'tahun_aktif'      => $tahunAktifModel?->periode_penilaian ?? '-',
-            'total_kategori'   => KategoriKinerja::count(),
+            'total_pangkalan' => Pangkalan::count(),
+            'tahun_aktif' => $tahunAktifModel?->periode_penilaian ?? '-',
+            'total_kategori' => KategoriKinerja::count(),
             'total_kompetensi' => Kompetensi::count(),
-            'total_penilaian'  => Transaksi::whereHas('karyawan', fn($q) => $q->bukanKepala())->count(),
-            'sudah_dinilai'    => Transaksi::whereHas('karyawan', fn($q) => $q->bukanKepala())->distinct('karyawan_id')->count('karyawan_id'),
+            'total_penilaian' => Transaksi::whereHas('karyawan', fn ($q) => $q->bukanKepala())->count(),
+            'sudah_dinilai' => Transaksi::whereHas('karyawan', fn ($q) => $q->bukanKepala())->distinct('karyawan_id')->count('karyawan_id'),
             'sudah_dinilai_tahun_aktif' => $sudahDinilaiAktifTahun,
             'progres_dinilai_tahun_aktif' => $progresDinilaiAktifTahun,
             'belum_lengkap_count' => $karyawanIncompleteList->count(),
@@ -120,7 +118,7 @@ class AdminController extends Controller
             'rata_nilai_tahun_aktif' => $rataNilaiAktifTahun !== null ? round((float) $rataNilaiAktifTahun, 2) : null,
             'total_penilaian_tahun_aktif' => $tahunAktifId
                 ? Transaksi::where('tahun_penilaian_id', $tahunAktifId)
-                    ->whereHas('karyawan', fn($q) => $q->bukanKepala())
+                    ->whereHas('karyawan', fn ($q) => $q->bukanKepala())
                     ->count()
                 : 0,
             'pending_unlock' => PenilaianUnlockRequest::where('status', 'pending')->count(),
@@ -136,4 +134,3 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('stats'));
     }
 }
-

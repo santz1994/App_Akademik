@@ -17,7 +17,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasColumn('users', 'kepala_level')) {
+        if (! Schema::hasColumn('users', 'kepala_level')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->enum('kepala_level', ['bagian', 'departement'])
                     ->nullable()

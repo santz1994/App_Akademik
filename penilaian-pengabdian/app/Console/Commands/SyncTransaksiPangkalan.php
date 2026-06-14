@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class SyncTransaksiPangkalan extends Command
 {
     protected $signature = 'sync:transaksi-pangkalan';
+
     protected $description = 'Sync existing transaksi with pangkalan_id from karyawan';
 
     public function handle(): int
@@ -22,6 +23,7 @@ class SyncTransaksiPangkalan extends Command
         $remaining = DB::table('transaksi')->whereNull('pangkalan_id')->count();
 
         $this->info("Updated: {$updated} transaksi. Remaining without pangkalan: {$remaining}");
+
         return Command::SUCCESS;
     }
 }

@@ -109,29 +109,29 @@ class LaporanFormatController extends Controller
         }
 
         $requestedOrder = json_decode((string) $request->input('laporan_column_order', '[]'), true);
-        if (!is_array($requestedOrder)) {
+        if (! is_array($requestedOrder)) {
             $requestedOrder = [];
         }
 
         $normalizedOrder = [];
         foreach ($requestedOrder as $columnKey) {
             $columnKey = (string) $columnKey;
-            if (in_array($columnKey, self::AVAILABLE_COLUMNS, true) && !in_array($columnKey, $normalizedOrder, true)) {
+            if (in_array($columnKey, self::AVAILABLE_COLUMNS, true) && ! in_array($columnKey, $normalizedOrder, true)) {
                 $normalizedOrder[] = $columnKey;
             }
         }
         foreach (self::AVAILABLE_COLUMNS as $fallbackColumn) {
-            if (!in_array($fallbackColumn, $normalizedOrder, true)) {
+            if (! in_array($fallbackColumn, $normalizedOrder, true)) {
                 $normalizedOrder[] = $fallbackColumn;
             }
         }
         $data['laporan_column_order'] = json_encode($normalizedOrder);
 
-        if (!$data['laporan_show_nilai_akhir']) {
+        if (! $data['laporan_show_nilai_akhir']) {
             $data['laporan_show_rating'] = false;
         }
 
-        if (!$data['laporan_show_detail_kompetensi'] && $data['laporan_default_jenis'] === 'rinci') {
+        if (! $data['laporan_show_detail_kompetensi'] && $data['laporan_default_jenis'] === 'rinci') {
             $data['laporan_default_jenis'] = 'ringkas';
         }
 

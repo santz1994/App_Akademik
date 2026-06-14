@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('pangkalan_kategori_kinerja', function (Blueprint $table) {
             $table->foreignId('penanggung_jawab_user_id')
-                  ->nullable()
-                  ->after('kategori_kinerja_id')
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->after('kategori_kinerja_id')
+                ->constrained('users')
+                ->nullOnDelete();
         });
     }
 

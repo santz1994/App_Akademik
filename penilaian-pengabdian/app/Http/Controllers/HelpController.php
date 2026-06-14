@@ -18,7 +18,7 @@ class HelpController extends Controller
         $entity = strtolower($entity);
         $format = strtolower($format);
 
-        if (!in_array($entity, ['user', 'karyawan'], true) || !in_array($format, ['csv', 'xlsx'], true)) {
+        if (! in_array($entity, ['user', 'karyawan'], true) || ! in_array($format, ['csv', 'xlsx'], true)) {
             abort(404);
         }
 

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\KategoriKinerja;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 
 class KategoriKinerjaController extends Controller
 {
@@ -22,6 +22,7 @@ class KategoriKinerjaController extends Controller
     public function create()
     {
         $kode = $this->generateNextKodeKategori();
+
         return view('admin.kategori_kinerja.create', compact('kode'));
     }
 
@@ -29,8 +30,8 @@ class KategoriKinerjaController extends Controller
     {
         $request->validate([
             'kategori' => 'required|string|max:150',
-            'jenis'    => 'required|in:kinerja,kegiatan',
-            'bobot'    => 'nullable|numeric|min:0|max:100',
+            'jenis' => 'required|in:kinerja,kegiatan',
+            'bobot' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $jenis = (string) $request->input('jenis');
@@ -39,16 +40,16 @@ class KategoriKinerjaController extends Controller
             try {
                 KategoriKinerja::create([
                     'kode_kategori' => $this->generateNextKodeKategori(),
-                    'kategori'      => $request->kategori,
-                    'jenis'         => $jenis,
-                    'is_wajib'      => false,
-                    'bobot'         => (float) $request->input('bobot', 0),
+                    'kategori' => $request->kategori,
+                    'jenis' => $jenis,
+                    'is_wajib' => false,
+                    'bobot' => (float) $request->input('bobot', 0),
                 ]);
 
                 return redirect()->route('admin.kategori-kinerja.index')
                     ->with('success', 'Kategori berhasil ditambahkan.');
             } catch (QueryException $exception) {
-                if (!$this->isDuplicateKodeKategoriException($exception)) {
+                if (! $this->isDuplicateKodeKategoriException($exception)) {
                     throw $exception;
                 }
             }
@@ -68,8 +69,8 @@ class KategoriKinerjaController extends Controller
     {
         $request->validate([
             'kategori' => 'required|string|max:150',
-            'jenis'    => 'required|in:kinerja,kegiatan',
-            'bobot'    => 'nullable|numeric|min:0|max:100',
+            'jenis' => 'required|in:kinerja,kegiatan',
+            'bobot' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $jenis = (string) $request->input('jenis');
@@ -88,6 +89,7 @@ class KategoriKinerjaController extends Controller
     public function destroy(KategoriKinerja $kategoriKinerja)
     {
         $kategoriKinerja->delete();
+
         return redirect()->route('admin.kategori-kinerja.index')
             ->with('success', 'Kategori berhasil dihapus.');
     }
@@ -99,7 +101,7 @@ class KategoriKinerjaController extends Controller
             ->value('max_num')) + 1;
 
         do {
-            $kode = 'KTG-' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+            $kode = 'KTG-'.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (KategoriKinerja::where('kode_kategori', $kode)->exists());
 

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PerformanceRating;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 
 class PerformanceRatingController extends Controller
 {
@@ -12,19 +12,21 @@ class PerformanceRatingController extends Controller
     {
         $data = PerformanceRating::latest();
         $data = $this->paginateWithPerPage($data, $request, 10);
+
         return view('admin.performance_rating.index', compact('data'));
     }
 
     public function create()
     {
         $kode = $this->generateNextKodeRating();
+
         return view('admin.performance_rating.create', compact('kode'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'rating'     => 'required|string|max:100',
+            'rating' => 'required|string|max:100',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -32,14 +34,14 @@ class PerformanceRatingController extends Controller
             try {
                 PerformanceRating::create([
                     'kode_rating' => $this->generateNextKodeRating(),
-                    'rating'      => $request->rating,
-                    'keterangan'  => $request->keterangan,
+                    'rating' => $request->rating,
+                    'keterangan' => $request->keterangan,
                 ]);
 
                 return redirect()->route('admin.performance-rating.index')
                     ->with('success', 'Performance rating berhasil ditambahkan.');
             } catch (QueryException $exception) {
-                if (!$this->isDuplicateKodeRatingException($exception)) {
+                if (! $this->isDuplicateKodeRatingException($exception)) {
                     throw $exception;
                 }
             }
@@ -58,7 +60,7 @@ class PerformanceRatingController extends Controller
     public function update(Request $request, PerformanceRating $performanceRating)
     {
         $request->validate([
-            'rating'     => 'required|string|max:100',
+            'rating' => 'required|string|max:100',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -71,6 +73,7 @@ class PerformanceRatingController extends Controller
     public function destroy(PerformanceRating $performanceRating)
     {
         $performanceRating->delete();
+
         return redirect()->route('admin.performance-rating.index')
             ->with('success', 'Performance rating berhasil dihapus.');
     }
@@ -82,7 +85,7 @@ class PerformanceRatingController extends Controller
             ->value('max_num')) + 1;
 
         do {
-            $kode = 'RTG-' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+            $kode = 'RTG-'.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (PerformanceRating::where('kode_rating', $kode)->exists());
 

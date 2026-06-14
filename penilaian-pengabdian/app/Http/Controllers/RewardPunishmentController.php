@@ -19,9 +19,9 @@ class RewardPunishmentController extends Controller
                     ->orWhere('grade', 'like', "%{$search}%");
             });
         })
-        ->when($filterTipe, fn($q) => $q->where('tipe', $filterTipe))
-        ->orderBy('tipe')
-        ->orderBy('grade');
+            ->when($filterTipe, fn ($q) => $q->where('tipe', $filterTipe))
+            ->orderBy('tipe')
+            ->orderBy('grade');
 
         $items = $this->paginateWithPerPage($items, $request, 10);
 
@@ -36,24 +36,24 @@ class RewardPunishmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode'      => 'required|string|max:20|unique:reward_punishment,kode',
-            'tipe'      => 'required|in:reward,punishment',
-            'grade'     => 'required|in:A,B,C,D,E',
-            'nama'      => 'required|string|max:255',
+            'kode' => 'required|string|max:20|unique:reward_punishment,kode',
+            'tipe' => 'required|in:reward,punishment',
+            'grade' => 'required|in:A,B,C,D,E',
+            'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'satuan'    => 'nullable|string|max:50',
-            'jumlah'    => 'required|integer|min:0',
+            'satuan' => 'nullable|string|max:50',
+            'jumlah' => 'required|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
         RewardPunishment::create([
-            'kode'      => $request->kode,
-            'tipe'      => $request->tipe,
-            'grade'     => $request->grade,
-            'nama'      => $request->nama,
+            'kode' => $request->kode,
+            'tipe' => $request->tipe,
+            'grade' => $request->grade,
+            'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
-            'satuan'    => $request->satuan,
-            'jumlah'    => $request->jumlah,
+            'satuan' => $request->satuan,
+            'jumlah' => $request->jumlah,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
@@ -69,24 +69,24 @@ class RewardPunishmentController extends Controller
     public function update(Request $request, RewardPunishment $rewardPunishment)
     {
         $request->validate([
-            'kode'      => 'required|string|max:20|unique:reward_punishment,kode,' . $rewardPunishment->id,
-            'tipe'      => 'required|in:reward,punishment',
-            'grade'     => 'required|in:A,B,C,D,E',
-            'nama'      => 'required|string|max:255',
+            'kode' => 'required|string|max:20|unique:reward_punishment,kode,'.$rewardPunishment->id,
+            'tipe' => 'required|in:reward,punishment',
+            'grade' => 'required|in:A,B,C,D,E',
+            'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'satuan'    => 'nullable|string|max:50',
-            'jumlah'    => 'required|integer|min:0',
+            'satuan' => 'nullable|string|max:50',
+            'jumlah' => 'required|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
         $rewardPunishment->update([
-            'kode'      => $request->kode,
-            'tipe'      => $request->tipe,
-            'grade'     => $request->grade,
-            'nama'      => $request->nama,
+            'kode' => $request->kode,
+            'tipe' => $request->tipe,
+            'grade' => $request->grade,
+            'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
-            'satuan'    => $request->satuan,
-            'jumlah'    => $request->jumlah,
+            'satuan' => $request->satuan,
+            'jumlah' => $request->jumlah,
             'is_active' => $request->boolean('is_active', true),
         ]);
 

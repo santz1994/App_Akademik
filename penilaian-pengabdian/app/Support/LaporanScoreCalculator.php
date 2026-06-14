@@ -3,26 +3,26 @@
 namespace App\Support;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class LaporanScoreCalculator
 {
     public static function resolveKategoriUntukKaryawan(Collection $kategoriList, mixed $karyawan): Collection
     {
-        if (!$karyawan) {
+        if (! $karyawan) {
             return $kategoriList->values();
         }
 
         // Check if karyawan has any pangkalan (via pivot table or single field)
         $hasPangkalan = false;
         if (method_exists($karyawan, 'getAllPangkalanIds')) {
-            $hasPangkalan = !empty($karyawan->getAllPangkalanIds());
+            $hasPangkalan = ! empty($karyawan->getAllPangkalanIds());
         } else {
-            $hasPangkalan = !empty($karyawan->pangkalan_id);
+            $hasPangkalan = ! empty($karyawan->pangkalan_id);
         }
 
-        if (!$hasPangkalan) {
+        if (! $hasPangkalan) {
             return $kategoriList->values();
         }
 
@@ -30,20 +30,20 @@ class LaporanScoreCalculator
 
         // Kinerja: filter by pangkalan mapping
         $kategoriKinerja = $kategoriList
-            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kinerja')
+            ->filter(fn ($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kinerja')
             ->values();
 
         $selectedKinerja = $mappedKategoriIds->isNotEmpty()
-            ? $kategoriKinerja->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
+            ? $kategoriKinerja->filter(fn ($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
             : collect();
 
         // Kegiatan: only include kegiatan mapped to the karyawan's pangkalan(s)
         $kategoriKegiatan = $kategoriList
-            ->filter(fn($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan')
+            ->filter(fn ($kategori) => strtolower((string) ($kategori->jenis ?? '')) === 'kegiatan')
             ->values();
 
         $selectedKegiatan = $mappedKategoriIds->isNotEmpty()
-            ? $kategoriKegiatan->filter(fn($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
+            ? $kategoriKegiatan->filter(fn ($kategori) => $mappedKategoriIds->contains((int) $kategori->id))->values()
             : collect();
 
         return $selectedKinerja
@@ -55,8 +55,8 @@ class LaporanScoreCalculator
     public static function kompetensiIdsFromKategori(Collection $kategoriList): Collection
     {
         return $kategoriList
-            ->flatMap(fn($kategori) => $kategori->kompetensi->pluck('id'))
-            ->map(fn($id) => (int) $id)
+            ->flatMap(fn ($kategori) => $kategori->kompetensi->pluck('id'))
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
     }
@@ -66,10 +66,9 @@ class LaporanScoreCalculator
         Collection $trxByKompetensi,
         string $method = 'weighted_kategori',
         array $options = []
-    ): ?float
-    {
-        $hasAnyValue = $trxByKompetensi->contains(fn($t) => self::isScored($t?->nilai));
-        if (!$hasAnyValue) {
+    ): ?float {
+        $hasAnyValue = $trxByKompetensi->contains(fn ($t) => self::isScored($t?->nilai));
+        if (! $hasAnyValue) {
             return null;
         }
 
@@ -109,15 +108,14 @@ class LaporanScoreCalculator
         Collection $kategoriList,
         Collection $trxByKompetensi,
         array $options = []
-    ): ?float
-    {
+    ): ?float {
         $kinerjaScore = self::calculateWeightedByKategori(
-            $kategoriList->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')->values(),
+            $kategoriList->filter(fn ($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')->values(),
             $trxByKompetensi
         );
 
         $kegiatanScore = self::calculateWeightedByKategori(
-            $kategoriList->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kegiatan')->values(),
+            $kategoriList->filter(fn ($k) => strtolower((string) ($k->jenis ?? '')) === 'kegiatan')->values(),
             $trxByKompetensi
         );
 
@@ -166,7 +164,7 @@ class LaporanScoreCalculator
             $values = [];
             foreach ($kategori->kompetensi as $kompetensi) {
                 // Try composite key first (kompetensi_id:kategori_kinerja_id), fallback to kompetensi_id
-                $compositeKey = (int) $kompetensi->id . ':' . (int) $kategori->id;
+                $compositeKey = (int) $kompetensi->id.':'.(int) $kategori->id;
                 $transaksi = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($kompetensi->id);
                 if ($transaksi && self::isScored($transaksi->nilai)) {
                     $values[] = (float) $transaksi->nilai;
@@ -202,7 +200,7 @@ class LaporanScoreCalculator
         $allPangkalanIds = [];
         if (method_exists($karyawan, 'getAllPangkalanIds')) {
             $allPangkalanIds = $karyawan->getAllPangkalanIds();
-        } elseif (!empty($karyawan->pangkalan_id)) {
+        } elseif (! empty($karyawan->pangkalan_id)) {
             $allPangkalanIds = [(int) $karyawan->pangkalan_id];
         }
 
@@ -218,7 +216,7 @@ class LaporanScoreCalculator
             foreach ($karyawan->pangkalans as $pangkalan) {
                 if ($pangkalan->relationLoaded('kategoriKinerja')) {
                     $mappedKategoriIds = $mappedKategoriIds->merge(
-                        $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                        $pangkalan->kategoriKinerja->pluck('id')->map(fn ($id) => (int) $id)
                     );
                 }
             }
@@ -229,21 +227,21 @@ class LaporanScoreCalculator
             $pangkalan = $karyawan->pangkalan;
             if ($pangkalan && $pangkalan->relationLoaded('kategoriKinerja')) {
                 $mappedKategoriIds = $mappedKategoriIds->merge(
-                    $pangkalan->kategoriKinerja->pluck('id')->map(fn($id) => (int) $id)
+                    $pangkalan->kategoriKinerja->pluck('id')->map(fn ($id) => (int) $id)
                 );
             }
         }
 
         // Final fallback: query database
-        if ($mappedKategoriIds->isEmpty() && !empty($allPangkalanIds)) {
-            if (!Schema::hasTable('pangkalan_kategori_kinerja')) {
+        if ($mappedKategoriIds->isEmpty() && ! empty($allPangkalanIds)) {
+            if (! Schema::hasTable('pangkalan_kategori_kinerja')) {
                 return collect();
             }
 
             $mappedKategoriIds = DB::table('pangkalan_kategori_kinerja')
                 ->whereIn('pangkalan_id', $allPangkalanIds)
                 ->pluck('kategori_kinerja_id')
-                ->map(fn($id) => (int) $id);
+                ->map(fn ($id) => (int) $id);
         }
 
         return $mappedKategoriIds->unique()->values();
@@ -253,17 +251,17 @@ class LaporanScoreCalculator
      * Calculate scores broken down by pangkalan for a karyawan.
      * Returns an array with per-pangkalan scores and the averaged final score.
      *
-     * @param Collection $kategoriList  All kategori (kinerja + kegiatan)
-     * @param Collection $trxByKompetensi  Transaction records keyed by kompetensi_id
-     * @param array      $allPangkalanIds  All pangkalan IDs the karyawan is assigned to
-     * @param Collection $pangkalanList  Pangkalan models with kategoriKinerja loaded
-     * @param array      $options  ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
-     * @return array  [
-     *     'perPangkalan' => [[ 'pangkalan' => Pangkalan, 'kinerjaAvg' => float|null, 'kategoriDetails' => [...] ], ...],
-     *     'kegiatanAvg' => float|null,
-     *     'kinerjaFinal' => float|null,  // average of per-pangkalan kinerja averages
-     *     'nilaiAkhir' => float|null,
-     * ]
+     * @param  Collection  $kategoriList  All kategori (kinerja + kegiatan)
+     * @param  Collection  $trxByKompetensi  Transaction records keyed by kompetensi_id
+     * @param  array  $allPangkalanIds  All pangkalan IDs the karyawan is assigned to
+     * @param  Collection  $pangkalanList  Pangkalan models with kategoriKinerja loaded
+     * @param  array  $options  ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
+     * @return array [
+     *               'perPangkalan' => [[ 'pangkalan' => Pangkalan, 'kinerjaAvg' => float|null, 'kategoriDetails' => [...] ], ...],
+     *               'kegiatanAvg' => float|null,
+     *               'kinerjaFinal' => float|null,  // average of per-pangkalan kinerja averages
+     *               'nilaiAkhir' => float|null,
+     *               ]
      */
     public static function calculatePerPangkalan(
         Collection $kategoriList,
@@ -274,10 +272,10 @@ class LaporanScoreCalculator
         array $trxByPangkalan = []
     ): array {
         $kinerjaKategori = $kategoriList
-            ->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')
+            ->filter(fn ($k) => strtolower((string) ($k->jenis ?? '')) === 'kinerja')
             ->values();
         $kegiatanKategori = $kategoriList
-            ->filter(fn($k) => strtolower((string) ($k->jenis ?? '')) === 'kegiatan')
+            ->filter(fn ($k) => strtolower((string) ($k->jenis ?? '')) === 'kegiatan')
             ->values();
 
         // Build per-pangkalan kinerja breakdown
@@ -285,8 +283,8 @@ class LaporanScoreCalculator
         $allPangkalanKategoriMap = [];
         $needFallback = false;
         foreach ($allPangkalanIds as $pId) {
-            $pangkalan = $pangkalanList->first(fn($p) => (int) $p->id === (int) $pId);
-            if (!$pangkalan || !$pangkalan->relationLoaded('kategoriKinerja')) {
+            $pangkalan = $pangkalanList->first(fn ($p) => (int) $p->id === (int) $pId);
+            if (! $pangkalan || ! $pangkalan->relationLoaded('kategoriKinerja')) {
                 $needFallback = true;
                 break;
             }
@@ -299,7 +297,7 @@ class LaporanScoreCalculator
             foreach ($allMappings as $pId => $rows) {
                 $allPangkalanKategoriMap[(int) $pId] = $rows
                     ->pluck('kategori_kinerja_id')
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->unique()
                     ->values();
             }
@@ -308,14 +306,14 @@ class LaporanScoreCalculator
         $perPangkalan = [];
         foreach ($allPangkalanIds as $pId) {
             $pIdInt = (int) $pId;
-            $pangkalan = $pangkalanList->first(fn($p) => (int) $p->id === $pIdInt);
+            $pangkalan = $pangkalanList->first(fn ($p) => (int) $p->id === $pIdInt);
 
             // Get kategori_kinerja IDs mapped to this pangkalan
             $mappedKategoriIds = collect();
             if ($pangkalan && $pangkalan->relationLoaded('kategoriKinerja')) {
                 $mappedKategoriIds = $pangkalan->kategoriKinerja
                     ->pluck('id')
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->unique()
                     ->values();
             } elseif (isset($allPangkalanKategoriMap[$pIdInt])) {
@@ -325,7 +323,7 @@ class LaporanScoreCalculator
 
             // Filter kinerja kategori that are mapped to this pangkalan
             $pangkalanKinerjaKategori = $mappedKategoriIds->isNotEmpty()
-                ? $kinerjaKategori->filter(fn($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
+                ? $kinerjaKategori->filter(fn ($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
                 : collect();
 
             // Calculate average per kategori for this pangkalan
@@ -337,7 +335,7 @@ class LaporanScoreCalculator
             foreach ($pangkalanKinerjaKategori as $kat) {
                 $values = [];
                 foreach ($kat->kompetensi as $komp) {
-                    $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                    $compositeKey = (int) $komp->id.':'.(int) $kat->id;
                     $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
                     if ($t && self::isScored($t->nilai)) {
                         $values[] = (float) $t->nilai;
@@ -356,14 +354,14 @@ class LaporanScoreCalculator
 
             // Also build kegiatan details for this pangkalan (only mapped kegiatan)
             $pangkalanKegiatanKategori = $mappedKategoriIds->isNotEmpty()
-                ? $kegiatanKategori->filter(fn($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
+                ? $kegiatanKategori->filter(fn ($kat) => $mappedKategoriIds->contains((int) $kat->id))->values()
                 : collect();
             $kegiatanDetails = [];
             $kegiatanAverages = [];
             foreach ($pangkalanKegiatanKategori as $kat) {
                 $values = [];
                 foreach ($kat->kompetensi as $komp) {
-                    $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                    $compositeKey = (int) $komp->id.':'.(int) $kat->id;
                     $t = $pangkalanTrx->get($compositeKey) ?? $pangkalanTrx->get($komp->id);
                     if ($t && self::isScored($t->nilai)) {
                         $values[] = (float) $t->nilai;
@@ -400,7 +398,7 @@ class LaporanScoreCalculator
         $kegiatanValues = [];
         foreach ($kegiatanKategori as $kat) {
             foreach ($kat->kompetensi as $komp) {
-                $compositeKey = (int) $komp->id . ':' . (int) $kat->id;
+                $compositeKey = (int) $komp->id.':'.(int) $kat->id;
                 $t = $trxByKompetensi->get($compositeKey) ?? $trxByKompetensi->get($komp->id);
                 if ($t && self::isScored($t->nilai)) {
                     $kegiatanValues[] = (float) $t->nilai;
@@ -414,7 +412,7 @@ class LaporanScoreCalculator
         // Average kinerja across all pangkalan
         $validPangkalanAvgs = collect($perPangkalan)
             ->pluck('kinerjaAvg')
-            ->filter(fn($v) => $v !== null)
+            ->filter(fn ($v) => $v !== null)
             ->values();
 
         $kinerjaFinal = $validPangkalanAvgs->isNotEmpty()
@@ -455,8 +453,7 @@ class LaporanScoreCalculator
     /**
      * Get reward/punishment info for a given final score.
      *
-     * @param float|null $nilaiAkhir
-     * @return array|null  ['grade' => 'C', 'items' => Collection]
+     * @return array|null ['grade' => 'C', 'items' => Collection]
      */
     public static function getRewardPunishmentInfo(?float $nilaiAkhir): ?array
     {
@@ -519,10 +516,10 @@ class LaporanScoreCalculator
      * Calculate final score for a karyawan using the per-pangkalan approach.
      * This ensures consistent results between laporan keseluruhan and perorangan.
      *
-     * @param Collection $kategoriList  Resolved kategori list with kompetensi loaded
-     * @param mixed      $karyawan     Karyawan model with pangkalans.kategoriKinerja and transaksi loaded
-     * @param array      $options      ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
-     * @return array  ['nilaiAkhir' => float|null, 'kinerjaFinal' => float|null, 'kegiatanAvg' => float|null]
+     * @param  Collection  $kategoriList  Resolved kategori list with kompetensi loaded
+     * @param  mixed  $karyawan  Karyawan model with pangkalans.kategoriKinerja and transaksi loaded
+     * @param  array  $options  ['bobot_kinerja' => 70, 'bobot_kegiatan' => 30]
+     * @return array ['nilaiAkhir' => float|null, 'kinerjaFinal' => float|null, 'kegiatanAvg' => float|null]
      */
     public static function calculateNilaiAkhirForKaryawan(
         Collection $kategoriList,
@@ -534,8 +531,8 @@ class LaporanScoreCalculator
 
         // Build composite-keyed trxByKompetensi with enrichment
         $trxByKompetensi = $karyawan->transaksi
-            ->filter(fn($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
-            ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]);
+            ->filter(fn ($t) => $t->nilai !== null && in_array((int) ($t->pangkalan_id ?? 0), $allPangkalanIds, true))
+            ->mapWithKeys(fn ($t) => [(int) $t->kompetensi_id.':'.(int) ($t->kategori_kinerja_id ?? 0) => $t]);
 
         $trxByKompetensi = self::enrichTrxForSharedKompetensi($trxByKompetensi, $kategoriList);
 
@@ -545,8 +542,8 @@ class LaporanScoreCalculator
             $pIdInt = (int) $pId;
             $trxByPangkalan[$pIdInt] = self::enrichTrxForSharedKompetensi(
                 $karyawan->transaksi
-                    ->filter(fn($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
-                    ->mapWithKeys(fn($t) => [(int) $t->kompetensi_id . ':' . (int) ($t->kategori_kinerja_id ?? 0) => $t]),
+                    ->filter(fn ($t) => $t->nilai !== null && (int) ($t->pangkalan_id ?? 0) === $pIdInt)
+                    ->mapWithKeys(fn ($t) => [(int) $t->kompetensi_id.':'.(int) ($t->kategori_kinerja_id ?? 0) => $t]),
                 $kategoriList
             );
         }
@@ -574,9 +571,9 @@ class LaporanScoreCalculator
      * This fixes the case where "Pengambilan Keputusan" appears under both "Karakter" and
      * "Kompetensi", but transaksi only stores kategori_kinerja_id for one of them.
      *
-     * @param Collection $trxByKompetensi  Keyed by "kompetensi_id:kategori_kinerja_id"
-     * @param Collection $kategoriList     Resolved kategori list with kompetensi loaded
-     * @return Collection  Enriched collection with additional composite-key entries
+     * @param  Collection  $trxByKompetensi  Keyed by "kompetensi_id:kategori_kinerja_id"
+     * @param  Collection  $kategoriList  Resolved kategori list with kompetensi loaded
+     * @return Collection Enriched collection with additional composite-key entries
      */
     public static function enrichTrxForSharedKompetensi(
         Collection $trxByKompetensi,
@@ -599,8 +596,8 @@ class LaporanScoreCalculator
             $katId = (int) $kat->id;
             foreach ($kat->kompetensi as $komp) {
                 $kompId = (int) $komp->id;
-                $compositeKey = $kompId . ':' . $katId;
-                if (!$enriched->has($compositeKey) && isset($trxByKompId[$kompId])) {
+                $compositeKey = $kompId.':'.$katId;
+                if (! $enriched->has($compositeKey) && isset($trxByKompId[$kompId])) {
                     $enriched->put($compositeKey, $trxByKompId[$kompId]);
                 }
             }

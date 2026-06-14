@@ -3,17 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
+use App\Models\Pangkalan;
 use App\Models\SettingLembaga;
 use App\Models\TahunPenilaian;
 use App\Models\User;
-use App\Models\Pangkalan;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use Intervention\Image\Laravel\Facades\Image;
 use Intervention\Image\Format;
+use Intervention\Image\Laravel\Facades\Image;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KaryawanController extends Controller
 {
@@ -32,17 +32,15 @@ class KaryawanController extends Controller
                         ->orWhere('nomor_induk', 'like', "%{$search}%");
                 });
             })
-            ->when($filterPangkalan, fn($q) => $q->whereHas('pangkalans', fn($pq) => $pq->where('pangkalan.id', $filterPangkalan)))
-            ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('is_active', true))
-            ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('is_active', false))
-            ->when($filterStatusKepala === 'kepala', fn($q) =>
-                $q->whereHas('user', fn($uq) => $uq->where('is_kepala', true))
+            ->when($filterPangkalan, fn ($q) => $q->whereHas('pangkalans', fn ($pq) => $pq->where('pangkalan.id', $filterPangkalan)))
+            ->when($filterStatusAktif === 'aktif', fn ($q) => $q->where('is_active', true))
+            ->when($filterStatusAktif === 'nonaktif', fn ($q) => $q->where('is_active', false))
+            ->when($filterStatusKepala === 'kepala', fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('is_kepala', true))
             )
-            ->when($filterStatusKepala === 'nonkepala', fn($q) =>
-                $q->where(function ($sub) {
-                    $sub->whereDoesntHave('user')
-                        ->orWhereHas('user', fn($uq) => $uq->where('is_kepala', false));
-                })
+            ->when($filterStatusKepala === 'nonkepala', fn ($q) => $q->where(function ($sub) {
+                $sub->whereDoesntHave('user')
+                    ->orWhereHas('user', fn ($uq) => $uq->where('is_kepala', false));
+            })
             )
             ->latest();
 
@@ -61,12 +59,13 @@ class KaryawanController extends Controller
 
     public function create()
     {
-        $tahunAktif   = TahunPenilaian::where('is_active', true)->first();
-        $kode         = $this->generateNextKodeKaryawan();
+        $tahunAktif = TahunPenilaian::where('is_active', true)->first();
+        $kode = $this->generateNextKodeKaryawan();
         $linkedUserIds = Karyawan::whereNotNull('user_id')->pluck('user_id');
-        $users        = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
-        $pangkalan    = Pangkalan::getNonWajibPangkalans();
+        $users = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
+        $pangkalan = Pangkalan::getNonWajibPangkalans();
         $wajibPangkalan = Pangkalan::getWajibPangkalans();
+
         return view('admin.karyawan.create', compact('tahunAktif', 'kode', 'users', 'pangkalan', 'wajibPangkalan'));
     }
 
@@ -76,7 +75,7 @@ class KaryawanController extends Controller
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
 
-        $fileName = 'profil-karyawan-' . strtolower($karyawan->kode_karyawan) . '.pdf';
+        $fileName = 'profil-karyawan-'.strtolower($karyawan->kode_karyawan).'.pdf';
 
         return Pdf::loadView('admin.karyawan.profile_pdf', compact('karyawan', 'setting'))
             ->setPaper('a4', 'portrait')
@@ -87,20 +86,20 @@ class KaryawanController extends Controller
     {
         $request->validate([
             'nama_karyawan' => 'nullable|string|max:150',
-            'nomor_induk'   => 'nullable|string|max:50|unique:karyawan,nomor_induk',
+            'nomor_induk' => 'nullable|string|max:50|unique:karyawan,nomor_induk',
             'jenis_kelamin' => 'nullable|in:L,P',
             'nomor_surat_tugas' => 'nullable|string|max:100',
             'tanggal_surat_tugas' => 'nullable|date',
-            'is_active'     => 'required|boolean',
-            'alamat'        => 'nullable|string',
-            'email'         => 'nullable|email|max:150',
-            'no_hp'         => 'nullable|string|max:20',
-            'kontak_darurat'=> 'nullable|string|max:150',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
-            'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id',
+            'is_active' => 'required|boolean',
+            'alamat' => 'nullable|string',
+            'email' => 'nullable|email|max:150',
+            'no_hp' => 'nullable|string|max:20',
+            'kontak_darurat' => 'nullable|string|max:150',
+            'foto' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'user_id' => 'nullable|exists:users,id|unique:karyawan,user_id',
             'pangkalan_ids' => 'nullable|array',
             'pangkalan_ids.*' => 'exists:pangkalan,id',
-            'tugas_khusus'  => 'nullable|string|max:255',
+            'tugas_khusus' => 'nullable|string|max:255',
         ]);
 
         $tahunAktif = TahunPenilaian::where('is_active', true)->first();
@@ -119,17 +118,17 @@ class KaryawanController extends Controller
         }
 
         $pangkalanIds = array_map('intval', $request->input('pangkalan_ids', []));
-        $resolvedPangkalanId = !empty($pangkalanIds) ? $pangkalanIds[0] : null;
+        $resolvedPangkalanId = ! empty($pangkalanIds) ? $pangkalanIds[0] : null;
 
         if ($linkedUser?->pangkalan_id) {
             $resolvedPangkalanId = $linkedUser->pangkalan_id;
-            if (!in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
+            if (! in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
                 array_unshift($pangkalanIds, $linkedUser->pangkalan_id);
             }
         }
 
         if ($linkedUser?->is_kepala) {
-            if (!$linkedUser->pangkalan_id) {
+            if (! $linkedUser->pangkalan_id) {
                 return back()
                     ->withInput()
                     ->withErrors(['user_id' => 'User kepala harus memiliki pangkalan. Silakan perbarui data user terlebih dahulu.']);
@@ -138,21 +137,21 @@ class KaryawanController extends Controller
         }
 
         $payload = [
-            'nama_karyawan'      => $resolvedNamaKaryawan,
-            'nomor_induk'        => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
-            'jenis_kelamin'      => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
-            'nomor_surat_tugas'  => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
-            'tanggal_surat_tugas'=> $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
-            'is_active'          => $request->boolean('is_active', true),
-            'alamat'             => $request->alamat,
-            'email'              => $request->filled('email') ? trim((string) $request->email) : null,
-            'no_hp'              => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
-            'kontak_darurat'     => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
-            'foto_path'          => $fotoPath,
+            'nama_karyawan' => $resolvedNamaKaryawan,
+            'nomor_induk' => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
+            'jenis_kelamin' => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
+            'nomor_surat_tugas' => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
+            'tanggal_surat_tugas' => $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
+            'is_active' => $request->boolean('is_active', true),
+            'alamat' => $request->alamat,
+            'email' => $request->filled('email') ? trim((string) $request->email) : null,
+            'no_hp' => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
+            'kontak_darurat' => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
+            'foto_path' => $fotoPath,
             'tahun_penilaian_id' => $tahunAktif?->id,
-            'user_id'            => $request->user_id ?: null,
-            'pangkalan_id'       => $resolvedPangkalanId,
-            'tugas_khusus'       => $request->tugas_khusus,
+            'user_id' => $request->user_id ?: null,
+            'pangkalan_id' => $resolvedPangkalanId,
+            'tugas_khusus' => $request->tugas_khusus,
         ];
 
         $created = false;
@@ -164,13 +163,13 @@ class KaryawanController extends Controller
                 $created = true;
                 break;
             } catch (QueryException $exception) {
-                if (!$this->isDuplicateKodeKaryawanException($exception)) {
+                if (! $this->isDuplicateKodeKaryawanException($exception)) {
                     throw $exception;
                 }
             }
         }
 
-        if (!$created) {
+        if (! $created) {
             return back()
                 ->withInput()
                 ->withErrors(['nama_karyawan' => 'Gagal membuat kode karyawan unik. Silakan coba lagi.']);
@@ -178,7 +177,7 @@ class KaryawanController extends Controller
 
         // Sync semua pangkalan ke pivot table
         // Auto-tambahkan pangkalan wajib
-        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         $allPangkalanIds = array_unique(array_merge(array_map('intval', $pangkalanIds), $wajibIds));
         $karyawan->syncPangkalan($allPangkalanIds);
 
@@ -191,17 +190,18 @@ class KaryawanController extends Controller
         $linkedUserIds = Karyawan::whereNotNull('user_id')
             ->where('id', '!=', $karyawan->id)
             ->pluck('user_id');
-        $users     = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
+        $users = User::with('pangkalan')->whereNotIn('id', $linkedUserIds)->orderBy('name')->get();
         $pangkalan = Pangkalan::getNonWajibPangkalans();
         $wajibPangkalan = Pangkalan::getWajibPangkalans();
         // Load all pangkalan IDs from pivot table for multi-select (hanya non-wajib)
-        $allPangkalanIds = $karyawan->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
-        $wajibIds = $wajibPangkalan->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $allPangkalanIds = $karyawan->pangkalans()->pluck('pangkalan_id')->map(fn ($id) => (int) $id)->toArray();
+        $wajibIds = $wajibPangkalan->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         $pangkalanIds = array_values(array_diff($allPangkalanIds, $wajibIds));
         // Fallback: if pivot is empty but pangkalan_id exists, use it
-        if (empty($pangkalanIds) && $karyawan->pangkalan_id && !in_array((int) $karyawan->pangkalan_id, $wajibIds)) {
+        if (empty($pangkalanIds) && $karyawan->pangkalan_id && ! in_array((int) $karyawan->pangkalan_id, $wajibIds)) {
             $pangkalanIds = [(int) $karyawan->pangkalan_id];
         }
+
         return view('admin.karyawan.edit', compact('karyawan', 'users', 'pangkalan', 'pangkalanIds', 'wajibPangkalan'));
     }
 
@@ -209,100 +209,100 @@ class KaryawanController extends Controller
     {
         $request->validate([
             'nama_karyawan' => 'nullable|string|max:150',
-            'nomor_induk'   => 'nullable|string|max:50|unique:karyawan,nomor_induk,' . $karyawan->id,
+            'nomor_induk' => 'nullable|string|max:50|unique:karyawan,nomor_induk,'.$karyawan->id,
             'jenis_kelamin' => 'nullable|in:L,P',
             'nomor_surat_tugas' => 'nullable|string|max:100',
             'tanggal_surat_tugas' => 'nullable|date',
-            'is_active'     => 'required|boolean',
-            'alamat'        => 'nullable|string',
-            'email'         => 'nullable|email|max:150',
-            'no_hp'         => 'nullable|string|max:20',
-            'kontak_darurat'=> 'nullable|string|max:150',
-            'foto'          => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
-            'user_id'       => 'nullable|exists:users,id|unique:karyawan,user_id,' . $karyawan->id,
+            'is_active' => 'required|boolean',
+            'alamat' => 'nullable|string',
+            'email' => 'nullable|email|max:150',
+            'no_hp' => 'nullable|string|max:20',
+            'kontak_darurat' => 'nullable|string|max:150',
+            'foto' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
+            'user_id' => 'nullable|exists:users,id|unique:karyawan,user_id,'.$karyawan->id,
             'pangkalan_ids' => 'nullable|array',
             'pangkalan_ids.*' => 'exists:pangkalan,id',
-            'tugas_khusus'  => 'nullable|string|max:255',
+            'tugas_khusus' => 'nullable|string|max:255',
         ]);
-    
+
         // AWAL: Gunakan path lama sebagai default agar tidak undefined
         $fotoPath = $karyawan->foto_path;
-    
+
         if ($request->hasFile('foto')) {
             try {
                 // Hapus foto lama jika ada file baru yang masuk
                 if ($karyawan->foto_path && \Storage::disk('public')->exists($karyawan->foto_path)) {
                     \Storage::disk('public')->delete($karyawan->foto_path);
                 }
-    
+
                 $file = $request->file('foto');
-                $filename = time() . '.png';
-                
+                $filename = time().'.png';
+
                 // Membaca file gambar dari temporary path menggunakan decodePath (v4.x API)
                 $img = Image::decodePath($file->getRealPath());
-                
+
                 // Melakukan auto-crop dengan rasio 3:4
                 $img->cover(300, 400);
-                
-                $savePath = 'karyawan-foto/' . $filename;
-                
+
+                $savePath = 'karyawan-foto/'.$filename;
+
                 // Encode menggunakan PNG format (v4.x API) dan simpan ke storage
                 $encoded = $img->encodeUsingFormat(Format::PNG);
                 \Storage::disk('public')->put($savePath, (string) $encoded);
-                
+
                 // Update variabel path untuk database
                 $fotoPath = $savePath;
-    
+
             } catch (\Throwable $e) {
                 // Gunakan \Throwable agar Error fatal tetap tertangkap dan kembali ke form
-                return back()->withInput()->withErrors(['foto' => 'Gagal memproses gambar: ' . $e->getMessage()]);
+                return back()->withInput()->withErrors(['foto' => 'Gagal memproses gambar: '.$e->getMessage()]);
             }
         }
-    
+
         $linkedUser = $request->filled('user_id') ? \App\Models\User::find($request->user_id) : null;
         $resolvedNamaKaryawan = trim((string) $request->input('nama_karyawan', ''));
-        
+
         if ($resolvedNamaKaryawan === '' && $linkedUser) {
             $resolvedNamaKaryawan = trim((string) $linkedUser->name);
         }
-        
+
         if ($resolvedNamaKaryawan === '') {
             return back()->withInput()->withErrors(['nama_karyawan' => 'Nama karyawan wajib diisi.']);
         }
-    
+
         $resolvedPangkalanId = $request->pangkalan_id ?: $karyawan->pangkalan_id;
-        if ($linkedUser?->pangkalan_id) { 
-            $resolvedPangkalanId = $linkedUser->pangkalan_id; 
+        if ($linkedUser?->pangkalan_id) {
+            $resolvedPangkalanId = $linkedUser->pangkalan_id;
         }
 
         // Resolve all pangkalan IDs from multi-select
         $pangkalanIds = array_map('intval', $request->input('pangkalan_ids', []));
-        if ($linkedUser?->pangkalan_id && !in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
+        if ($linkedUser?->pangkalan_id && ! in_array($linkedUser->pangkalan_id, $pangkalanIds)) {
             array_unshift($pangkalanIds, $linkedUser->pangkalan_id);
         }
-        $resolvedPangkalanId = !empty($pangkalanIds) ? $pangkalanIds[0] : $resolvedPangkalanId;
+        $resolvedPangkalanId = ! empty($pangkalanIds) ? $pangkalanIds[0] : $resolvedPangkalanId;
 
         // UPDATE DATABASE
         $karyawan->update([
-            'nama_karyawan'       => $resolvedNamaKaryawan,
-            'nomor_induk'         => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
-            'jenis_kelamin'       => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
-            'nomor_surat_tugas'   => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
+            'nama_karyawan' => $resolvedNamaKaryawan,
+            'nomor_induk' => $request->filled('nomor_induk') ? trim((string) $request->nomor_induk) : null,
+            'jenis_kelamin' => $request->filled('jenis_kelamin') ? $request->jenis_kelamin : null,
+            'nomor_surat_tugas' => $request->filled('nomor_surat_tugas') ? trim((string) $request->nomor_surat_tugas) : null,
             'tanggal_surat_tugas' => $request->filled('tanggal_surat_tugas') ? $request->tanggal_surat_tugas : null,
-            'is_active'           => $request->boolean('is_active', true),
-            'alamat'              => $request->alamat,
-            'email'              => $request->filled('email') ? trim((string) $request->email) : null,
-            'no_hp'              => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
-            'kontak_darurat'     => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
-            'foto_path'           => $fotoPath,
-            'user_id'             => $request->user_id ?: null,
-            'pangkalan_id'        => $resolvedPangkalanId,
-            'tugas_khusus'        => $request->tugas_khusus,
+            'is_active' => $request->boolean('is_active', true),
+            'alamat' => $request->alamat,
+            'email' => $request->filled('email') ? trim((string) $request->email) : null,
+            'no_hp' => $request->filled('no_hp') ? trim((string) $request->no_hp) : null,
+            'kontak_darurat' => $request->filled('kontak_darurat') ? trim((string) $request->kontak_darurat) : null,
+            'foto_path' => $fotoPath,
+            'user_id' => $request->user_id ?: null,
+            'pangkalan_id' => $resolvedPangkalanId,
+            'tugas_khusus' => $request->tugas_khusus,
         ]);
-    
+
         // Sync semua pangkalan ke pivot table (dan update derived pangkalan_id)
         // Auto-tambahkan pangkalan wajib
-        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         $allPangkalanIds = array_unique(array_merge(array_map('intval', $pangkalanIds), $wajibIds));
         $karyawan->syncPangkalan($allPangkalanIds);
 
@@ -313,17 +313,18 @@ class KaryawanController extends Controller
     public function destroy(Karyawan $karyawan)
     {
         $karyawan->delete();
+
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'Data karyawan berhasil dihapus.');
     }
 
     public function toggleStatus(Karyawan $karyawan)
     {
-        $karyawan->update(['is_active' => !$karyawan->is_active]);
+        $karyawan->update(['is_active' => ! $karyawan->is_active]);
 
         return back()->with(
             'success',
-            'Status karyawan ' . $karyawan->nama_karyawan . ' berhasil diubah menjadi ' . ($karyawan->is_active ? 'Aktif.' : 'Tidak Aktif.')
+            'Status karyawan '.$karyawan->nama_karyawan.' berhasil diubah menjadi '.($karyawan->is_active ? 'Aktif.' : 'Tidak Aktif.')
         );
     }
 
@@ -345,8 +346,9 @@ class KaryawanController extends Controller
         $skipped = 0;
 
         foreach ($rows as $idx => $row) {
-            if (!is_array($row)) {
+            if (! is_array($row)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -354,25 +356,27 @@ class KaryawanController extends Controller
                 continue;
             }
 
-            $kode = trim((string)($row[0] ?? ''));
-            $nama = trim((string)($row[1] ?? ''));
-            $kodePangkalan = trim((string)($row[2] ?? ''));
-            $tugasKhusus = trim((string)($row[3] ?? ''));
-            $alamat = trim((string)($row[4] ?? ''));
+            $kode = trim((string) ($row[0] ?? ''));
+            $nama = trim((string) ($row[1] ?? ''));
+            $kodePangkalan = trim((string) ($row[2] ?? ''));
+            $tugasKhusus = trim((string) ($row[3] ?? ''));
+            $alamat = trim((string) ($row[4] ?? ''));
             $isActiveRaw = $row[5] ?? null;
-            $username = trim((string)($row[6] ?? ''));
-            $tahunRaw = trim((string)($row[7] ?? ''));
+            $username = trim((string) ($row[6] ?? ''));
+            $tahunRaw = trim((string) ($row[7] ?? ''));
 
             if ($nama === '') {
                 $skipped++;
+
                 continue;
             }
 
             $pangkalan = null;
             if ($kodePangkalan !== '') {
                 $pangkalan = Pangkalan::where('kode_pangkalan', $kodePangkalan)->first();
-                if (!$pangkalan) {
+                if (! $pangkalan) {
                     $skipped++;
+
                     continue;
                 }
             }
@@ -380,8 +384,9 @@ class KaryawanController extends Controller
             $user = null;
             if ($username !== '') {
                 $user = User::where('username', $username)->first();
-                if (!$user) {
+                if (! $user) {
                     $skipped++;
+
                     continue;
                 }
             }
@@ -393,8 +398,9 @@ class KaryawanController extends Controller
                     : TahunPenilaian::where('periode_penilaian', $tahunRaw)->first();
             }
 
-            if (!$tahun) {
+            if (! $tahun) {
                 $skipped++;
+
                 continue;
             }
 
@@ -410,7 +416,7 @@ class KaryawanController extends Controller
 
             if ($user) {
                 $linkedUserExists = Karyawan::where('user_id', $user->id)
-                    ->when($existing, fn($q) => $q->where('id', '!=', $existing->id))
+                    ->when($existing, fn ($q) => $q->where('id', '!=', $existing->id))
                     ->exists();
 
                 if ($linkedUserExists) {
@@ -433,14 +439,14 @@ class KaryawanController extends Controller
                 $existing->update($payload);
                 // Sync pangkalan to pivot table (termasuk wajib)
                 $syncIds = $pangkalan ? [$pangkalan->id] : [];
-                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
                 $existing->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $updated++;
             } else {
                 $newKaryawan = Karyawan::create($payload);
                 // Sync pangkalan to pivot table (termasuk wajib)
                 $syncIds = $pangkalan ? [$pangkalan->id] : [];
-                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
                 $newKaryawan->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $imported++;
             }
@@ -451,7 +457,7 @@ class KaryawanController extends Controller
 
     private function looksLikeKaryawanHeaderRow(array $row): bool
     {
-        $header = strtolower(implode(' ', array_map(fn($v) => trim((string) $v), $row)));
+        $header = strtolower(implode(' ', array_map(fn ($v) => trim((string) $v), $row)));
 
         return str_contains($header, 'nama_karyawan')
             || str_contains($header, 'kode_pangkalan')
@@ -490,7 +496,7 @@ class KaryawanController extends Controller
             ->value('max_num')) + 1;
 
         do {
-            $kode = 'KRY-' . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+            $kode = 'KRY-'.str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (Karyawan::where('kode_karyawan', $kode)->exists());
 

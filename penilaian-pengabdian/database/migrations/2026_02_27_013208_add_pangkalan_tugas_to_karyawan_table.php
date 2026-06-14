@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('karyawan', function (Blueprint $table) {
             $table->foreignId('pangkalan_id')->nullable()->after('tahun_penilaian_id')
-                  ->constrained('pangkalan')->nullOnDelete();
+                ->constrained('pangkalan')->nullOnDelete();
             $table->string('tugas_khusus')->nullable()->after('alamat');
         });
     }

@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\TahunPenilaian;
+use App\Models\Karyawan;
 use App\Models\KategoriKinerja;
 use App\Models\Kompetensi;
-use App\Models\PerformanceRating;
 use App\Models\Pangkalan;
-use App\Models\Karyawan;
+use App\Models\PerformanceRating;
+use App\Models\TahunPenilaian;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,32 +18,32 @@ class DatabaseSeeder extends Seeder
     {
         // ── Users ──────────────────────────────────────────
         User::create([
-            'name'     => 'Administrator',
+            'name' => 'Administrator',
             'username' => 'admin',
-            'email'    => 'admin@penilaian.com',
+            'email' => 'admin@penilaian.com',
             'password' => Hash::make('admin123'),
-            'role'     => 'admin',
+            'role' => 'admin',
         ]);
         User::create([
-            'name'     => 'User Penilai',
+            'name' => 'User Penilai',
             'username' => 'user',
-            'email'    => 'user@penilaian.com',
+            'email' => 'user@penilaian.com',
             'password' => Hash::make('user123'),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
         User::create([
-            'name'     => 'Budi Santoso',
+            'name' => 'Budi Santoso',
             'username' => 'budi',
-            'email'    => 'budi@penilaian.com',
+            'email' => 'budi@penilaian.com',
             'password' => Hash::make('budi123'),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
 
         // ── Tahun Penilaian ────────────────────────────────
         $tahun = TahunPenilaian::create([
             'periode_penilaian' => '2023/2024',
-            'keterangan'        => 'Tahun Pengabdian 2023/2024',
-            'is_active'         => true,
+            'keterangan' => 'Tahun Pengabdian 2023/2024',
+            'is_active' => true,
         ]);
 
         // ── Kategori Kinerja ───────────────────────────────
@@ -75,9 +75,9 @@ class DatabaseSeeder extends Seeder
         ];
         foreach ($kompetensiData as [$katId, $kode, $nama]) {
             $kompetensi = Kompetensi::create([
-                'kode_kompetensi'    => $kode,
-                'kategori_kinerja_id'=> $katId,
-                'kompetensi'         => $nama,
+                'kode_kompetensi' => $kode,
+                'kategori_kinerja_id' => $katId,
+                'kompetensi' => $nama,
             ]);
 
             $kompetensi->kategoriKinerja()->syncWithoutDetaching([$katId]);
@@ -107,7 +107,7 @@ class DatabaseSeeder extends Seeder
             ['PNG-008', 'PENGURUS PONPES PI',          'NINA MARLINA, S.Pd.',        null],
             ['PNG-009', 'KOPERASI PONTREN',            'NINA MARLINA, S.Pd.',        null],
             ['PNG-010', 'KEMASJIDAN',                  'Drs. ANAS',                  null],
-            ['PNG-011', 'DEPOT AIR, TAMAN, LOGISTIK',  'RAHMAT BUDI PERMANA, S.Pd.',null],
+            ['PNG-011', 'DEPOT AIR, TAMAN, LOGISTIK',  'RAHMAT BUDI PERMANA, S.Pd.', null],
             ['PNG-012', 'PERPUSTAKAAN',                null,                         null],
             ['PNG-013', 'PEMBINA PRAMUKA',             "FATHUL MU'IN, S.Pd.",        null],
         ];
@@ -116,8 +116,8 @@ class DatabaseSeeder extends Seeder
             $pangkalan[$kode] = Pangkalan::create([
                 'kode_pangkalan' => $kode,
                 'nama_pangkalan' => $nama,
-                'pimpinan_pos'   => $pimpinan,
-                'keterangan'     => $ket,
+                'pimpinan_pos' => $pimpinan,
+                'keterangan' => $ket,
             ]);
         }
 
@@ -163,20 +163,20 @@ class DatabaseSeeder extends Seeder
             [24, 'NURIL HUDA FERDIANSYAH',        'Koperasi',                'PNG-009'],
             [25, 'PUTRI AGUSTINA',                'PAUD',                    'PNG-005'],
             [26, 'RIFKA RIFIA FITRIANI',          'TU MTs',                  'PNG-002'],
-            [27, "SITI MUNIROTUS SHOLIHAH",       'Koperasi',                'PNG-009'],
+            [27, 'SITI MUNIROTUS SHOLIHAH',       'Koperasi',                'PNG-009'],
             [28, 'ULVA INAYATUL IFTAKHIYAH',      'TU MA',                   'PNG-001'],
         ];
 
         foreach ($karyawanData as [$no, $nama, $tugas, $kodePangkalan]) {
             Karyawan::create([
-                'kode_karyawan'       => 'KRY-' . str_pad($no, 4, '0', STR_PAD_LEFT),
-                'nama_karyawan'       => $nama,
-                'is_active'           => true,
-                'alamat'              => null,
-                'tugas_khusus'        => $tugas,
-                'tahun_penilaian_id'  => $tahun->id,
-                'pangkalan_id'        => $pangkalan[$kodePangkalan]->id,
-                'user_id'             => null,
+                'kode_karyawan' => 'KRY-'.str_pad($no, 4, '0', STR_PAD_LEFT),
+                'nama_karyawan' => $nama,
+                'is_active' => true,
+                'alamat' => null,
+                'tugas_khusus' => $tugas,
+                'tahun_penilaian_id' => $tahun->id,
+                'pangkalan_id' => $pangkalan[$kodePangkalan]->id,
+                'user_id' => null,
             ]);
         }
     }

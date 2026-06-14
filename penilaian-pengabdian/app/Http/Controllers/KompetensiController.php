@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kompetensi;
 use App\Models\KategoriKinerja;
-use Illuminate\Http\Request;
+use App\Models\Kompetensi;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 
 class KompetensiController extends Controller
 {
@@ -13,13 +13,15 @@ class KompetensiController extends Controller
     {
         $data = Kompetensi::with('kategoriKinerja')->latest();
         $data = $this->paginateWithPerPage($data, $request, 10);
+
         return view('admin.kompetensi.index', compact('data'));
     }
 
     public function create()
     {
         $kategori = KategoriKinerja::orderBy('jenis')->orderBy('kode_kategori')->get();
-        $kode     = $this->generateNextKodeKompetensi();
+        $kode = $this->generateNextKodeKompetensi();
+
         return view('admin.kompetensi.create', compact('kategori', 'kode'));
     }
 
@@ -31,25 +33,25 @@ class KompetensiController extends Controller
             'kompetensi' => 'required|string|max:255',
         ]);
 
-        $kategoriIds = collect($request->input('kategori_kinerja_ids', []))->map(fn($id) => (int) $id)->unique()->values();
+        $kategoriIds = collect($request->input('kategori_kinerja_ids', []))->map(fn ($id) => (int) $id)->unique()->values();
 
         $kompetensi = null;
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
                 $kompetensi = Kompetensi::create([
-                    'kode_kompetensi'    => $this->generateNextKodeKompetensi(),
-                    'kategori_kinerja_id'=> $kategoriIds->first(),
-                    'kompetensi'         => $request->kompetensi,
+                    'kode_kompetensi' => $this->generateNextKodeKompetensi(),
+                    'kategori_kinerja_id' => $kategoriIds->first(),
+                    'kompetensi' => $request->kompetensi,
                 ]);
                 break;
             } catch (QueryException $exception) {
-                if (!$this->isDuplicateKodeKompetensiException($exception)) {
+                if (! $this->isDuplicateKodeKompetensiException($exception)) {
                     throw $exception;
                 }
             }
         }
 
-        if (!$kompetensi) {
+        if (! $kompetensi) {
             return back()
                 ->withInput()
                 ->withErrors(['kompetensi' => 'Gagal membuat kode kompetensi unik. Silakan coba lagi.']);
@@ -77,7 +79,7 @@ class KompetensiController extends Controller
             'kompetensi' => 'required|string|max:255',
         ]);
 
-        $kategoriIds = collect($request->input('kategori_kinerja_ids', []))->map(fn($id) => (int) $id)->unique()->values();
+        $kategoriIds = collect($request->input('kategori_kinerja_ids', []))->map(fn ($id) => (int) $id)->unique()->values();
 
         $kompetensi->update([
             'kompetensi' => $request->kompetensi,
@@ -93,6 +95,7 @@ class KompetensiController extends Controller
     public function destroy(Kompetensi $kompetensi)
     {
         $kompetensi->delete();
+
         return redirect()->route('admin.kompetensi.index')
             ->with('success', 'Kompetensi berhasil dihapus.');
     }
@@ -104,7 +107,7 @@ class KompetensiController extends Controller
             ->value('max_num')) + 1;
 
         do {
-            $kode = 'KMP-' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+            $kode = 'KMP-'.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (Kompetensi::where('kode_kompetensi', $kode)->exists());
 

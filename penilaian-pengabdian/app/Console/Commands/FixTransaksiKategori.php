@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class FixTransaksiKategori extends Command
 {
     protected $signature = 'fix:transaksi-kategori';
+
     protected $description = 'Fix transaksi with NULL kategori_kinerja_id based on pangkalan-kategori mapping';
 
     public function handle(): int
@@ -16,6 +17,7 @@ class FixTransaksiKategori extends Command
 
         if ($nullCount === 0) {
             $this->info('Tidak ada transaksi dengan kategori_kinerja_id NULL.');
+
             return Command::SUCCESS;
         }
 
@@ -37,11 +39,11 @@ class FixTransaksiKategori extends Command
             $kompId = (int) $row->kompetensi_id;
             $katId = (int) $row->kategori_kinerja_id;
 
-            if (!isset($pangkalanKategoriMap[$pId])) {
+            if (! isset($pangkalanKategoriMap[$pId])) {
                 $pangkalanKategoriMap[$pId] = [];
             }
             // If kompetensi belongs to multiple kategori for same pangkalan, prefer kegiatan
-            if (!isset($pangkalanKategoriMap[$pId][$kompId])) {
+            if (! isset($pangkalanKategoriMap[$pId][$kompId])) {
                 $pangkalanKategoriMap[$pId][$kompId] = $katId;
             }
         }

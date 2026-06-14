@@ -6,8 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Karyawan;
-use App\Models\Pangkalan;
 
 class User extends Authenticatable
 {
@@ -53,10 +51,11 @@ class User extends Authenticatable
      */
     public function getAllPangkalanIds(): array
     {
-        $ids = $this->kepalaPangkalan()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
-        if ($this->pangkalan_id && !in_array((int) $this->pangkalan_id, $ids, true)) {
+        $ids = $this->kepalaPangkalan()->pluck('pangkalan_id')->map(fn ($id) => (int) $id)->toArray();
+        if ($this->pangkalan_id && ! in_array((int) $this->pangkalan_id, $ids, true)) {
             $ids[] = (int) $this->pangkalan_id;
         }
+
         return array_unique($ids);
     }
 

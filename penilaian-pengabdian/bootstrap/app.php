@@ -11,11 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-    $middleware->alias([
-        'role.admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'role.user'  => \App\Http\Middleware\UserMiddleware::class,
-        'role.kepala' => \App\Http\Middleware\KepalaMiddleware::class,
-        'role.tata_usaha' => \App\Http\Middleware\TataUsahaMiddleware::class,
+        $middleware->alias([
+            'role.admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'role.user' => \App\Http\Middleware\UserMiddleware::class,
+            'role.kepala' => \App\Http\Middleware\KepalaMiddleware::class,
+            'role.tata_usaha' => \App\Http\Middleware\TataUsahaMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json(['message' => 'Unauthenticated.'], 401);
                 }
+
                 return redirect()->route('login')
                     ->with('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
             }
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json(['message' => 'CSRF token mismatch.'], 419);
                 }
+
                 return back()->with('error', 'Token keamanan telah kedaluwarsa. Silakan coba lagi.');
             }
 
@@ -63,7 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->view('errors.error', [
                     'code' => $status,
                     'message' => $e->getMessage(),
-                    'detail' => config('app.debug') ? $e->getFile() . ':' . $e->getLine() : null,
+                    'detail' => config('app.debug') ? $e->getFile().':'.$e->getLine() : null,
                 ], $status);
             }
 

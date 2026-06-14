@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Pangkalan;
 
 class Karyawan extends Model
 {
@@ -69,7 +67,7 @@ class Karyawan extends Model
      */
     public function getAllPangkalanIds(): array
     {
-        return $this->pangkalans()->pluck('pangkalan_id')->map(fn($id) => (int) $id)->toArray();
+        return $this->pangkalans()->pluck('pangkalan_id')->map(fn ($id) => (int) $id)->toArray();
     }
 
     /**
@@ -79,7 +77,7 @@ class Karyawan extends Model
     {
         $this->pangkalans()->sync($pangkalanIds);
         // Update derived pangkalan_id = first selected (or null)
-        $this->update(['pangkalan_id' => !empty($pangkalanIds) ? (int) $pangkalanIds[0] : null]);
+        $this->update(['pangkalan_id' => ! empty($pangkalanIds) ? (int) $pangkalanIds[0] : null]);
     }
 
     public function tahunPenilaian()
@@ -111,7 +109,7 @@ class Karyawan extends Model
     {
         return $query->where(function ($sub) {
             $sub->whereDoesntHave('user')
-                ->orWhereHas('user', fn($uq) => $uq->where('is_kepala', false));
+                ->orWhereHas('user', fn ($uq) => $uq->where('is_kepala', false));
         });
     }
 }

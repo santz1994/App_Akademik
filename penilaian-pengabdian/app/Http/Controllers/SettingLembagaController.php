@@ -13,7 +13,8 @@ class SettingLembagaController extends Controller
         try {
             $setting = $this->resolveSetting();
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('SettingLembaga resolveSetting failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('SettingLembaga resolveSetting failed: '.$e->getMessage());
+
             return back()->with('error', 'Gagal memuat pengaturan lembaga. Silakan coba lagi.');
         }
 

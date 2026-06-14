@@ -49,10 +49,10 @@ class Pangkalan extends Model
             'pangkalan_id',
             'kategori_kinerja_id'
         )
-        ->withPivot('penanggung_jawab_user_id')
-        ->withTimestamps()
-        ->orderBy('jenis')
-        ->orderBy('kode_kategori');
+            ->withPivot('penanggung_jawab_user_id')
+            ->withTimestamps()
+            ->orderBy('jenis')
+            ->orderBy('kode_kategori');
     }
 
     /**
@@ -88,13 +88,13 @@ class Pangkalan extends Model
     {
         if ($this->is_wajib) {
             return \App\Models\Karyawan::where('is_active', true)
-                ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+                ->whereDoesntHave('user', fn ($q) => $q->where('is_kepala', true))
                 ->count();
         }
 
         return $this->karyawanPivot()
             ->where('karyawan.is_active', true)
-            ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+            ->whereDoesntHave('user', fn ($q) => $q->where('is_kepala', true))
             ->count();
     }
 
@@ -109,10 +109,10 @@ class Pangkalan extends Model
             'pangkalan_id',
             'kategori_kinerja_id'
         )
-        ->withPivot('penanggung_jawab_user_id')
-        ->withTimestamps()
-        ->orderBy('jenis')
-        ->orderBy('kode_kategori');
+            ->withPivot('penanggung_jawab_user_id')
+            ->withTimestamps()
+            ->orderBy('jenis')
+            ->orderBy('kode_kategori');
     }
 
     /**

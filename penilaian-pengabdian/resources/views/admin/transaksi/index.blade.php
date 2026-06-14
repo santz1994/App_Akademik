@@ -177,20 +177,16 @@
                         $isLocked  = $lockState ? (bool) $lockState->is_locked : false;
 
                         // Build scored transaksi collection for score calculation
-                        $applicableKompetensiIds = \App\Support\LaporanScoreCalculator::kompetensiIdsFromKategori($kategoriForKaryawan);
-                        $scoredTrx = $trx
-                            ->filter(fn($t) => $t->nilai !== null)
-                            ->filter(fn($t) => $applicableKompetensiIds->contains((int) $t->kompetensi_id));
-                        $trxByKompetensi = $scoredTrx->keyBy('kompetensi_id');
-                        $nilaiAkhir = \App\Support\LaporanScoreCalculator::calculate(
+                        // Use calculateNilaiAkhirForKaryawan to match laporan calculation (per-pangkalan averaging)
+                        $scoreCalcResult = \App\Support\LaporanScoreCalculator::calculateNilaiAkhirForKaryawan(
                             $kategoriForKaryawan,
-                            $trxByKompetensi,
-                            $scoreMethod,
+                            $k,
                             [
                                 'bobot_kinerja' => $scoreWeightKinerja,
                                 'bobot_kegiatan' => $scoreWeightKegiatan,
                             ]
                         );
+                        $nilaiAkhir = $scoreCalcResult['nilaiAkhir'];
                         $ratingMeta = \App\Support\LaporanScoreCalculator::ratingMeta($nilaiAkhir);
                         $rating = $ratingMeta['label'];
                         $ratingColor = $ratingMeta['color'];

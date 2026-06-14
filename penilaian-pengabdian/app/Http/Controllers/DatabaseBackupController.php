@@ -16,7 +16,7 @@ class DatabaseBackupController extends Controller
         $files = [];
 
         if (File::isDirectory($backupPath)) {
-            $allFiles = File::glob($backupPath . '/*.sql');
+            $allFiles = File::glob($backupPath.'/*.sql');
             foreach ($allFiles as $file) {
                 $files[] = [
                     'name' => basename($file),
@@ -24,7 +24,7 @@ class DatabaseBackupController extends Controller
                     'modified' => File::lastModified($file),
                 ];
             }
-            usort($files, fn($a, $b) => $b['modified'] <=> $a['modified']);
+            usort($files, fn ($a, $b) => $b['modified'] <=> $a['modified']);
         }
 
         return view('admin.database.index', compact('files'));
@@ -34,12 +34,12 @@ class DatabaseBackupController extends Controller
     {
         $backupPath = storage_path('app/backups');
 
-        if (!File::isDirectory($backupPath)) {
+        if (! File::isDirectory($backupPath)) {
             File::makeDirectory($backupPath, 0755, true);
         }
 
-        $filename = 'backup_penilaian_pengabdian_' . now()->format('Ymd_His') . '.sql';
-        $filepath = $backupPath . DIRECTORY_SEPARATOR . $filename;
+        $filename = 'backup_penilaian_pengabdian_'.now()->format('Ymd_His').'.sql';
+        $filepath = $backupPath.DIRECTORY_SEPARATOR.$filename;
 
         try {
             $dbConfig = config('database.connections.mysql');
@@ -58,55 +58,57 @@ class DatabaseBackupController extends Controller
             }
 
             // Method 2: PHP-based backup (fallback)
-            if (!$success) {
+            if (! $success) {
                 $success = $this->phpBackup($filepath, $database);
             }
 
             if ($success && File::exists($filepath) && File::size($filepath) > 100) {
                 $sizeKb = round(File::size($filepath) / 1024, 1);
+
                 return back()->with('success', "Backup berhasil! File: {$filename} ({$sizeKb} KB)");
             }
 
             return back()->with('error', 'Gagal membuat backup. Pastikan mysqldump tersedia atau gunakan metode manual.');
         } catch (\Throwable $e) {
-            \Log::error('Backup error: ' . $e->getMessage());
-            return back()->with('error', 'Gagal backup: ' . $e->getMessage());
+            \Log::error('Backup error: '.$e->getMessage());
+
+            return back()->with('error', 'Gagal backup: '.$e->getMessage());
         }
     }
 
     public function download(string $filename)
     {
-        if (!$this->isValidBackupFile($filename)) {
+        if (! $this->isValidBackupFile($filename)) {
             abort(403);
         }
 
-        $filepath = storage_path('app/backups/' . $filename);
+        $filepath = storage_path('app/backups/'.$filename);
 
-        if (!File::exists($filepath)) {
+        if (! File::exists($filepath)) {
             return back()->with('error', 'File backup tidak ditemukan.');
         }
 
         return Response::download($filepath, $filename, [
             'Content-Type' => 'application/sql',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
     public function destroy(string $filename)
     {
-        if (!$this->isValidBackupFile($filename)) {
+        if (! $this->isValidBackupFile($filename)) {
             abort(403);
         }
 
-        $filepath = storage_path('app/backups/' . $filename);
+        $filepath = storage_path('app/backups/'.$filename);
 
-        if (!File::exists($filepath)) {
+        if (! File::exists($filepath)) {
             return back()->with('error', 'File backup tidak ditemukan.');
         }
 
         File::delete($filepath);
 
-        return back()->with('success', 'File backup berhasil dihapus: ' . $filename);
+        return back()->with('success', 'File backup berhasil dihapus: '.$filename);
     }
 
     public function restore(Request $request)
@@ -131,8 +133,9 @@ class DatabaseBackupController extends Controller
 
             return back()->with('success', 'Restore database berhasil! Silakan refresh halaman.');
         } catch (\Throwable $e) {
-            \Log::error('Restore error: ' . $e->getMessage());
-            return back()->with('error', 'Gagal restore: ' . $e->getMessage());
+            \Log::error('Restore error: '.$e->getMessage());
+
+            return back()->with('error', 'Gagal restore: '.$e->getMessage());
         }
     }
 
@@ -141,9 +144,9 @@ class DatabaseBackupController extends Controller
     private function isValidBackupFile(string $filename): bool
     {
         return str_ends_with($filename, '.sql')
-            && !str_contains($filename, '..')
-            && !str_contains($filename, '/')
-            && !str_contains($filename, '\\');
+            && ! str_contains($filename, '..')
+            && ! str_contains($filename, '/')
+            && ! str_contains($filename, '\\');
     }
 
     private function backupWithMysqldump(string $mysqldumpPath, string $host, string $port, string $username, string $password, string $database, string $filepath): bool
@@ -171,7 +174,8 @@ class DatabaseBackupController extends Controller
 
             return $returnCode === 0 && File::exists($filepath) && File::size($filepath) > 100;
         } catch (\Throwable $e) {
-            \Log::warning('mysqldump failed: ' . $e->getMessage());
+            \Log::warning('mysqldump failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -179,12 +183,12 @@ class DatabaseBackupController extends Controller
     private function phpBackup(string $filepath, string $database): bool
     {
         try {
-            $tables = DB::select("SHOW TABLES");
-            $tableKey = "Tables_in_" . $database;
+            $tables = DB::select('SHOW TABLES');
+            $tableKey = 'Tables_in_'.$database;
 
             $sql = "-- ============================================\n";
             $sql .= "-- Backup Penilaian Pengabdian\n";
-            $sql .= "-- Generated: " . now()->format('Y-m-d H:i:s') . "\n";
+            $sql .= '-- Generated: '.now()->format('Y-m-d H:i:s')."\n";
             $sql .= "-- Database: {$database}\n";
             $sql .= "-- ============================================\n\n";
             $sql .= "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
@@ -197,52 +201,62 @@ class DatabaseBackupController extends Controller
                 $tableName = $table->$tableKey;
 
                 // Get CREATE TABLE statement
-                $createTable = DB::select("SHOW CREATE TABLE `" . $tableName . "`");
-                if (!empty($createTable)) {
+                $createTable = DB::select('SHOW CREATE TABLE `'.$tableName.'`');
+                if (! empty($createTable)) {
                     $sql .= "-- --------------------------------------------------------\n";
                     $sql .= "-- Table: `{$tableName}`\n";
                     $sql .= "-- --------------------------------------------------------\n";
-                    $sql .= "DROP TABLE IF EXISTS `" . $tableName . "`;\n";
-                    $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
+                    $sql .= 'DROP TABLE IF EXISTS `'.$tableName."`;\n";
+                    $sql .= $createTable[0]->{'Create Table'}.";\n\n";
                 }
 
                 // Get all data
                 $rows = DB::table($tableName)->get();
                 if ($rows->isEmpty()) {
                     $sql .= "-- (no data)\n\n";
+
                     continue;
                 }
 
-                $sql .= "-- Data for table `{$tableName}` (" . $rows->count() . " rows)\n";
+                $sql .= "-- Data for table `{$tableName}` (".$rows->count()." rows)\n";
 
                 // Build batch INSERT statements (500 rows per statement for efficiency)
                 $batchSize = 500;
                 $chunks = $rows->chunk($batchSize);
 
                 foreach ($chunks as $chunk) {
-                    $sql .= "INSERT INTO `" . $tableName . "` VALUES\n";
+                    $sql .= 'INSERT INTO `'.$tableName."` VALUES\n";
                     $rowStatements = [];
 
                     foreach ($chunk as $row) {
                         $values = array_map(function ($value) {
-                            if ($value === null) return 'NULL';
-                            if (is_int($value)) return (string) $value;
-                            if (is_float($value)) return rtrim(rtrim(number_format($value, 10, '.', ''), '0'), '.');
-                            if (is_bool($value)) return $value ? '1' : '0';
+                            if ($value === null) {
+                                return 'NULL';
+                            }
+                            if (is_int($value)) {
+                                return (string) $value;
+                            }
+                            if (is_float($value)) {
+                                return rtrim(rtrim(number_format($value, 10, '.', ''), '0'), '.');
+                            }
+                            if (is_bool($value)) {
+                                return $value ? '1' : '0';
+                            }
                             // Escape special characters for MySQL
                             $value = (string) $value;
                             $value = str_replace(
-                                ["\\", "\0", "\n", "\r", "\t", "'", "\x1a"],
-                                ["\\\\", "\\0", "\\n", "\\r", "\\t", "\\'", "\\Z"],
+                                ['\\', "\0", "\n", "\r", "\t", "'", "\x1a"],
+                                ['\\\\', '\\0', '\\n', '\\r', '\\t', "\\'", '\\Z'],
                                 $value
                             );
-                            return "'" . $value . "'";
+
+                            return "'".$value."'";
                         }, (array) $row);
 
-                        $rowStatements[] = "(" . implode(', ', $values) . ")";
+                        $rowStatements[] = '('.implode(', ', $values).')';
                     }
 
-                    $sql .= implode(",\n", $rowStatements) . ";\n\n";
+                    $sql .= implode(",\n", $rowStatements).";\n\n";
                 }
             }
 
@@ -253,7 +267,8 @@ class DatabaseBackupController extends Controller
 
             return File::exists($filepath) && File::size($filepath) > 100;
         } catch (\Throwable $e) {
-            \Log::error('PHP backup error: ' . $e->getMessage());
+            \Log::error('PHP backup error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -261,14 +276,14 @@ class DatabaseBackupController extends Controller
     private function dropAllTables(): void
     {
         $database = config('database.connections.mysql.database');
-        $tables = DB::select("SHOW TABLES");
-        $tableKey = "Tables_in_" . $database;
+        $tables = DB::select('SHOW TABLES');
+        $tableKey = 'Tables_in_'.$database;
 
         DB::unprepared('SET FOREIGN_KEY_CHECKS=0');
 
         foreach ($tables as $table) {
             $tableName = $table->$tableKey;
-            DB::unprepared("DROP TABLE IF EXISTS `" . $tableName . "`");
+            DB::unprepared('DROP TABLE IF EXISTS `'.$tableName.'`');
         }
 
         DB::unprepared('SET FOREIGN_KEY_CHECKS=1');
@@ -294,7 +309,9 @@ class DatabaseBackupController extends Controller
 
         foreach ($statements as $statement) {
             $statement = trim($statement);
-            if (empty($statement)) continue;
+            if (empty($statement)) {
+                continue;
+            }
 
             // Skip SET commands that are handled separately
             if (preg_match('/^\s*SET\s+(FOREIGN_KEY_CHECKS|AUTOCOMMIT|time_zone|SQL_MODE)/i', $statement)) {
@@ -303,13 +320,14 @@ class DatabaseBackupController extends Controller
                 } catch (\Throwable $e) {
                     // Ignore SET errors
                 }
+
                 continue;
             }
 
             try {
                 DB::unprepared($statement);
             } catch (\Throwable $e) {
-                \Log::warning('SQL statement error: ' . $e->getMessage() . "\nStatement: " . substr($statement, 0, 200));
+                \Log::warning('SQL statement error: '.$e->getMessage()."\nStatement: ".substr($statement, 0, 200));
             }
         }
     }
@@ -340,9 +358,9 @@ class DatabaseBackupController extends Controller
                     $inString = true;
                     $stringChar = $char;
                     $current .= $char;
-                } elseif ($char === ';' ) {
+                } elseif ($char === ';') {
                     $trimmed = trim($current);
-                    if (!empty($trimmed)) {
+                    if (! empty($trimmed)) {
                         $statements[] = $trimmed;
                     }
                     $current = '';
@@ -354,7 +372,7 @@ class DatabaseBackupController extends Controller
 
         // Last statement without trailing semicolon
         $trimmed = trim($current);
-        if (!empty($trimmed)) {
+        if (! empty($trimmed)) {
             $statements[] = $trimmed;
         }
 

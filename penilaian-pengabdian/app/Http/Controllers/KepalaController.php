@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
+use App\Models\Pangkalan;
 use App\Models\TahunPenilaian;
 use App\Models\Transaksi;
-use App\Models\Pangkalan;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class KepalaController extends Controller
 {
@@ -23,7 +23,7 @@ class KepalaController extends Controller
         $selectedPangkalanId = $request->input('pangkalan_id');
         $filterPangkalanIds = $selectedPangkalanId
             ? [(int) $selectedPangkalanId]
-            : $pangkalanList->pluck('id')->map(fn($id) => (int) $id)->toArray();
+            : $pangkalanList->pluck('id')->map(fn ($id) => (int) $id)->toArray();
 
         $selectedPangkalanName = $selectedPangkalanId
             ? ($pangkalanList->firstWhere('id', (int) $selectedPangkalanId)?->nama_pangkalan ?? '-')
@@ -33,7 +33,7 @@ class KepalaController extends Controller
         $tahunId = $tahunAktif?->id;
 
         // Hanya karyawan aktif di pangkalan yang dipilih
-        $karyawanQuery = Karyawan::whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $filterPangkalanIds))
+        $karyawanQuery = Karyawan::whereHas('pangkalans', fn ($q) => $q->whereIn('pangkalan.id', $filterPangkalanIds))
             ->bukanKepala()
             ->where('is_active', true);
 
@@ -41,7 +41,7 @@ class KepalaController extends Controller
 
         $totalKaryawan = $karyawanIds->count();
         $totalPenilaian = Transaksi::whereIn('karyawan_id', $karyawanIds)
-            ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
+            ->when($tahunId, fn ($q) => $q->where('tahun_penilaian_id', $tahunId))
             ->count();
 
         // FIX: Count karyawan where ALL kompetensi per pangkalan are scored
@@ -52,10 +52,12 @@ class KepalaController extends Controller
             foreach ($kPangkalanIds as $pkId) {
                 $pkKatIds = DB::table('pangkalan_kategori_kinerja')->where('pangkalan_id', $pkId)->pluck('kategori_kinerja_id')->toArray();
                 $pkKompCount = DB::table('kategori_kinerja_kompetensi')->whereIn('kategori_kinerja_id', $pkKatIds)->count();
-                if ($pkKompCount === 0) continue;
+                if ($pkKompCount === 0) {
+                    continue;
+                }
                 $pkScoredCount = Transaksi::where('karyawan_id', $kId)
                     ->where('pangkalan_id', $pkId)
-                    ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
+                    ->when($tahunId, fn ($q) => $q->where('tahun_penilaian_id', $tahunId))
                     ->whereNotNull('nilai')
                     ->count();
                 if ($pkScoredCount < $pkKompCount) {
@@ -63,12 +65,14 @@ class KepalaController extends Controller
                     break;
                 }
             }
-            if ($allScored && count($kPangkalanIds) > 0) $sudahDinilai++;
+            if ($allScored && count($kPangkalanIds) > 0) {
+                $sudahDinilai++;
+            }
         }
 
         // List karyawan untuk dashboard
-        $karyawanList = Karyawan::with(['pangkalans', 'transaksi' => fn($q) => $q->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))])
-            ->whereHas('pangkalans', fn($q) => $q->whereIn('pangkalan.id', $filterPangkalanIds))
+        $karyawanList = Karyawan::with(['pangkalans', 'transaksi' => fn ($q) => $q->when($tahunId, fn ($q) => $q->where('tahun_penilaian_id', $tahunId))])
+            ->whereHas('pangkalans', fn ($q) => $q->whereIn('pangkalan.id', $filterPangkalanIds))
             ->bukanKepala()
             ->where('is_active', true)
             ->orderBy('nama_karyawan')

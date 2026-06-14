@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pangkalan;
 use App\Models\KategoriKinerja;
+use App\Models\Pangkalan;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 
 class PangkalanController extends Controller
 {
@@ -16,10 +16,11 @@ class PangkalanController extends Controller
 
         $data = Pangkalan::with(['kategoriKinerja:id,kategori,jenis', 'kepalaUser:id,name'])
             ->withCount(['kategoriKinerja'])
-            ->when($filterStatusAktif === 'aktif', fn($q) => $q->where('pangkalan.is_active', true))
-            ->when($filterStatusAktif === 'nonaktif', fn($q) => $q->where('pangkalan.is_active', false))
+            ->when($filterStatusAktif === 'aktif', fn ($q) => $q->where('pangkalan.is_active', true))
+            ->when($filterStatusAktif === 'nonaktif', fn ($q) => $q->where('pangkalan.is_active', false))
             ->latest();
         $data = $this->paginateWithPerPage($data, $request, 10);
+
         return view('admin.pangkalan.index', compact('data', 'filterStatusAktif'));
     }
 
@@ -39,10 +40,10 @@ class PangkalanController extends Controller
     {
         $request->validate([
             'nama_pangkalan' => 'required|string|max:200',
-            'pimpinan_pos'   => 'nullable|string|max:150',
-            'keterangan'     => 'nullable|string',
-            'is_active'      => 'required|boolean',
-            'is_wajib'       => 'nullable|boolean',
+            'pimpinan_pos' => 'nullable|string|max:150',
+            'keterangan' => 'nullable|string',
+            'is_active' => 'required|boolean',
+            'is_wajib' => 'nullable|boolean',
             'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
@@ -53,10 +54,10 @@ class PangkalanController extends Controller
                 $pangkalan = Pangkalan::create([
                     'kode_pangkalan' => $this->generateNextKodePangkalan(),
                     'nama_pangkalan' => $request->nama_pangkalan,
-                    'pimpinan_pos'   => $request->pimpinan_pos,
-                    'keterangan'     => $request->keterangan,
-                    'is_active'      => $request->boolean('is_active', true),
-                    'is_wajib'       => $request->boolean('is_wajib', false),
+                    'pimpinan_pos' => $request->pimpinan_pos,
+                    'keterangan' => $request->keterangan,
+                    'is_active' => $request->boolean('is_active', true),
+                    'is_wajib' => $request->boolean('is_wajib', false),
                     'kepala_user_id' => $request->kepala_user_id ?: null,
                 ]);
 
@@ -75,7 +76,7 @@ class PangkalanController extends Controller
                 return redirect()->route('admin.pangkalan.index')
                     ->with('success', 'Data pangkalan berhasil ditambahkan.');
             } catch (QueryException $exception) {
-                if (!$this->isDuplicateKodePangkalanException($exception)) {
+                if (! $this->isDuplicateKodePangkalanException($exception)) {
                     throw $exception;
                 }
             }
@@ -102,10 +103,10 @@ class PangkalanController extends Controller
     {
         $request->validate([
             'nama_pangkalan' => 'required|string|max:200',
-            'pimpinan_pos'   => 'nullable|string|max:150',
-            'keterangan'     => 'nullable|string',
-            'is_active'      => 'required|boolean',
-            'is_wajib'       => 'nullable|boolean',
+            'pimpinan_pos' => 'nullable|string|max:150',
+            'keterangan' => 'nullable|string',
+            'is_active' => 'required|boolean',
+            'is_wajib' => 'nullable|boolean',
             'kepala_user_id' => 'nullable|exists:users,id',
             'kategori_kinerja_ids' => 'nullable|array',
             'kategori_kinerja_ids.*' => 'integer|exists:kategori_kinerja,id',
@@ -116,10 +117,10 @@ class PangkalanController extends Controller
 
         $pangkalan->update([
             'nama_pangkalan' => $request->nama_pangkalan,
-            'pimpinan_pos'   => $request->pimpinan_pos,
-            'keterangan'     => $request->keterangan,
-            'is_active'      => $request->boolean('is_active', true),
-            'is_wajib'       => $request->boolean('is_wajib', false),
+            'pimpinan_pos' => $request->pimpinan_pos,
+            'keterangan' => $request->keterangan,
+            'is_active' => $request->boolean('is_active', true),
+            'is_wajib' => $request->boolean('is_wajib', false),
             'kepala_user_id' => $request->kepala_user_id ?: null,
         ]);
 
@@ -129,10 +130,10 @@ class PangkalanController extends Controller
 
         // Handle perubahan is_wajib
         $isNowWajib = (bool) $pangkalan->is_wajib;
-        if ($isNowWajib && !$wasWajib) {
+        if ($isNowWajib && ! $wasWajib) {
             // Baru jadi wajib: tambahkan ke semua karyawan aktif
             $this->syncWajibPangkalan($pangkalan);
-        } elseif (!$isNowWajib && $wasWajib) {
+        } elseif (! $isNowWajib && $wasWajib) {
             // Berubah dari wajib ke tidak wajib: hapus dari semua karyawan
             $this->removeWajibPangkalan($pangkalan);
         }
@@ -147,13 +148,14 @@ class PangkalanController extends Controller
     public function destroy(Pangkalan $pangkalan)
     {
         $pangkalan->delete();
+
         return redirect()->route('admin.pangkalan.index')
             ->with('success', 'Data pangkalan berhasil dihapus.');
     }
 
     public function toggleStatus(Pangkalan $pangkalan)
     {
-        $pangkalan->update(['is_active' => !$pangkalan->is_active]);
+        $pangkalan->update(['is_active' => ! $pangkalan->is_active]);
 
         // Jika wajib dan baru diaktifkan, sync ke semua karyawan
         if ($pangkalan->is_wajib && $pangkalan->is_active) {
@@ -162,7 +164,7 @@ class PangkalanController extends Controller
 
         return back()->with(
             'success',
-            'Status pangkalan ' . $pangkalan->nama_pangkalan . ' berhasil diubah menjadi ' . ($pangkalan->is_active ? 'Aktif.' : 'Tidak Aktif.')
+            'Status pangkalan '.$pangkalan->nama_pangkalan.' berhasil diubah menjadi '.($pangkalan->is_active ? 'Aktif.' : 'Tidak Aktif.')
         );
     }
 
@@ -179,18 +181,18 @@ class PangkalanController extends Controller
             $user = User::find($pangkalan->kepala_user_id);
             if ($user) {
                 // Add this pangkalan to the user's kepala_pangkalan
-                if (!$user->kepalaPangkalan()->where('pangkalan_id', $pangkalan->id)->exists()) {
+                if (! $user->kepalaPangkalan()->where('pangkalan_id', $pangkalan->id)->exists()) {
                     $user->kepalaPangkalan()->attach($pangkalan->id);
                 }
                 // Update user's pangkalan_id if not set
-                if (!$user->pangkalan_id) {
+                if (! $user->pangkalan_id) {
                     $user->update(['pangkalan_id' => $pangkalan->id]);
                 }
 
                 // Also add karyawan to this pangkalan's karyawan_pangkalan pivot
                 $karyawan = \App\Models\Karyawan::where('user_id', $user->id)->first();
                 if ($karyawan) {
-                    if (!$karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
+                    if (! $karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
                         $karyawan->pangkalans()->attach($pangkalan->id);
                     }
                 }
@@ -203,7 +205,7 @@ class PangkalanController extends Controller
                 ->where('id', '!=', $pangkalan->id)
                 ->exists();
 
-            if (!$stillKepala) {
+            if (! $stillKepala) {
                 User::where('id', $oldKepalaUserId)->update(['is_kepala' => false]);
             }
 
@@ -221,11 +223,11 @@ class PangkalanController extends Controller
     private function syncWajibPangkalan(Pangkalan $pangkalan): void
     {
         $karyawanIds = \App\Models\Karyawan::where('is_active', true)
-            ->whereDoesntHave('user', fn($q) => $q->where('is_kepala', true))
+            ->whereDoesntHave('user', fn ($q) => $q->where('is_kepala', true))
             ->pluck('id');
         foreach ($karyawanIds as $karyawanId) {
             $karyawan = \App\Models\Karyawan::find($karyawanId);
-            if ($karyawan && !$karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
+            if ($karyawan && ! $karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
                 $karyawan->pangkalans()->attach($pangkalan->id);
             }
         }
@@ -246,7 +248,7 @@ class PangkalanController extends Controller
             ->value('max_num')) + 1;
 
         do {
-            $kode = 'PNG-' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+            $kode = 'PNG-'.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (Pangkalan::where('kode_pangkalan', $kode)->exists());
 
@@ -270,10 +272,8 @@ class PangkalanController extends Controller
         return KategoriKinerja::query()
             ->whereIn('id', $kategoriIds)
             ->pluck('id')
-            ->map(fn($id) => (int) $id)
+            ->map(fn ($id) => (int) $id)
             ->values()
             ->all();
     }
 }
-
-

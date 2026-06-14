@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Karyawan;
+use App\Models\SettingLembaga;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\SettingLembaga;
-use App\Models\Karyawan;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -25,10 +25,10 @@ class AuthController extends Controller
         $setting = SettingLembaga::where('is_active', true)->latest()->first()
             ?? SettingLembaga::latest()->first();
         $loginLogoUrl = null;
-        if ($setting?->show_logo && !empty($setting->logo_path)) {
+        if ($setting?->show_logo && ! empty($setting->logo_path)) {
             $logoPath = ltrim((string) $setting->logo_path, '/');
             if (\Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath)) {
-                $loginLogoUrl = asset('storage/' . $logoPath);
+                $loginLogoUrl = asset('storage/'.$logoPath);
             }
         }
 
@@ -40,11 +40,11 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-            'captcha'  => 'required|string',
+            'captcha' => 'required|string',
         ], [
             'username.required' => 'Username wajib diisi.',
             'password.required' => 'Password wajib diisi.',
-            'captcha.required'  => 'Captcha wajib diisi.',
+            'captcha.required' => 'Captcha wajib diisi.',
         ]);
 
         // Validate captcha
@@ -74,14 +74,16 @@ class AuthController extends Controller
             $user = Auth::user();
 
             // Check if linked karyawan is inactive
-            if ($user->karyawan && !$user->karyawan->is_active && $user->role !== 'admin') {
+            if ($user->karyawan && ! $user->karyawan->is_active && $user->role !== 'admin') {
                 Auth::logout();
+
                 return back()->withErrors([
                     'username' => 'Akun Anda telah dinonaktifkan karena data karyawan tidak aktif. Silakan hubungi Admin.',
                 ])->withInput($request->only('username'));
             }
 
             $request->session()->regenerate();
+
             return $this->redirectToDashboard();
         }
 
@@ -104,14 +106,14 @@ class AuthController extends Controller
     public function activate(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
         ], [
-            'email.required'    => 'Email wajib diisi.',
-            'email.email'       => 'Format email tidak valid.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
             'password.required' => 'Password wajib diisi.',
-            'password.min'      => 'Password minimal 6 karakter.',
-            'password.confirmed'=> 'Konfirmasi password tidak sesuai.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
         ]);
 
         $email = $request->email;
@@ -119,13 +121,13 @@ class AuthController extends Controller
         // Find karyawan by email
         $karyawan = Karyawan::where('email', $email)->first();
 
-        if (!$karyawan) {
+        if (! $karyawan) {
             return back()->withInput()->withErrors([
                 'email' => 'Email tidak terdaftar di data karyawan. Silakan hubungi Admin.',
             ]);
         }
 
-        if (!$karyawan->is_active) {
+        if (! $karyawan->is_active) {
             return back()->withInput()->withErrors([
                 'email' => 'Data karyawan tidak aktif. Silakan hubungi Admin.',
             ]);
@@ -153,22 +155,22 @@ class AuthController extends Controller
         $baseUsername = $username;
         $counter = 1;
         while (User::where('username', $username)->exists()) {
-            $username = $baseUsername . '_' . $counter;
+            $username = $baseUsername.'_'.$counter;
             $counter++;
         }
 
         $user = User::create([
-            'name'     => $karyawan->nama_karyawan,
+            'name' => $karyawan->nama_karyawan,
             'username' => $username,
-            'email'    => $email,
+            'email' => $email,
             'password' => Hash::make($request->password),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
 
         // Link karyawan to user
         $karyawan->update(['user_id' => $user->id]);
 
-        return redirect()->route('login')->with('success', 'Akun berhasil diaktifkan! Silakan login dengan email atau username: <strong>' . $username . '</strong>');
+        return redirect()->route('login')->with('success', 'Akun berhasil diaktifkan! Silakan login dengan email atau username: <strong>'.$username.'</strong>');
     }
 
     public function logout(Request $request)
@@ -176,6 +178,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login')->with('success', 'Anda berhasil logout.');
     }
 

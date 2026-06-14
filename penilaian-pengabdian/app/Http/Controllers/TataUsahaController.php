@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
-use App\Models\TahunPenilaian;
-use App\Models\Transaksi;
 use App\Models\Pangkalan;
 use App\Models\PenilaianLock;
-use Illuminate\Support\Facades\Auth;
+use App\Models\TahunPenilaian;
+use App\Models\Transaksi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TataUsahaController extends Controller
 {
@@ -28,19 +28,19 @@ class TataUsahaController extends Controller
         // If tata usaha has pangkalan, filter by it
         $karyawanQuery = Karyawan::bukanKepala()->where('is_active', true);
         if ($pangkalanId) {
-            $karyawanQuery->whereHas('pangkalans', fn($q) => $q->where('pangkalan.id', $pangkalanId));
+            $karyawanQuery->whereHas('pangkalans', fn ($q) => $q->where('pangkalan.id', $pangkalanId));
         }
 
         $karyawanIds = $karyawanQuery->pluck('id');
         $totalKaryawan = $karyawanIds->count();
 
         $sudahDinilai = Transaksi::whereIn('karyawan_id', $karyawanIds)
-            ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
+            ->when($tahunId, fn ($q) => $q->where('tahun_penilaian_id', $tahunId))
             ->distinct('karyawan_id')
             ->count('karyawan_id');
 
         $lockedCount = PenilaianLock::whereIn('karyawan_id', $karyawanIds)
-            ->when($tahunId, fn($q) => $q->where('tahun_penilaian_id', $tahunId))
+            ->when($tahunId, fn ($q) => $q->where('tahun_penilaian_id', $tahunId))
             ->where('is_locked', true)
             ->count();
 

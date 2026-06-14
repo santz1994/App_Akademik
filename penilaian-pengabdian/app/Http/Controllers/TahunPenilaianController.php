@@ -11,6 +11,7 @@ class TahunPenilaianController extends Controller
     {
         $data = TahunPenilaian::latest();
         $data = $this->paginateWithPerPage($data, $request, 10);
+
         return view('admin.tahun_penilaian.index', compact('data'));
     }
 
@@ -23,8 +24,8 @@ class TahunPenilaianController extends Controller
     {
         $request->validate([
             'periode_penilaian' => 'required|string|max:100',
-            'keterangan'        => 'nullable|string',
-            'is_active'         => 'nullable|boolean',
+            'keterangan' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->boolean('is_active')) {
@@ -33,8 +34,8 @@ class TahunPenilaianController extends Controller
 
         TahunPenilaian::create([
             'periode_penilaian' => $request->periode_penilaian,
-            'keterangan'        => $request->keterangan,
-            'is_active'         => $request->boolean('is_active'),
+            'keterangan' => $request->keterangan,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return redirect()->route('admin.tahun-penilaian.index')
@@ -50,8 +51,8 @@ class TahunPenilaianController extends Controller
     {
         $request->validate([
             'periode_penilaian' => 'required|string|max:100',
-            'keterangan'        => 'nullable|string',
-            'is_active'         => 'nullable|boolean',
+            'keterangan' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->boolean('is_active')) {
@@ -62,8 +63,8 @@ class TahunPenilaianController extends Controller
 
         $tahunPenilaian->update([
             'periode_penilaian' => $request->periode_penilaian,
-            'keterangan'        => $request->keterangan,
-            'is_active'         => $request->boolean('is_active'),
+            'keterangan' => $request->keterangan,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return redirect()->route('admin.tahun-penilaian.index')
@@ -73,6 +74,7 @@ class TahunPenilaianController extends Controller
     public function destroy(TahunPenilaian $tahunPenilaian)
     {
         $tahunPenilaian->delete();
+
         return redirect()->route('admin.tahun-penilaian.index')
             ->with('success', 'Tahun penilaian berhasil dihapus.');
     }

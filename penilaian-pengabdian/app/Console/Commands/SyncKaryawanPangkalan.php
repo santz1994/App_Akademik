@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Karyawan;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class SyncKaryawanPangkalan extends Command
 {
     protected $signature = 'sync:karyawan-pangkalan';
+
     protected $description = 'Sync existing karyawan pangkalan_id to karyawan_pangkalan pivot table';
 
     public function handle(): int
@@ -23,7 +24,7 @@ class SyncKaryawanPangkalan extends Command
                 ->where('pangkalan_id', $karyawan->pangkalan_id)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('karyawan_pangkalan')->insert([
                     'karyawan_id' => $karyawan->id,
                     'pangkalan_id' => $karyawan->pangkalan_id,
@@ -37,6 +38,7 @@ class SyncKaryawanPangkalan extends Command
         }
 
         $this->info("Sync selesai. Disync: {$synced}, Sudah ada: {$skipped}, Total karyawan dengan pangkalan: {$karyawanList->count()}");
+
         return Command::SUCCESS;
     }
 }

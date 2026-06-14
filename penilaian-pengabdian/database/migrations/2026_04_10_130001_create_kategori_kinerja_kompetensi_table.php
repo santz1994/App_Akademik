@@ -37,7 +37,7 @@ return new class extends Migration
                         ];
                     }
 
-                    if (!empty($payload)) {
+                    if (! empty($payload)) {
                         DB::table('kategori_kinerja_kompetensi')->insertOrIgnore($payload);
                     }
                 });
