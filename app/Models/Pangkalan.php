@@ -87,7 +87,7 @@ class Pangkalan extends Model
     public function getKaryawanCountAttribute(): int
     {
         if ($this->is_wajib) {
-            return \App\Models\Karyawan::where('is_active', true)
+            return Karyawan::where('is_active', true)
                 ->whereDoesntHave('user', fn ($q) => $q->where('is_kepala', true))
                 ->count();
         }

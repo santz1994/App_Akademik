@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\RewardPunishment;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -476,8 +477,8 @@ class LaporanScoreCalculator
 
         // Try to load from database
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('reward_punishment')) {
-                $items = \App\Models\RewardPunishment::active()
+            if (Schema::hasTable('reward_punishment')) {
+                $items = RewardPunishment::active()
                     ->forGrade($grade)
                     ->get();
 

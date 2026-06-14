@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SettingLembaga;
 use App\Models\TahunPenilaian;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SettingLembagaController extends Controller
 {
@@ -13,7 +14,7 @@ class SettingLembagaController extends Controller
         try {
             $setting = $this->resolveSetting();
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('SettingLembaga resolveSetting failed: '.$e->getMessage());
+            Log::error('SettingLembaga resolveSetting failed: '.$e->getMessage());
 
             return back()->with('error', 'Gagal memuat pengaturan lembaga. Silakan coba lagi.');
         }

@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Intervention\Image\Laravel\ServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    Intervention\Image\Laravel\ServiceProvider::class,
+    AppServiceProvider::class,
+    ServiceProvider::class,
 ];

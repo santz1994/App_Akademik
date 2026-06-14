@@ -259,7 +259,7 @@ class KaryawanController extends Controller
             }
         }
 
-        $linkedUser = $request->filled('user_id') ? \App\Models\User::find($request->user_id) : null;
+        $linkedUser = $request->filled('user_id') ? User::find($request->user_id) : null;
         $resolvedNamaKaryawan = trim((string) $request->input('nama_karyawan', ''));
 
         if ($resolvedNamaKaryawan === '' && $linkedUser) {
@@ -439,14 +439,14 @@ class KaryawanController extends Controller
                 $existing->update($payload);
                 // Sync pangkalan to pivot table (termasuk wajib)
                 $syncIds = $pangkalan ? [$pangkalan->id] : [];
-                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
+                $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
                 $existing->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $updated++;
             } else {
                 $newKaryawan = Karyawan::create($payload);
                 // Sync pangkalan to pivot table (termasuk wajib)
                 $syncIds = $pangkalan ? [$pangkalan->id] : [];
-                $wajibIds = \App\Models\Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
+                $wajibIds = Pangkalan::where('is_wajib', true)->where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
                 $newKaryawan->syncPangkalan(array_unique(array_merge($syncIds, $wajibIds)));
                 $imported++;
             }

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Models\Pangkalan;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -19,8 +19,8 @@ class UserTest extends TestCase
         $this->userCounter++;
 
         return User::create(array_merge([
-            'name' => 'Test User ' . $this->userCounter,
-            'username' => 'testuser' . $this->userCounter,
+            'name' => 'Test User '.$this->userCounter,
+            'username' => 'testuser'.$this->userCounter,
             'email' => "test{$this->userCounter}@example.com",
             'password' => Hash::make('password'),
             'role' => 'user',
@@ -30,7 +30,7 @@ class UserTest extends TestCase
 
     public function test_user_has_fillable_attributes(): void
     {
-        $user = new User();
+        $user = new User;
         $fillable = $user->getFillable();
 
         $this->assertContains('name', $fillable);
@@ -44,7 +44,7 @@ class UserTest extends TestCase
 
     public function test_user_password_is_hidden(): void
     {
-        $user = new User();
+        $user = new User;
         $hidden = $user->getHidden();
 
         $this->assertContains('password', $hidden);
@@ -138,7 +138,7 @@ class UserTest extends TestCase
 
     public function test_get_all_pangkalan_ids_includes_primary_pangkalan(): void
     {
-        $pangkalan = \App\Models\Pangkalan::create([
+        $pangkalan = Pangkalan::create([
             'kode_pangkalan' => 'PK001',
             'nama_pangkalan' => 'Pangkalan Test',
         ]);
@@ -151,11 +151,11 @@ class UserTest extends TestCase
 
     public function test_get_all_pangkalan_ids_includes_kepala_pangkalan(): void
     {
-        $pangkalan1 = \App\Models\Pangkalan::create([
+        $pangkalan1 = Pangkalan::create([
             'kode_pangkalan' => 'PK001',
             'nama_pangkalan' => 'Pangkalan 1',
         ]);
-        $pangkalan2 = \App\Models\Pangkalan::create([
+        $pangkalan2 = Pangkalan::create([
             'kode_pangkalan' => 'PK002',
             'nama_pangkalan' => 'Pangkalan 2',
         ]);
@@ -171,7 +171,7 @@ class UserTest extends TestCase
 
     public function test_get_all_pangkalan_ids_deduplicates(): void
     {
-        $pangkalan = \App\Models\Pangkalan::create([
+        $pangkalan = Pangkalan::create([
             'kode_pangkalan' => 'PK001',
             'nama_pangkalan' => 'Pangkalan Test',
         ]);
@@ -192,7 +192,7 @@ class UserTest extends TestCase
 
     public function test_pangkalan_relationship(): void
     {
-        $pangkalan = \App\Models\Pangkalan::create([
+        $pangkalan = Pangkalan::create([
             'kode_pangkalan' => 'PK001',
             'nama_pangkalan' => 'Pangkalan Test',
         ]);

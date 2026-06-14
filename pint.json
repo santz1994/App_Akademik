@@ -1,0 +1,10 @@
+{
+    "$schema": "https://laravel.com/pint.schema.json",
+    "preset": "laravel",
+    "rules": [],
+    "exclude": [
+        "vendor",
+        "node_modules",
+        "Doc"
+    ]
+}

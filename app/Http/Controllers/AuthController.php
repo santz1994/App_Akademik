@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -27,7 +28,7 @@ class AuthController extends Controller
         $loginLogoUrl = null;
         if ($setting?->show_logo && ! empty($setting->logo_path)) {
             $logoPath = ltrim((string) $setting->logo_path, '/');
-            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath)) {
+            if (Storage::disk('public')->exists($logoPath)) {
                 $loginLogoUrl = asset('storage/'.$logoPath);
             }
         }

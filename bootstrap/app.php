@@ -1,8 +1,15 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\KepalaMiddleware;
+use App\Http\Middleware\TataUsahaMiddleware;
+use App\Http\Middleware\UserMiddleware;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,18 +19,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role.admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'role.user' => \App\Http\Middleware\UserMiddleware::class,
-            'role.kepala' => \App\Http\Middleware\KepalaMiddleware::class,
-            'role.tata_usaha' => \App\Http\Middleware\TataUsahaMiddleware::class,
+            'role.admin' => AdminMiddleware::class,
+            'role.user' => UserMiddleware::class,
+            'role.kepala' => KepalaMiddleware::class,
+            'role.tata_usaha' => TataUsahaMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Handle authentication errors — redirect to login instead of 500
-        $exceptions->renderable(function (\Throwable $e, $request) {
+        $exceptions->renderable(function (Throwable $e, $request) {
             // Unauthenticated / session expired → redirect to login
-            if ($e instanceof \Illuminate\Auth\AuthenticationException
-                || $e instanceof \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException) {
+            if ($e instanceof AuthenticationException
+                || $e instanceof UnauthorizedHttpException) {
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json(['message' => 'Unauthenticated.'], 401);
                 }
@@ -33,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // CSRF token mismatch (419) → redirect back with error
-            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+            if ($e instanceof TokenMismatchException) {
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json(['message' => 'CSRF token mismatch.'], 419);
                 }

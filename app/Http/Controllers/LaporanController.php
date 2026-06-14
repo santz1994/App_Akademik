@@ -12,6 +12,7 @@ use App\Support\LaporanScoreCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LaporanController extends Controller
@@ -327,7 +328,7 @@ class LaporanController extends Controller
             }
         } else {
             // For admin: only show kategori that are mapped to at least one pangkalan
-            $allMappedKategoriIds = \Illuminate\Support\Facades\DB::table('pangkalan_kategori_kinerja')
+            $allMappedKategoriIds = DB::table('pangkalan_kategori_kinerja')
                 ->pluck('kategori_kinerja_id')
                 ->map(fn ($id) => (int) $id)
                 ->unique()

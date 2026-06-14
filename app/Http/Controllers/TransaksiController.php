@@ -13,6 +13,7 @@ use App\Models\TahunPenilaian;
 use App\Models\Transaksi;
 use App\Support\LaporanScoreCalculator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -399,7 +400,7 @@ class TransaksiController extends Controller
         }
 
         // Get the selected pangkalan and resolve kategori for it
-        $selectedPangkalan = \App\Models\Pangkalan::with('kategoriKinerja')->find($pangkalanId);
+        $selectedPangkalan = Pangkalan::with('kategoriKinerja')->find($pangkalanId);
         $kategoriList = $this->resolveKategoriListForPangkalan($selectedPangkalan);
         $allowedKompetensiIds = $this->resolveAllowedKompetensiIds($kategoriList);
 
@@ -470,7 +471,7 @@ class TransaksiController extends Controller
         }
 
         // FIX: Wrap in transaction to reduce connection hold time and prevent aborted clients
-        $savedAny = \Illuminate\Support\Facades\DB::transaction(function () use (
+        $savedAny = DB::transaction(function () use (
             $nilaiInput, $allowedKompetensiIds, $canEditLockedScores, $existingLockedKompetensiIds,
             $kompetensiKategoriMap, $karyawanId, $tahunId, $pangkalanId, $counter
         ) {
@@ -933,7 +934,7 @@ class TransaksiController extends Controller
                         ->pluck('kategori_kinerja_id')
                         ->unique()
                         ->values();
-                    $kategoriList = \App\Models\KategoriKinerja::with('kompetensi:id,kategori_kinerja_id')
+                    $kategoriList = KategoriKinerja::with('kompetensi:id,kategori_kinerja_id')
                         ->whereIn('id', $mappedKatIds)
                         ->get();
                 }
@@ -1073,7 +1074,7 @@ class TransaksiController extends Controller
     /**
      * Resolve kategori list for a specific pangkalan.
      */
-    private function resolveKategoriListForPangkalan(?Pangkalan $pangkalan, $baseList = null, bool $includeKegiatan = true): \Illuminate\Support\Collection
+    private function resolveKategoriListForPangkalan(?Pangkalan $pangkalan, $baseList = null, bool $includeKegiatan = true): Collection
     {
         $kategoriList = $baseList ?? KategoriKinerja::with([
             'kompetensi' => fn ($q) => $q->orderBy('kode_kompetensi'),

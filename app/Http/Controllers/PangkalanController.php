@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Karyawan;
 use App\Models\KategoriKinerja;
 use App\Models\Pangkalan;
 use App\Models\User;
@@ -190,7 +191,7 @@ class PangkalanController extends Controller
                 }
 
                 // Also add karyawan to this pangkalan's karyawan_pangkalan pivot
-                $karyawan = \App\Models\Karyawan::where('user_id', $user->id)->first();
+                $karyawan = Karyawan::where('user_id', $user->id)->first();
                 if ($karyawan) {
                     if (! $karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
                         $karyawan->pangkalans()->attach($pangkalan->id);
@@ -222,11 +223,11 @@ class PangkalanController extends Controller
      */
     private function syncWajibPangkalan(Pangkalan $pangkalan): void
     {
-        $karyawanIds = \App\Models\Karyawan::where('is_active', true)
+        $karyawanIds = Karyawan::where('is_active', true)
             ->whereDoesntHave('user', fn ($q) => $q->where('is_kepala', true))
             ->pluck('id');
         foreach ($karyawanIds as $karyawanId) {
-            $karyawan = \App\Models\Karyawan::find($karyawanId);
+            $karyawan = Karyawan::find($karyawanId);
             if ($karyawan && ! $karyawan->pangkalans()->where('pangkalan_id', $pangkalan->id)->exists()) {
                 $karyawan->pangkalans()->attach($pangkalan->id);
             }
